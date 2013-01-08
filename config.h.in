@@ -1,0 +1,1 @@
+#define BOOST_SUPPORT @Boost_LIBRARIES@

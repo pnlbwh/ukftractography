@@ -1,0 +1,1 @@
+/Users/Chrigi/ukftractography/allplatforms/_CPack_Packages/Darwin/TGZ/19053-macosx-amd64-ukftractography-svn127-2012-01-11/Slicer.app/Contents/cli-modules/ukftractography

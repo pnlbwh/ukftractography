@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head><title></title>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<link rel="stylesheet" type="text/css" href="search.css"/>
+<script type="text/javascript" src="search.js"></script>
+</head>
+<body class="SRPage">
+<div id="SRIndex">
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRResult" id="SR_operator_2a">
+ <div class="SREntry">
+  <a id="Item0" onkeydown="return searchResults.Nav(event,0)" onkeypress="return searchResults.Nav(event,0)" onkeyup="return searchResults.Nav(event,0)" class="SRSymbol" href="javascript:searchResults.Toggle('SR_operator_2a')">operator*</a>
+  <div class="SRChildren">
+    <a id="Item0_c0" onkeydown="return searchResults.NavChild(event,0,0)" onkeypress="return searchResults.NavChild(event,0,0)" onkeyup="return searchResults.NavChild(event,0,0)" class="SRScope" href="../linalg_8h.html#a227422618a365789fed28d62aff96bd8" target="_parent">operator*(vec_t a, double b):&nbsp;linalg.h</a>
+    <a id="Item0_c1" onkeydown="return searchResults.NavChild(event,0,1)" onkeypress="return searchResults.NavChild(event,0,1)" onkeyup="return searchResults.NavChild(event,0,1)" class="SRScope" href="../linalg_8h.html#aa7d8a967710130e83b46710f7f0dbb35" target="_parent">operator*(double a, vec_t b):&nbsp;linalg.h</a>
+    <a id="Item0_c2" onkeydown="return searchResults.NavChild(event,0,2)" onkeypress="return searchResults.NavChild(event,0,2)" onkeyup="return searchResults.NavChild(event,0,2)" class="SRScope" href="../linalg_8h.html#affc3ac3a8df01a9f04c87d3eefcc0963" target="_parent">operator*(mat_t a, double b):&nbsp;linalg.h</a>
+    <a id="Item0_c3" onkeydown="return searchResults.NavChild(event,0,3)" onkeypress="return searchResults.NavChild(event,0,3)" onkeyup="return searchResults.NavChild(event,0,3)" class="SRScope" href="../linalg_8h.html#a45fd42843f2f9b750a0004b63dadb57b" target="_parent">operator*(double a, mat_t b):&nbsp;linalg.h</a>
+    <a id="Item0_c4" onkeydown="return searchResults.NavChild(event,0,4)" onkeypress="return searchResults.NavChild(event,0,4)" onkeyup="return searchResults.NavChild(event,0,4)" class="SRScope" href="../linalg_8h.html#a62f455b8f71fcbede182ab7ff16bac01" target="_parent">operator*(mat_t a, vec_t b):&nbsp;linalg.h</a>
+    <a id="Item0_c5" onkeydown="return searchResults.NavChild(event,0,5)" onkeypress="return searchResults.NavChild(event,0,5)" onkeyup="return searchResults.NavChild(event,0,5)" class="SRScope" href="../linalg_8h.html#a70b76ff0b1bbb2a4fe49d11b9f450ed8" target="_parent">operator*(mat_t a, mat_t b):&nbsp;linalg.h</a>
+  </div>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2a_3d">
+ <div class="SREntry">
+  <a id="Item1" onkeydown="return searchResults.Nav(event,1)" onkeypress="return searchResults.Nav(event,1)" onkeyup="return searchResults.Nav(event,1)" class="SRSymbol" href="../linalg_8h.html#a5f2c6db6c1945c86dd6d4e8e5daf1307" target="_parent">operator*=</a>
+  <span class="SRScope">linalg.h</span>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2b">
+ <div class="SREntry">
+  <a id="Item2" onkeydown="return searchResults.Nav(event,2)" onkeypress="return searchResults.Nav(event,2)" onkeyup="return searchResults.Nav(event,2)" class="SRSymbol" href="javascript:searchResults.Toggle('SR_operator_2b')">operator+</a>
+  <div class="SRChildren">
+    <a id="Item2_c0" onkeydown="return searchResults.NavChild(event,2,0)" onkeypress="return searchResults.NavChild(event,2,0)" onkeyup="return searchResults.NavChild(event,2,0)" class="SRScope" href="../linalg_8h.html#a7bbc416680cba8aa2bd5cf9bc52e183b" target="_parent">operator+(vec_t a, vec_t b):&nbsp;linalg.h</a>
+    <a id="Item2_c1" onkeydown="return searchResults.NavChild(event,2,1)" onkeypress="return searchResults.NavChild(event,2,1)" onkeyup="return searchResults.NavChild(event,2,1)" class="SRScope" href="../linalg_8h.html#a696564876e1c708e0f70934bf80db842" target="_parent">operator+(vec_t a, double b):&nbsp;linalg.h</a>
+    <a id="Item2_c2" onkeydown="return searchResults.NavChild(event,2,2)" onkeypress="return searchResults.NavChild(event,2,2)" onkeyup="return searchResults.NavChild(event,2,2)" class="SRScope" href="../linalg_8h.html#a943a21278bcf23e3af63827751587494" target="_parent">operator+(double a, vec_t b):&nbsp;linalg.h</a>
+  </div>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2b_3d">
+ <div class="SREntry">
+  <a id="Item3" onkeydown="return searchResults.Nav(event,3)" onkeypress="return searchResults.Nav(event,3)" onkeyup="return searchResults.Nav(event,3)" class="SRSymbol" href="../linalg_8h.html#ab7911fb6c0524e7d6f8c53a4ea9fd41e" target="_parent">operator+=</a>
+  <span class="SRScope">linalg.h</span>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2d">
+ <div class="SREntry">
+  <a id="Item4" onkeydown="return searchResults.Nav(event,4)" onkeypress="return searchResults.Nav(event,4)" onkeyup="return searchResults.Nav(event,4)" class="SRSymbol" href="javascript:searchResults.Toggle('SR_operator_2d')">operator-</a>
+  <div class="SRChildren">
+    <a id="Item4_c0" onkeydown="return searchResults.NavChild(event,4,0)" onkeypress="return searchResults.NavChild(event,4,0)" onkeyup="return searchResults.NavChild(event,4,0)" class="SRScope" href="../linalg_8h.html#ad8fbd75fb8c411f94259f42a9774c8cb" target="_parent">operator-(vec_t a):&nbsp;linalg.h</a>
+    <a id="Item4_c1" onkeydown="return searchResults.NavChild(event,4,1)" onkeypress="return searchResults.NavChild(event,4,1)" onkeyup="return searchResults.NavChild(event,4,1)" class="SRScope" href="../linalg_8h.html#a673ef9c3bef678cd7ffcc1542e956f36" target="_parent">operator-(vec_t a, vec_t b):&nbsp;linalg.h</a>
+    <a id="Item4_c2" onkeydown="return searchResults.NavChild(event,4,2)" onkeypress="return searchResults.NavChild(event,4,2)" onkeyup="return searchResults.NavChild(event,4,2)" class="SRScope" href="../linalg_8h.html#ac46d3b3f034fa5c9f0e1e50e7a5d4532" target="_parent">operator-(vec_t a, double b):&nbsp;linalg.h</a>
+    <a id="Item4_c3" onkeydown="return searchResults.NavChild(event,4,3)" onkeypress="return searchResults.NavChild(event,4,3)" onkeyup="return searchResults.NavChild(event,4,3)" class="SRScope" href="../linalg_8h.html#a52d9285683abf03af5a4ef61eba66b1c" target="_parent">operator-(double a, vec_t b):&nbsp;linalg.h</a>
+  </div>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2d_3d">
+ <div class="SREntry">
+  <a id="Item5" onkeydown="return searchResults.Nav(event,5)" onkeypress="return searchResults.Nav(event,5)" onkeyup="return searchResults.Nav(event,5)" class="SRSymbol" href="../linalg_8h.html#ae9ff3509a6c10d78d16a29e6ab140130" target="_parent">operator-=</a>
+  <span class="SRScope">linalg.h</span>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2f">
+ <div class="SREntry">
+  <a id="Item6" onkeydown="return searchResults.Nav(event,6)" onkeypress="return searchResults.Nav(event,6)" onkeyup="return searchResults.Nav(event,6)" class="SRSymbol" href="javascript:searchResults.Toggle('SR_operator_2f')">operator/</a>
+  <div class="SRChildren">
+    <a id="Item6_c0" onkeydown="return searchResults.NavChild(event,6,0)" onkeypress="return searchResults.NavChild(event,6,0)" onkeyup="return searchResults.NavChild(event,6,0)" class="SRScope" href="../linalg_8h.html#a635ac24099401b675ea8943f4d066ae6" target="_parent">operator/(vec_t a, double b):&nbsp;linalg.h</a>
+    <a id="Item6_c1" onkeydown="return searchResults.NavChild(event,6,1)" onkeypress="return searchResults.NavChild(event,6,1)" onkeyup="return searchResults.NavChild(event,6,1)" class="SRScope" href="../linalg_8h.html#a1741a754a4e4f3a5514cd18682f94112" target="_parent">operator/(double a, vec_t b):&nbsp;linalg.h</a>
+  </div>
+ </div>
+</div>
+<div class="SRResult" id="SR_operator_2f_3d">
+ <div class="SREntry">
+  <a id="Item7" onkeydown="return searchResults.Nav(event,7)" onkeypress="return searchResults.Nav(event,7)" onkeyup="return searchResults.Nav(event,7)" class="SRSymbol" href="../linalg_8h.html#a4be2df931c56d50877fd00bd377cec80" target="_parent">operator/=</a>
+  <span class="SRScope">linalg.h</span>
+ </div>
+</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+<script type="text/javascript"><!--
+document.getElementById("Loading").style.display="none";
+document.getElementById("NoMatches").style.display="none";
+var searchResults = new SearchResults("searchResults");
+searchResults.Search();
+--></script>
+</div>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<executable>
+  <category>
+    Diffusion.Tractography
+  </category>
+  <title>
+    UKF Tractography
+  </title>
+  <description>
+    This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. For more informations check the documentation.
+  </description>
+  <version>1.0</version>
+  <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
+  <license></license>
+  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner</contributor>
+  <acknowledgements></acknowledgements>
+  
+  <parameters>
+    
+    <label>IO</label>
+    <description>Input/output paramters</description>
+    
+    <image type="diffusion-weighted" fileExtensions=".nhdr,.nrrd">
+      <name>dwiFile</name>
+      <longflag alias="dwiData">dwiFile</longflag>
+      <label>Input DTI volume</label>
+      <channel>input</channel>
+      <description>Input DWI volume</description>
+    </image>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>seedsFile</name>
+      <longflag alias="seedsData">seedsFile</longflag>
+      <label>Input Label Map</label>
+      <channel>input</channel>
+      <description>Seeds for diffusion. If not specified, full brain tractography will be performed, and the algorithm will start from every voxel in the brain mask where the Generalized Anisotropy is bigger than 0.18</description>
+    </image>
+    
+    <integer-vector>
+      <name>labels</name>
+      <longflag>labels</longflag>
+      <label>ROI label to use for seeding</label>
+      <description>A vector of the ROI labels to be used</description>
+      <default>1</default>
+    </integer-vector>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>maskFile</name>
+      <longflag alias="maskData">maskFile</longflag>
+      <label>Brain mask</label>
+      <channel>input</channel>
+      <description>Mask for diffusion tractography</description>
+    </image>
+   
+    <geometry type="fiberbundle">
+      <name>tracts</name>
+      <longflag>tracts</longflag>
+      <label>Output Fibers (first tensor)</label>
+      <channel>output</channel>
+      <description>Tracts generated, with first tensor output</description>
+    </geometry>
+
+    <geometry type="fiberbundle">
+      <name>tractsWithSecondTensor</name>
+      <longflag>tractsWithSecondTensor</longflag>
+      <label>Output Fibers (second tensor, optional)</label>
+      <channel>output</channel>
+      <description>Tracts generated, with second tensor output (if there is one)</description>
+    </geometry>
+
+  </parameters>
+  
+  <parameters>
+	<label>Seeding Options</label>
+    <description>Seeding Options</description>
+	
+    <integer>
+      <name>seedsPerVoxel</name>
+      <longflag>seedsPerVoxel</longflag>
+      <label>Number of seeds per voxel</label>
+      <description>Number of seeds per voxel</description>
+      <default>1</default>
+      <constraints>
+        <minimum>0</minimum>
+	    <maximum>50</maximum>
+	    <step>1</step>
+	  </constraints>
+    </integer>
+
+  </parameters>
+
+  <parameters>
+    
+    <label>Model options</label>
+    <description>Which model should be used for tractography</description>
+    
+    <integer-enumeration>
+      <name>numTensor</name>
+      <longflag>numTensor</longflag>
+      <label>Number of tensors used</label>
+      <description>Number of tensors used</description>
+      <default>2</default>
+      <element>1</element>
+      <element>2</element>
+      <element>3</element>
+    </integer-enumeration>
+    
+    <boolean>
+      <name>simpleTensorModel</name>
+      <longflag>simpleTensorModel</longflag>
+      <label>Use simple tensor model</label>
+      <description>Whether to use the simple tensor model. If unchecked, use the full tensor model</description>
+      <default>true</default>
+    </boolean>
+    
+    <boolean>
+      <name>freeWater</name>
+      <longflag>freeWater</longflag>
+      <label>Estimate term for free water</label>
+      <description>Adds a term for free water difusion to the model. If checked, the 1T simple model is forced.</description>
+      <default>false</default>
+    </boolean>
+    
+  </parameters>
+
+  <parameters>
+
+  	<label>Stopping Criteria</label>
+    <description>if one or more of the criteria are fulfilled the fiber stops</description>
+
+	<double>
+      <name>minFA</name>
+      <longflag>minFA</longflag>
+      <label>Terminating FA (defaults set runtime)</label>
+      <description>Abort the tractography when the Fractional Anisotropy is less than this value</description>
+      <default>0.15</default>
+      <constraints>
+        <minimum>0</minimum>
+	    <maximum>1</maximum>
+	    <step>0.01</step>
+	  </constraints>
+    </double>
+
+    <double>
+      <name>minGA</name>
+      <longflag>minGA</longflag>
+      <label>Terminating minimum Generalized Anisotropy</label>
+      <description>Abort the tractography when the Generalized Anisotropy is less than this value</description>
+      <default>0.1</default>
+      <constraints>
+		<minimum>0</minimum>
+	  	<maximum>1</maximum>
+	  	<step>0.01</step>
+	  </constraints>
+    </double>
+	
+
+  </parameters>
+
+<parameters>
+
+    <label>Fiber scalar fields</label>
+    <description>Scalars to be recorded together with the traced fiber</description>
+    <boolean>
+      <name>recordFA</name>
+      <longflag>recordFA</longflag>
+      <label>Record FA</label>
+      <description>Whether to store FA. Attaches field 'FA', and 'FA2' for 2-tensor case to fiber. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordNMSE</name>
+      <longflag>recordNMSE</longflag>
+      <label>Record normalized MSE</label>
+      <description>Whether to store NMSE. Attaches field 'NMSE' to fiber. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordTrace</name>
+      <longflag>recordTrace</longflag>
+      <label>Record Trace</label>
+      <description>Whether to store Trace. Attaches field 'Trace', and 'Trace2' for 2-tensor case to fiber.</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordFreeWater</name>
+      <longflag>recordFreeWater</longflag>
+      <label>Record Free Water</label>
+      <description>Whether to store the fraction of free water. Attaches field 'FreeWater' to fiber.</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordState</name>
+      <longflag>recordState</longflag>
+      <label>Record states</label>
+      <description>Whether to attach the states to the fiber. Will generate field 'state'.</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordCovariance</name>
+      <longflag>recordCovariance</longflag>
+      <label>Record the covariance</label>
+      <description>Whether to store the covariance. Will generate field 'covariance' in fiber.</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordTensors</name>
+      <longflag>recordTensors</longflag>
+      <label>Record the tensors</label>
+      <description>Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. The fields will be called 'TensorN', where N is the tensor number. </description>
+      <default>false</default>
+    </boolean>
+
+  </parameters>
+
+  <parameters>
+    
+    <label>Advanced Options</label>
+    <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>
+
+    <integer>
+      <name>numThreads</name>
+      <longflag>numThreads</longflag>
+      <label>Number of threads</label>
+      <description>Number of threads used during compuation. Set to the number of cores on your workstation for optimal speed. If left undefined boost will figure out the number of cores, and hence threads, during runtime. </description>
+      <default>0</default>
+    </integer>
+
+    <boolean>
+      <name>normalizedDWIData</name>
+      <longflag>normalizedDWIData</longflag>
+      <label>The DWI data is normalized</label>
+      <description>Whether the DWI input data is already normalized</description>
+      <default>false</default>
+    </boolean>
+
+    <double>
+      <name>stepLength</name>
+      <longflag>stepLength</longflag>
+      <label>Step length of tractography(in mm)</label>
+      <description>Step length of tractography, in millimeters</description>
+      <default>0.0</default>
+    </double>
+
+    <double-vector>
+      <name>weightsOnTensors</name>
+      <longflag>weightsOnTensors</longflag>
+      <label>Weights on tensors</label>
+      <description>Weights on different tensors when using multiple tensors. There must be one weight for each tensor, and the weights must sum up to 1. Default to equally weighted</description>
+    </double-vector>
+
+    <double>
+      <name>maxHalfFiberLength</name>
+      <longflag>maxHalfFiberLength</longflag>
+      <label>Maximum half-fiber length limit(in mm)</label>
+      <description>The max length limit of the half fibers generated during tractography. Here the fiber is "half" because the tractography goes in only one direction from one seed point at a time</description>
+      <default>10000.0</default>
+    </double>
+
+    <double>
+      <name>seedFALimit</name>
+      <longflag>seedFALimit</longflag>
+      <label>The FA limit for seed potins to be valid</label>
+      <description>Seed points whose FA are below this value are excluded</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>Qm</name>
+      <longflag>Qm</longflag>
+      <label>Process noise for angles/direction</label>
+      <description>Process noise for angles/direction</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>Ql</name>
+      <longflag>Ql</longflag>
+      <label>Process noise for eigenvalues</label>
+      <description>Process noise for eigenvalues</description>
+      <default>0.0</default>
+    </double>
+    
+    <double>
+      <name>Qw</name>
+      <longflag>Qw</longflag>
+      <label>Process noise for free water weights</label>
+      <description>Process noise for free water weights, ignored if no free water estimation</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>Rs</name>
+      <longflag>Rs</longflag>
+      <label>Measurement noise</label>
+      <description>Measurement noise</description>
+      <default>0.0</default>
+    </double>
+    
+    <double>
+      <name>maxBranchingAngle</name>
+      <longflag>maxBranchingAngle</longflag>
+      <label>Maximum branching angle</label>
+      <description>Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle). Branching is supressed when this maxBranchingAngle is set to 0.0</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>minBranchingAngle</name>
+      <longflag>minBranchingAngle</longflag>
+      <label>Minimum branching angle</label>
+      <description>Minimum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle)</description>
+      <default>0.0</default>
+    </double>
+
+  </parameters>
+    
+  <parameters>
+    
+    <label>Additional output options</label>
+    <description>Additional output options</description>
+     
+    <boolean>
+      <name>noTransformPosition</name>
+      <longflag>noTransformPosition</longflag>
+      <label>Don't transform fibers ijk->RAS</label>
+      <description>Don't transform Points back from ijk->RAS when writing the output fiber</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>branchesOnly</name>
+      <longflag>branchesOnly</longflag>
+      <label>Only write branches out</label>
+      <description>Only output branches, ignore the primary tracts</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>storeGlyphs</name>
+      <longflag>storeGlyphs</longflag>
+      <label>Store tensors' main directions</label>
+      <description>Store tensors' main directions as two-point lines in a separate file named glyphs_{tracts}. When using multiple tensors, only the major tensors' main directions are stored</description>
+      <default>false</default>
+    </boolean>
+  
+    <boolean>
+      <name>outputNormalizedDWIData</name>
+      <longflag>outputNormalizedDWIData</longflag>
+      <label>Output the normalized DWI data</label>
+      <description>Whether to output the normalized DWI data</description>
+      <default>false</default>
+    </boolean> 
+    
+  </parameters>
+ 
+</executable>

@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/ukftractography/!svn/ver/219/trunk/Testing/Data
+END
+single_tensor.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ukftractography/!svn/ver/177/trunk/Testing/Data/single_tensor.raw.gz
+END
+mask.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/mask.nhdr
+END
+seed.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/seed.raw.gz
+END
+two_tensor_fw.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/two_tensor_fw.nhdr
+END
+1T_fw_fiber.vtk
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/ukftractography/!svn/ver/219/trunk/Testing/Data/1T_fw_fiber.vtk
+END
+2T_fw_fiber.vtk
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/ukftractography/!svn/ver/219/trunk/Testing/Data/2T_fw_fiber.vtk
+END
+two_tensor.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/two_tensor.nhdr
+END
+1T_fiber.vtk
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ukftractography/!svn/ver/219/trunk/Testing/Data/1T_fiber.vtk
+END
+2T_fiber.vtk
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/ukftractography/!svn/ver/219/trunk/Testing/Data/2T_fiber.vtk
+END
+single_tensor_fw.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/single_tensor_fw.nhdr
+END
+mask.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/mask.raw.gz
+END
+single_tensor.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/single_tensor.nhdr
+END
+two_tensor_fw.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/ukftractography/!svn/ver/192/trunk/Testing/Data/two_tensor_fw.raw.gz
+END
+GenerateSynDataForTractography.m
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/GenerateSynDataForTractography.m
+END
+seed.nhdr
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/ukftractography/!svn/ver/147/trunk/Testing/Data/seed.nhdr
+END
+two_tensor.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/ukftractography/!svn/ver/192/trunk/Testing/Data/two_tensor.raw.gz
+END
+single_tensor_fw.raw.gz
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/ukftractography/!svn/ver/177/trunk/Testing/Data/single_tensor_fw.raw.gz
+END

@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/ukftractography/!svn/ver/202/trunk/BuildTools
+END
+BuildMacros.cmake
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/ukftractography/!svn/ver/202/trunk/BuildTools/BuildMacros.cmake
+END
+PreventInSourceBuilds.cmake
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/ukftractography/!svn/ver/147/trunk/BuildTools/PreventInSourceBuilds.cmake
+END

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/ukftractography/!svn/ver/219/trunk/Testing
+END
+CompareFiber.h
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/ukftractography/!svn/ver/147/trunk/Testing/CompareFiber.h
+END
+CompareFibers.cc
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/ukftractography/!svn/ver/160/trunk/Testing/CompareFibers.cc
+END
+generate_ground_truth.sh
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/ukftractography/!svn/ver/219/trunk/Testing/generate_ground_truth.sh
+END
+vtkReader.cc
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/ukftractography/!svn/ver/147/trunk/Testing/vtkReader.cc
+END
+CMakeLists.txt
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/ukftractography/!svn/ver/219/trunk/Testing/CMakeLists.txt
+END
+vtkReader.h
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/ukftractography/!svn/ver/147/trunk/Testing/vtkReader.h
+END

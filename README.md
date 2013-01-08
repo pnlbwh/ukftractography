@@ -1,6 +1,5 @@
-UKFTRACTOGRAPHY
-===============
-
+UKF TRACTOGRAPHY
+================
 
 About   
 -----
@@ -32,7 +31,7 @@ example ukf-build.
 
 There are 3 ways to build the project
 
-### Standalone 
+### 1. Standalone 
 
 From your build directory run the following commands
 
@@ -42,7 +41,7 @@ From your build directory run the following commands
 This will download all resources and build the project for you.
 Note: cmake >= 2.8.4, git, and svn are required for this
 
-### Build with Slicer 
+### 2. Build with Slicer 
 
 To build against one of the slicer versions run:
 
@@ -59,7 +58,7 @@ To build against one of the slicer versions run:
 Note: cmake >= 2.6, and an installed version of boost >1.41.1 is required
 Also, you must have a Slicer build. Only, executables are not enough.
 
-### Manual Build
+### 3. Manual Build
 
 You can take care of all dependancies yourself, the easiest
 way to do this is using ccmake. Run ccmake from your build directory
@@ -76,7 +75,7 @@ Note: This is only recommended if the above two methods failed for some reason
 Running the Executable
 ----------------------
 
-### As Command Line Module
+### 1. As Command Line Module
 
 The executable will be called 'UKFTractography', and can be found in the bin directory
 of your build folder. 
@@ -89,7 +88,7 @@ In the source directory of the project you will find a shell script called 'samp
 It should give you an idea of what a function call could look like. 
 
 
-### As Slicer 3 or 4 module
+### 2. As Slicer 3 or 4 module
 
 Open Slicer and in the settings add the '<path-to-build>/bin' directory. When you restart
 Slicer the module will be under Diffusion->Tractography.

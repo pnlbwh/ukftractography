@@ -52,7 +52,7 @@ ExternalProject_add(ITK
 set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITK-prefix/src/ITK-build)
 
 ExternalProject_add(SlicerExecutionModel
-  GIT_REPOSITORY git://github.com/Chaircrusher/SlicerExecutionModel.git
+  GIT_REPOSITORY https://github.com/Slicer/SlicerExecutionModel.git
   GIT_TAG "origin/master"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
@@ -61,15 +61,13 @@ ExternalProject_add(SlicerExecutionModel
   -DITK_DIR:PATH=${ITK_DIR}
   DEPENDS ITK
   )
-
-set(SEM_BUILD_DIR
+set(SlicerExecutionModel_DIR
   ${CMAKE_CURRENT_BINARY_DIR}/SlicerExecutionModel-prefix/src/SlicerExecutionModel-build)
-set(GenerateCLP_DIR ${SEM_BUILD_DIR}/GenerateCLP)
+set(GenerateCLP_DIR ${SlicerExecutionModel_DIR}/GenerateCLP)
 
 # the 'find_package' files are not present in the build directory so you have
 # to install teem somewhere for find_package to work
 set(TEEM_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/teem-prefix/src/teem-install)
-
 ExternalProject_add(teem
   SVN_REPOSITORY "http://teem.svn.sourceforge.net/svnroot/teem/teem/tags/1.10.0"
   UPDATE_COMMAND ""
@@ -85,6 +83,8 @@ ExternalProject_add(teem
   # -DTeem_VTK_MANGLE:BOOL=ON
   )
 set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/Teem-1.10.0)
+#set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/)
+#set(teem_INCLUDE_DIR ${TEEM_INSTALL_PREFIX}/include)
 
 set(BOOST_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/boost-prefix/src/boost-install)
 ExternalProject_add(boost
@@ -99,7 +99,8 @@ ExternalProject_add(boost
   BUILD_COMMAND "" # <SOURCE_DIR>/bjam link=static runtime-link=static
   INSTALL_COMMAND <SOURCE_DIR>/bjam link=static runtime-link=static install
 )
-set(Boost_INCLUDE_DIR ${BOOST_INSTALL_PREFIX}/include)
+set(Boost_INCLUDE_DIRS ${BOOST_INSTALL_PREFIX}/include)
+set(Boost_LIBRARY_DIRS ${BOOST_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 # Invoke the main project
@@ -111,8 +112,10 @@ ExternalProject_add(UKFTractography
   -DUKFTractography_SuperBuild::bool=ON
   -DITK_DIR:PATH=${ITK_DIR}
   -DTeem_DIR:PATH=${Teem_DIR}
-  -DBoost_INCLUDE_DIR:PATH=${Boost_INCLUDE_DIR}
+  -DBoost_INCLUDE_DIRS:PATH=${Boost_INCLUDE_DIRS}
+  -DBoost_LIBRARY_DIRS:PATH=${Boost_LIBRARY_DIRS}
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
+  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ITK teem boost SlicerExecutionModel
 )

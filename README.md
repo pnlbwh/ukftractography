@@ -23,8 +23,28 @@ Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner (c.f.baumgartner@gmail.com)
 Ryan Eckbo
 
 
-Building the Project
---------------------
+Building the Project 
+---------------------
+
+### 1. Standalone Superbuild
+
+    cd <build-dir>
+    cmake <path-to-source>/superbuild
+    make
+
+### 2. Build with Slicer4
+
+    cd <build-dir>
+    cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
+    make
+
+### 3. Download as a Slicer4 extension
+
+----
+Below are the old instructions
+
+Building the Project 
+---------------------
 
 In order to build make a new directory outside of the source tree called for 	
 example ukf-build.

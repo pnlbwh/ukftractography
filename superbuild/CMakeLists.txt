@@ -106,7 +106,7 @@ set(Boost_LIBRARY_DIRS ${BOOST_INSTALL_PREFIX}/lib)
 # Invoke the main project
 #-----------------------------------------------------------------------------
 ExternalProject_add(UKFTractography
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..
+  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../ukf/
   CMAKE_ARGS
   ${COMMON_CMAKE_ARGS}
   -DUKFTractography_SuperBuild::bool=ON

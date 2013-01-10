@@ -24,30 +24,35 @@ set(OUTPUT_DIR ${PROJECT_SOURCE_DIR}/testing)
 set(TEST_CODE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 ## Build the code for testing
-set(Compare_SOURCE ${TEST_CODE_DIR}/CompareFibers.cc ${TEST_CODE_DIR}/vtkReader.cc)
+set(Compare_SOURCE 
+    ${TEST_CODE_DIR}/CompareFibers.cc 
+    ${TEST_CODE_DIR}/vtkReader.cc
+    )
+
 include_directories(${PROJECT_SOURCE_DIR}/ukf)
 add_executable(${CLP}Compare ${Compare_SOURCE})
 add_dependencies(${CLP}Compare ${CLP})
 
-if (Slicer_VERSION EQUAL 4)
-  set(Slicer_EXE ${Slicer_HOME}/Slicer)
-endif()
+#if (Slicer_VERSION EQUAL 4)
+set(Slicer_EXE ${Slicer_HOME}/Slicer)
+#endif()
 
-if (Slicer_VERSION EQUAL 3)
-  set(Slicer_EXE ${Slicer3_HOME}/Slicer3)
-endif()
+#if (Slicer_VERSION EQUAL 3)
+  #set(Slicer_EXE ${Slicer3_HOME}/Slicer3)
+#endif()
 
 ## Add the correct executables
-if(Slicer_VERSION EQUAL 0) # differentiate between slicer3 and 4 later
-  set(RUNEXEC ${PROJECT_BINARY_DIR}/bin/${CLP})
-else(Slicer_VERSION EQUAL 0)
-  set(RUNEXEC 
-       ${Slicer_EXE} 
-       --launch 
-       ${PROJECT_BINARY_DIR}/bin/${CLP}
-  ) 
-endif(Slicer_VERSION EQUAL 0)
-set(COMPEXEC ./bin/${CLP}Compare)
+if(NOT Slicer_VERSION) 
+    set(RUNEXEC 
+        ${PROJECT_BINARY_DIR}/bin/${CLP}
+        )
+else()
+    set(RUNEXEC 
+        ${Slicer_EXE} --launch ${CLP}
+        ) 
+endif()
+
+set(COMPEXEC ${PROJECT_BINARY_DIR}/testing/${CLP}Compare)
 
 #-----------------------------------------------------------------------------
 # Run the actual tests

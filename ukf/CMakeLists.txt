@@ -10,6 +10,12 @@ if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
   include(${Slicer_USE_FILE})
 endif()
 
+if(NOT UKFTractography_SuperBuild)
+  if (NOT Boost_FOUND)
+      find_package(Boost 1.41.0 COMPONENTS thread REQUIRED)
+  endif (NOT Boost_FOUND)
+endif()
+
 if (UKFTractography_SuperBuild)
     find_package(SlicerExecutionModel REQUIRED)
     include(${SlicerExecutionModel_USE_FILE})
@@ -28,19 +34,11 @@ if (UKFTractography_SuperBuild)
     endif (NOT GenerateCLP_FOUND)
     include(${GenerateCLP_USE_FILE})
 
-    #if (NOT Boost_FOUND)
-      #find_package(Boost 1.41.0 COMPONENTS thread REQUIRED)
-    #endif (NOT Boost_FOUND)
-
     link_libraries(${Boost_LIBRARY_DIRS}/libboost_thread.a)
 endif()
 
-#-----------------------------------------------------------------------------
-add_subdirectory(Testing)
 
 #-----------------------------------------------------------------------------
-
-
 set(MODULE_INCLUDE_DIRECTORIES
     ${Boost_INCLUDE_DIRS}
     #${Teem_INCLUDE_DIRS}
@@ -64,7 +62,7 @@ set(MODULE_SRCS
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
     teem 
-    #${Boost_LIBRARIES}
+    ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
   )
 
@@ -81,7 +79,6 @@ if (NOT GenerateCLP_FOUND)
 endif (NOT GenerateCLP_FOUND)
 include(${GenerateCLP_USE_FILE})
 #-----------------------------------------------------------------------------
-message(${Boost_LIBRARY_DIRS})
 if(UKFTractography_SuperBuild)
     SEMMacroBuildCLI(
         NAME ${MODULE_NAME}

@@ -119,3 +119,15 @@ ExternalProject_add(UKFTractography
   -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS ITK teem boost SlicerExecutionModel
 )
+
+ExternalProject_add(vtk2mask
+  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../vtk2mask/
+  CMAKE_ARGS
+  ${COMMON_CMAKE_ARGS}
+  -DUKFTractography_SuperBuild::bool=ON
+  -DITK_DIR:PATH=${ITK_DIR}
+  -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
+  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
+  -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
+  DEPENDS ITK 
+)

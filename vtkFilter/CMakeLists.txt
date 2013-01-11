@@ -7,10 +7,10 @@ set(MODULE_NAME vtkFilter)
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 #-----------------------------------------------------------------------------
-if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
-  find_package(Slicer REQUIRED)
-  include(${Slicer_USE_FILE})
-endif()
+#if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
+  #find_package(Slicer REQUIRED)
+  #include(${Slicer_USE_FILE})
+#endif()
 
 #-----------------------------------------------------------------------------
 if (UKFTractography_SuperBuild)

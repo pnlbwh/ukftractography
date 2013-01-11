@@ -10,10 +10,10 @@ set(MODULE_NAME vtk2mask)
 #message("exec output path: ${EXECUTABLE_OUTPUT_PATH}")
 
 #-----------------------------------------------------------------------------
-if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
-  find_package(Slicer REQUIRED)
-  include(${Slicer_USE_FILE})
-endif()
+#if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
+  #find_package(Slicer REQUIRED)
+  #include(${Slicer_USE_FILE})
+#endif()
 
 if (UKFTractography_SuperBuild)
     find_package(SlicerExecutionModel REQUIRED)

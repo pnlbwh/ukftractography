@@ -19,19 +19,14 @@ endif()
 if (UKFTractography_SuperBuild)
     find_package(SlicerExecutionModel REQUIRED)
     include(${SlicerExecutionModel_USE_FILE})
-    if (NOT Teem_FOUND)
-        find_package(Teem REQUIRED)
-    endif (NOT Teem_FOUND)
+
+    find_package(Teem REQUIRED)
     include(${Teem_USE_FILE})
 
-    if (NOT ITK_FOUND)
-        find_package(ITK REQUIRED)
-    endif (NOT ITK_FOUND)
+    find_package(ITK REQUIRED)
     include(${ITK_USE_FILE})
 
-    if (NOT GenerateCLP_FOUND)
-      find_package(GenerateCLP REQUIRED)
-    endif (NOT GenerateCLP_FOUND)
+    find_package(GenerateCLP REQUIRED)
     include(${GenerateCLP_USE_FILE})
 
     link_libraries(${Boost_LIBRARY_DIRS}/libboost_thread.a)
@@ -74,10 +69,18 @@ configure_file (
  )
 
 
-if (NOT GenerateCLP_FOUND)
-  find_package(GenerateCLP REQUIRED)
-endif (NOT GenerateCLP_FOUND)
-include(${GenerateCLP_USE_FILE})
+#if (NOT GenerateCLP_FOUND)
+  #find_package(GenerateCLP REQUIRED)
+#endif (NOT GenerateCLP_FOUND)
+#include(${GenerateCLP_USE_FILE})
+
+#-----------------------------------------------------------------------------
+#if(BUILD_TESTING)
+  add_subdirectory(testing)
+#endif()
+
+
+
 #-----------------------------------------------------------------------------
 if(UKFTractography_SuperBuild)
     SEMMacroBuildCLI(

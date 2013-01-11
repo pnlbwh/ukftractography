@@ -40,7 +40,15 @@ Building the Project
 
 ### 3. Download as a Slicer4 extension
 
+
+TODO
 ----
+
+* Get tests to pass in slicer/s4ext build
+* Get `make test` to work with superbuild
+
+
+-------------------------------
 Below are the old instructions
 
 Building the Project 

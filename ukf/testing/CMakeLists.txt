@@ -10,10 +10,10 @@
 #-----------------------------------------------------------------------------
 
 ## Build Macros
-#include(${PROJECT_SOURCE_DIR}/BuildTools/BuildMacros.cmake)
+include(${PROJECT_SOURCE_DIR}/BuildTools/BuildMacros.cmake)
 
 ## This variable is only available in CMAKE 2.8.3 
-#SETIFEMPTY(CMAKE_CURRENT_LIST_DIR ${PROJECT_SOURCE_DIR}/testing)
+SETIFEMPTY(CMAKE_CURRENT_LIST_DIR ${PROJECT_SOURCE_DIR}/testing)
 
 ## The CLP Name
 set(CLP UKFTractography)

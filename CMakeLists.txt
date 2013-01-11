@@ -28,11 +28,6 @@ add_subdirectory(vtk2mask)
 add_subdirectory(vtkFilter)
 
 #-----------------------------------------------------------------------------
-if(BUILD_TESTING)
-  add_subdirectory(testing)
-endif()
-
-#-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   include(${Slicer_EXTENSION_CPACK})
 endif()

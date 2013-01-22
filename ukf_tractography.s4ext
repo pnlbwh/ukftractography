@@ -6,7 +6,8 @@
 
 # This is source code manager (i.e. svn)
 scm git
-scmurl https://reckbo@bitbucket.org/reckbo/ukf_tractography.git
+scmurl ssh://www.nitrc.org/home/groups/ukftractography/git 
+
 # scmrevision 80c7e69
 
 # list dependencies

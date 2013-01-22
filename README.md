@@ -14,10 +14,7 @@ methods. Both methods use a mixture of Gaussian tensors. One limits the diffusio
 ellipsoids to a cylindrical shape (the second and third eigenvalue are assumed to be 
 identical) and the other one uses a full tensor representation.
 
-
-Authors
--------
- 
+__Authors__:
 Yogesh Rathi (yogesh@bwh.harvard.edu), Stefan Lienhard, Yinpeng Li, Martin
 Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner (c.f.baumgartner@gmail.com)
 Ryan Eckbo
@@ -38,7 +35,11 @@ Building the Project
     cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
     make
 
-### 3. Download as a Slicer4 extension
+### 3. Build as Slicer4 extension
+
+* Manual build, e.g.
+
+    ccmake -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild2/Slicer-build -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography  $soft/slicer/Slicer4/Extensions/CMake
 
 
 TODO

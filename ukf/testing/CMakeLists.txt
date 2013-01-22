@@ -12,6 +12,7 @@
 ## Build Macros
 include(${PROJECT_SOURCE_DIR}/BuildTools/BuildMacros.cmake)
 
+
 ## This variable is only available in CMAKE 2.8.3 
 SETIFEMPTY(CMAKE_CURRENT_LIST_DIR ${PROJECT_SOURCE_DIR}/testing)
 
@@ -19,7 +20,7 @@ SETIFEMPTY(CMAKE_CURRENT_LIST_DIR ${PROJECT_SOURCE_DIR}/testing)
 set(CLP UKFTractography)
 
 ## Set the directories for testing
-set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/testing/data)
+set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/../data)
 set(OUTPUT_DIR ${PROJECT_SOURCE_DIR}/testing)
 set(TEST_CODE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
@@ -29,7 +30,7 @@ set(Compare_SOURCE
     ${TEST_CODE_DIR}/vtkReader.cc
     )
 
-include_directories(${PROJECT_SOURCE_DIR}/ukf)
+#include_directories(${PROJECT_SOURCE_DIR}/ukf)
 add_executable(${CLP}Compare ${Compare_SOURCE})
 add_dependencies(${CLP}Compare ${CLP})
 

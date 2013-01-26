@@ -1,6 +1,7 @@
 UKF TRACTOGRAPHY
 ================
 
+
 About   
 -----
 
@@ -20,89 +21,62 @@ Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner (c.f.baumgartner@gmail.com)
 Ryan Eckbo
 
 
-Building the Project 
----------------------
 
-### 1. Standalone Superbuild
+Installation
+------------
+
+
+### 1. From Source
+
+Check out from NITRC git repository:
+
+    git clone ssh://user@www.nitrc.org/home/groups/ukftractography/git 
+
+There are 3 ways to build this project from source, as a stand alone
+superbuild, against a Slicer 4 build, and as a Slicer 4 extension build (which
+is more of a test than anything).
+
+
+#### a) Standalone Superbuild
 
     cd <build-dir>
     cmake <path-to-source>/superbuild
     make
 
-### 2. Build with Slicer4
+#### b) Build with Slicer4
 
     cd <build-dir>
     cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
     make
 
-### 3. Build as Slicer4 extension
+#### c) Build as Slicer4 extension
 
-* Manual build, e.g.
+* Manual build (for the developer to test that the extension can be installed
+successfully)
 
+    mkdir s4ext_build
+    cd s4ext_build
     ccmake -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild2/Slicer-build -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography  $soft/slicer/Slicer4/Extensions/CMake
+    make
+
+Extension build, test, package and upload using ExperimentalUpload target
+(https://github.com/Slicer/ExtensionsIndex#extension-build-test-package-and-upload-using-experimentalupload-target):
+
+    cd s4ext_build
+    cd ukf_tractography-build
+    cmake -DMIDAS_PACKAGE_URL:STRING=http://slicer.kitware.com/midas3 -DMIDAS_PACKAGE_EMAIL:STRING=<EMAIL> -DMIDAS_PACKAGE_API_KEY:STRING=<API KEY> .
+    make ExperimentalUpload
 
 
-TODO
-----
+### 2. As a Slicer 4 Extension
 
-* Get tests to pass in slicer/s4ext build
-* Get `make test` to work with superbuild
-
-
--------------------------------
-Below are the old instructions
-
-Building the Project 
----------------------
-
-In order to build make a new directory outside of the source tree called for 	
-example ukf-build.
-
-There are 3 ways to build the project
-
-### 1. Standalone 
-
-From your build directory run the following commands
-
-    > cmake <path-to-source>/SuperBuild
-    > make
-
-This will download all resources and build the project for you.
-Note: cmake >= 2.8.4, git, and svn are required for this
-
-### 2. Build with Slicer 
-
-To build against one of the slicer versions run:
-
-    * Slicer 3
-
-        > cmake -DSlicer3_DIR=<path-to-slicer3>/Slicer3-build <path-to-source>
-        > make
-
-    * Slicer 4
-
-        > cmake -DSlicer_DIR=<path-to-slicer4-superbuild>/Slicer-build <path-to-source>
-        > make
-
-Note: cmake >= 2.6, and an installed version of boost >1.41.1 is required
-Also, you must have a Slicer build. Only, executables are not enough.
-
-### 3. Manual Build
-
-You can take care of all dependancies yourself, the easiest
-way to do this is using ccmake. Run ccmake from your build directory
-
-    > ccmake <path-to-source>
-
-Provide the Links to the builds of ITK, Teem, GenerateCLP, and Boost
-
-    > make
-
-Note: This is only recommended if the above two methods failed for some reason
+Navigate to the Slicer Extension Manager and download `UKF Tractography` to
+install it as a Slicer 4 module.
 
 
-Running the Executable
-----------------------
+
+Basic Usage
+-----------
 
 ### 1. As Command Line Module
 
@@ -117,14 +91,15 @@ In the source directory of the project you will find a shell script called 'samp
 It should give you an idea of what a function call could look like. 
 
 
-### 2. As Slicer 3 or 4 module
+### 2. As Slicer 4 module
 
-Open Slicer and in the settings add the '<path-to-build>/bin' directory. When you restart
-Slicer the module will be under Diffusion->Tractography.
+Navigate to the Slicer Extension Manager and download `UKF Tractography` to
+install it as a Slicer 4 module.  There will be 3 modules under
+`Diffusion-->Tractography`: `UKF Tractography`, `vtk2mask`, and `vtkFilter`.
 
 
-Everything Else
----------------
 
-Please refer to the wiki page of this project under 
-http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage. 
+TODO
+----
+
+* Get `make test` to work with superbuild

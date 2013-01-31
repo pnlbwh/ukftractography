@@ -6,7 +6,7 @@
 
 # This is source code manager (i.e. svn)
 scm git
-scmurl ssh://www.nitrc.org/home/groups/ukftractography/git 
+scmurl git://github.com/pnlbwh/ukftractography.git
 
 # scmrevision 80c7e69
 

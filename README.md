@@ -28,11 +28,7 @@ Installation
 
 ### 1. From Source
 
-Check out from NITRC git repository:
-
-    git clone ssh://user@www.nitrc.org/home/groups/ukftractography/git 
-
-or from github:
+Checkout from github:
 
     git clone git://github.com/pnlbwh/ukftractography.git
 

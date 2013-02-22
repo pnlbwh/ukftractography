@@ -178,9 +178,9 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
                            static_cast<double>((rand() % 10001) - 5000));
 
       //CB: those directions are to compare against the matlab output
-      dir._[2] = 0.439598093988175;
-      dir._[1] = 0.236539281163321;
-      dir._[0] = 0.028331682419209;
+      //dir._[2] = 0.439598093988175;
+      //dir._[1] = 0.236539281163321;
+      //dir._[0] = 0.028331682419209;
 
       dir /= norm(dir);
       dir *= 0.5;

@@ -86,21 +86,21 @@ set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/Teem-1.10.0)
 #set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/)
 #set(teem_INCLUDE_DIR ${TEEM_INSTALL_PREFIX}/include)
 
-set(BOOST_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/boost-prefix/src/boost-install)
-ExternalProject_add(boost
-  URL http://downloads.sourceforge.net/project/boost/boost/1.41.0/boost_1_41_0.tar.gz
-  URL_MD5 ddb04c9b9164a36a91dcf36819666dd9
-  BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND
-  <SOURCE_DIR>/bootstrap.sh
-  --prefix=${BOOST_INSTALL_PREFIX}
-  link=static
-  runtime-link=static
-  BUILD_COMMAND "" # <SOURCE_DIR>/bjam link=static runtime-link=static
-  INSTALL_COMMAND <SOURCE_DIR>/bjam link=static runtime-link=static install
-)
-set(Boost_INCLUDE_DIRS ${BOOST_INSTALL_PREFIX}/include)
-set(Boost_LIBRARY_DIRS ${BOOST_INSTALL_PREFIX}/lib)
+#set(BOOST_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/boost-prefix/src/boost-install)
+#ExternalProject_add(boost
+  #URL http://downloads.sourceforge.net/project/boost/boost/1.41.0/boost_1_41_0.tar.gz
+  #URL_MD5 ddb04c9b9164a36a91dcf36819666dd9
+  #BUILD_IN_SOURCE 1
+  #CONFIGURE_COMMAND
+  #<SOURCE_DIR>/bootstrap.sh
+  #--prefix=${BOOST_INSTALL_PREFIX}
+  #link=static
+  #runtime-link=static
+  #BUILD_COMMAND "" # <SOURCE_DIR>/bjam link=static runtime-link=static
+  #INSTALL_COMMAND <SOURCE_DIR>/bjam link=static runtime-link=static install
+#)
+#set(Boost_INCLUDE_DIRS ${BOOST_INSTALL_PREFIX}/include)
+#set(Boost_LIBRARY_DIRS ${BOOST_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 # Invoke the main project
@@ -112,12 +112,10 @@ ExternalProject_add(UKFTractography
   -DUKFTractography_SuperBuild::bool=ON
   -DITK_DIR:PATH=${ITK_DIR}
   -DTeem_DIR:PATH=${Teem_DIR}
-  -DBoost_INCLUDE_DIRS:PATH=${Boost_INCLUDE_DIRS}
-  -DBoost_LIBRARY_DIRS:PATH=${Boost_LIBRARY_DIRS}
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ITK teem boost SlicerExecutionModel
+  DEPENDS ITK teem SlicerExecutionModel
 )
 
 ExternalProject_add(vtk2mask

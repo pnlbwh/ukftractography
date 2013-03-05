@@ -7,15 +7,15 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
-#include <boost/progress.hpp>
-#include <boost/thread.hpp>
-#include "timer.h"
+//#include "timer.h"
 #include "filter_model.h"
 #include "ISignalData.h"
 #include "NrrdData.h"
 #include "utilities.h"
 #include "vtk_writer.h"
 #include "thread.h"
+//#include "UKFMultiThreader.h"
+#include "itkMultiThreader.h"
 #include "math_utilities.h"
 
 #include <vnl/algo/vnl_determinant.h>
@@ -24,11 +24,6 @@
 
 // TODO implement this switch
 #include "config.h"
-#ifndef BOOST_SUPPORT
-#define boost_support 0
-#else
-#define boost_support 1
-#endif
 
 Tractography::Tractography(FilterModel *model, model_type filter_model_type,
 
@@ -390,6 +385,7 @@ void Tractography::Run()
   Init(primary_seed_infos) ;
 
   const int num_of_threads = std::min(_num_threads, static_cast<int>(primary_seed_infos.size())) ;
+  //const int num_of_threads = 8;
 
   assert(num_of_threads > 0) ;
 
@@ -398,109 +394,82 @@ void Tractography::Run()
   }
 
   std::vector<Fiber> raw_primary ;
-  std::vector<Fiber> raw_branch ;
 
   {
     std::cout << "Tracing " << primary_seed_infos.size() << " primary fibers:" << std::endl ;
-
     raw_primary.resize(primary_seed_infos.size()) ;
+    //Timer timer ;
+    WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads, 
+                static_cast<int>(primary_seed_infos.size())) ;
 
-    Timer timer ;
-
-    WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads, static_cast<int>(primary_seed_infos.size())) ;
-
-    std::vector<TractographyThread *> work_threads ;
+    itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
+    threader->SetNumberOfThreads( num_of_threads );
+    thread_struct str;
+    str.tractography_ = this;
+    str.seed_infos_ = &primary_seed_infos;
+    str.work_distribution = &work_distribution;
+    str.branching_ = _is_branching;
+    str.num_tensors_ = _num_tensors;
+    str.output_fiber_group_ = &raw_primary;
+    str.branching_seed_info_vec = new std::vector< std::vector<SeedPointInfo> >(num_of_threads);
+    str.branching_seed_affiliation_vec = new std::vector< std::vector<BranchingSeedAffiliation> >(num_of_threads);
     for (int i = 0; i < num_of_threads; i++)
-      work_threads.push_back(
-        new TractographyThread(
-          work_distribution[i],
-          i,			//Thread id, starts from 0. It is used to index the Kalman filter for this thread
-          this,
-          primary_seed_infos,
-          _is_branching,
-          _num_tensors,
-          raw_primary
-        )
-      ) ;
-    ProgressThread progress_thread(work_threads) ;
+        threader->SetMultipleMethod(i, ThreadCallback, &str);
+    threader->MultipleMethodExecute();
 
-    boost::thread_group threads ;
-
-    for (int i = 0; i < num_of_threads; i++)
-      threads.create_thread(boost::ref(*work_threads[i])) ;
-    threads.create_thread(boost::ref(progress_thread)) ;
-
-    threads.join_all() ;
-
-    std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
+    //std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
 
     //Unpack the branch seeds and their affiliation
     int num_branch_seeds = 0 ;
     for (int i = 0; i < num_of_threads; i++) {
-      num_branch_seeds += static_cast<int>(work_threads[i]->branching_seed_info_.size()) ;
+      num_branch_seeds += static_cast<int>(str.branching_seed_info_vec->at(i).size()) ;
     }
 
-    branch_seed_infos.resize(num_branch_seeds) ;
-    branch_seed_affiliation.resize(num_branch_seeds) ;
+    std::cout << "branch_seeds size: " << num_branch_seeds << std::endl;
+    branch_seed_infos.resize(num_branch_seeds);
+    branch_seed_affiliation.resize(num_branch_seeds);
 
     int counter = 0 ;
     for (int i = 0; i < num_of_threads; i++) {
-      for (size_t j = 0; j < work_threads[i]->branching_seed_info_.size(); j++) {
-        branch_seed_infos[counter] = work_threads[i]->branching_seed_info_[j] ;
-        branch_seed_affiliation[counter] = work_threads[i]->branching_seed_affiliation_[j] ;
+      for (size_t j = 0; j < str.branching_seed_info_vec->at(i).size(); j++) {
+        branch_seed_infos[counter] = str.branching_seed_info_vec->at(i).at(j);
+        branch_seed_affiliation[counter] = str.branching_seed_affiliation_vec->at(i).at(j);
         counter++ ;
       }
     }
-
-    for (int i = 0; i < num_of_threads; i++) {
-      delete work_threads[i] ;
-    }
   }
 
+  std::vector<Fiber> raw_branch ;
   if (_is_branching) {
-
     assert(_num_tensors == 2 || _num_tensors == 3) ;
-
     std::cout << "Tracing " << branch_seed_infos.size() << " branches:" << std::endl ;
 
     raw_branch.resize(branch_seed_infos.size()) ;
-
-    Timer timer ;
-
+    //Timer timer ;
     WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads, static_cast<int>(branch_seed_infos.size())) ;
 
-    std::vector<TractographyThread *> work_threads ;
+    thread_struct str;
+    str.tractography_ = this;
+    str.work_distribution = &work_distribution;
+    str.seed_infos_ = &branch_seed_infos;
+    str.branching_ = false;
+    str.num_tensors_ = _num_tensors;
+    str.output_fiber_group_ = &raw_branch;
+    str.branching_seed_info_vec = new std::vector< std::vector<SeedPointInfo> >(num_of_threads);
+    str.branching_seed_affiliation_vec = new std::vector< std::vector<BranchingSeedAffiliation> >(num_of_threads);
+
+    itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
+    threader->SetNumberOfThreads( num_of_threads );
     for (int i = 0; i < num_of_threads; i++)
-      work_threads.push_back(
-        new TractographyThread(
-          work_distribution[i],
-          i,
-          this,
-          branch_seed_infos,
-          false,		//NOTE that the branches are not allowed to generate any new branches
-          _num_tensors,
-          raw_branch
-        )
-      ) ;
-    ProgressThread progress_thread(work_threads) ;
+        threader->SetMultipleMethod(i, ThreadCallback, &str);
+    threader->MultipleMethodExecute();
 
-    boost::thread_group threads ;
-
-    for (int i = 0; i < num_of_threads; i++)
-      threads.create_thread(boost::ref(*work_threads[i])) ;
-    threads.create_thread(boost::ref(progress_thread)) ;
-
-    threads.join_all() ;
-
-    std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
-
-    for (int i = 0; i < num_of_threads; i++) {
-      delete work_threads[i] ;
-    }
+    //std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
   }
 
   std::vector<Fiber> fibers;
   PostProcessFibers(raw_primary, raw_branch, branch_seed_affiliation, _branches_only, fibers);
+  std::cout << "fiber size after postprocessibers: " << fibers.size() << std::endl;
 
   // Write the fiber data to the output vtk file.
   VtkWriter writer(_signal_data, _filter_model_type, _record_tensors);
@@ -556,8 +525,8 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
 
   std::cout << "Estimating seed tensors:" << std::endl ;
 
-  Timer timer ;
-  boost::progress_display disp(static_cast<unsigned long>(ret.size())) ;
+  //Timer timer ;
+  //boost::progress_display disp(static_cast<unsigned long>(ret.size())) ;
 
   // Unpack data
   for (size_t i = 0; i < s.size(); ++i) {
@@ -630,10 +599,10 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
     ret[i][7] = sigma[1];
     ret[i][8] = sigma[2];
 
-    ++disp ;
+    //++disp ; for boost progress bar
   }
 
-  std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
+  //std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
 }
 
 void Tractography::Follow3T(const int thread_id,
@@ -816,6 +785,7 @@ void Tractography::Follow2T(const int thread_id,
   State state = seed.state;
   vnl_matrix<double> p(seed.covariance);
 
+
   double fa = seed.fa;
   double fa2 = seed.fa2;
   double dNormMSE = 0; // no error at the seed
@@ -865,12 +835,11 @@ void Tractography::Follow2T(const int thread_id,
     //bool in_csf = ga < _ga_min || fa < _fa_min ;
     bool is_curving = curve_radius(fiber.position) < _min_radius;
 
-    if (!is_brain || in_csf
+    if (!is_brain 
+        || in_csf
         || static_cast<int>(fiber.position.size()) > _max_length	//Stop when the fiber is too long
         || is_curving) {
-
-      break;
-
+        break;
     }
 
     Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
@@ -910,6 +879,7 @@ void Tractography::Follow2T(const int thread_id,
     }
 
   }
+
 //   stateFile.close();
 }
 

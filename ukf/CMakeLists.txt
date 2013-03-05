@@ -10,12 +10,6 @@ if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
   include(${Slicer_USE_FILE})
 endif()
 
-if(NOT UKFTractography_SuperBuild)
-  if (NOT Boost_FOUND)
-      find_package(Boost 1.41.0 COMPONENTS thread REQUIRED)
-  endif (NOT Boost_FOUND)
-endif()
-
 if (UKFTractography_SuperBuild)
     find_package(SlicerExecutionModel REQUIRED)
     include(${SlicerExecutionModel_USE_FILE})
@@ -29,13 +23,11 @@ if (UKFTractography_SuperBuild)
     find_package(GenerateCLP REQUIRED)
     include(${GenerateCLP_USE_FILE})
 
-    link_libraries(${Boost_LIBRARY_DIRS}/libboost_thread.a)
 endif()
 
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    ${Boost_INCLUDE_DIRS}
     #${Teem_INCLUDE_DIRS}
   )
 
@@ -48,7 +40,6 @@ set(MODULE_SRCS
     NrrdData.cc 
     vtk_writer.cc 
     dwi_normalize.cc 
-    timer.cc
     utilities.cc 
     thread.cc 
     QuadProg++_vnl.cc
@@ -57,16 +48,8 @@ set(MODULE_SRCS
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
     teem 
-    ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
   )
-
-
-# In the config file we integrate a boost toggle
-configure_file (
- "${PROJECT_SOURCE_DIR}/config.h.in"
- "${PROJECT_SOURCE_DIR}/config.h"
- )
 
 
 #if (NOT GenerateCLP_FOUND)
@@ -85,7 +68,6 @@ configure_file (
 if(UKFTractography_SuperBuild)
     SEMMacroBuildCLI(
         NAME ${MODULE_NAME}
-        LINK_DIRECTORIES ${Boost_LIBRARY_DIRS}
         TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}

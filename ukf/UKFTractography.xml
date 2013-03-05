@@ -229,7 +229,7 @@
       <name>numThreads</name>
       <longflag>numThreads</longflag>
       <label>Number of threads</label>
-      <description>Number of threads used during compuation. Set to the number of cores on your workstation for optimal speed. If left undefined boost will figure out the number of cores, and hence threads, during runtime. </description>
+      <description>Number of threads used during computation. Set to the number of cores on your workstation for optimal speed. If left undefined the number of cores detected will be used. </description>
       <default>0</default>
     </integer>
 

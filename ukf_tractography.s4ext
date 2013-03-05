@@ -13,7 +13,7 @@ scmurl git://github.com/pnlbwh/ukftractography.git
 # list dependencies
 # - These should be names of other modules that have .s4ext files
 # - The dependencies will be built first
-depends     boost
+depends     NA
 
 # Inner build directory (default is .)
 build_subdirectory .

@@ -12,20 +12,12 @@
 #include <vector>
 #include "filter_model.h"
 #include "tractography.h"
+#include "itkMultiThreader.h"
 
 #include "UKFTractographyCLP.h"
 
 #include <cassert>
 #include <string>
-#include <boost/thread.hpp>
-
-#include "config.h"
-
-#ifndef BOOST_SUPPORT
-#define boost_support 0
-#else
-#define boost_support 1
-#endif
 
 bool verbose = true;
 
@@ -66,7 +58,7 @@ int main(int argc, char **argv)
   const double FULL_BRAIN_GA_MIN	= 0.18;
   const double D_ISO			        = 0.003; // Diffusion coefficient of free water
 
-  unsigned int numCores = boost::thread::hardware_concurrency();
+  unsigned int numCores = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
 
   if (numThreads < 0) {
     std::cout << "Invalid thread number!" << std::endl << std::endl ;
@@ -77,7 +69,7 @@ int main(int argc, char **argv)
     std::cout << "User set " << numThreads << "-threaded execution." << std::endl;
   } else {
     numThreads = numCores;
-    std::cout << "Boost determined " << numCores << " cores on your system.\n";
+    std::cout << "Found " << numCores << " cores on your system.\n";
     std::cout << "Running tractography with " << numCores << " thread(s).\n";
   }
 

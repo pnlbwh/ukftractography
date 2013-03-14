@@ -1,16 +1,18 @@
 #!/bin/bash
 
+SRC="../ukf_tractography"
+
 # BINARY
 BINARY='bin/UKFTractography'
 
 # VOLUME
-diff_im_path='/projects/schiz/3Tdata/case01045/diff/01045-dwi-filt-Ed.nhdr'
+diff_im_path="$SRC/data/dwi.nhdr"
 
 # MASK
-mask_path='/projects/schiz/3Tdata/case01045/diff/Tensor_mask-01045-dwi-filt-Ed_AvGradient-edited.nhdr'
+mask_path="$SRC/data/dwi-mask.nhdr"
 
 # SEEDS
-seeds_path='/home/malcolm/src/seeds_tc.nhdr'
+seeds_path="$SRC/data/seeds_tc.nhdr"
 
 # OUTPUT FIBER
 output_path='./fiber.vtk'
@@ -26,3 +28,4 @@ eval $BINARY \
  --numTensor 2  \
  --simpleTensorModel \
 
+diff $output_path $SRC/data/fiber_gold.vtk

@@ -415,6 +415,7 @@ void Tractography::Run()
     str.branching_seed_affiliation_vec = new std::vector< std::vector<BranchingSeedAffiliation> >(num_of_threads);
     for (int i = 0; i < num_of_threads; i++)
         threader->SetMultipleMethod(i, ThreadCallback, &str);
+    threader->SetGlobalDefaultNumberOfThreads(num_of_threads);
     threader->MultipleMethodExecute();
 
     //std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;

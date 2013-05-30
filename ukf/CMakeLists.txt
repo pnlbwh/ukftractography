@@ -28,9 +28,9 @@ endif()
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    #${Teem_INCLUDE_DIRS}
+    ${Teem_INCLUDE_DIRS}
   )
-
+include_directories(${Teem_INCLUDE_DIRS})
 set(MODULE_SRCS
     tractography.cc 
     unscented_kalman_filter.cc 

@@ -20,6 +20,12 @@ endif()
 if(NOT Slicer_SOURCE_DIR)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
+else()
+  #-----------------------------------------------------------------------------
+  find_package(SlicerExecutionModel REQUIRED GenerateCLP)
+  include(${GenerateCLP_USE_FILE})
+  include(${SlicerExecutionModel_USE_FILE})
+  include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 endif()
 
 #-----------------------------------------------------------------------------

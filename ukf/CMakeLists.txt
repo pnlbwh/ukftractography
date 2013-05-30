@@ -29,8 +29,8 @@ endif()
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
     ${Teem_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common
  )
 
 include_directories( ${MODULE_INCLUDE_DIRECTORIES} )

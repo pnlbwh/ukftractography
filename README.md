@@ -42,12 +42,14 @@ is more of a test than anything).
     cd <build-dir>
     cmake <path-to-source>/superbuild
     make
+    make test
 
 #### b) Build with Slicer4
 
     cd <build-dir>
     cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
     make
+    make test
 
 #### c) Build as Slicer4 extension
 
@@ -56,7 +58,7 @@ successfully)
 
     mkdir s4ext_build
     cd s4ext_build
-    ccmake -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild2/Slicer-build -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography  $soft/slicer/Slicer4/Extensions/CMake
+    ccmake -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild/Slicer-build -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography  $soft/slicer/Slicer4/Extensions/CMake
     make
 
 Extension build, test, package and upload using ExperimentalUpload target

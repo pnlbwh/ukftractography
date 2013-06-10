@@ -9,19 +9,13 @@
 # Setting up the Binary for fiber comparison 
 #-----------------------------------------------------------------------------
 
-## Build Macros
-include(${PROJECT_SOURCE_DIR}/BuildTools/BuildMacros.cmake)
-
-
-## This variable is only available in CMAKE 2.8.3 
-SETIFEMPTY(CMAKE_CURRENT_LIST_DIR ${PROJECT_SOURCE_DIR}/testing)
-
 ## The CLP Name
 set(CLP UKFTractography)
 
 ## Set the directories for testing
-set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/../data)
-set(OUTPUT_DIR ${PROJECT_SOURCE_DIR}/testing)
+set(UKF_SRC_DIR ${PROJECT_SOURCE_DIR}/ukf)
+set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/data)
+set(OUTPUT_DIR ${UKF_SRC_DIR}/testing)
 set(TEST_CODE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 ## Build the code for testing
@@ -38,10 +32,6 @@ add_dependencies(${CLP}Compare ${CLP})
 set(Slicer_EXE ${Slicer_HOME}/Slicer)
 #endif()
 
-#if (Slicer_VERSION EQUAL 3)
-  #set(Slicer_EXE ${Slicer3_HOME}/Slicer3)
-#endif()
-
 ## Add the correct executables
 if(NOT Slicer_VERSION) 
     set(RUNEXEC 
@@ -53,7 +43,7 @@ else()
         ) 
 endif()
 
-set(COMPEXEC ${PROJECT_BINARY_DIR}/testing/${CLP}Compare)
+set(COMPEXEC ${PROJECT_BINARY_DIR}/ukf/testing/${CLP}Compare)
 
 #-----------------------------------------------------------------------------
 # Run the actual tests

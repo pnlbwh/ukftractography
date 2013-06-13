@@ -58,9 +58,7 @@ set(MODULE_TARGET_LIBRARIES
 #include(${GenerateCLP_USE_FILE})
 
 #-----------------------------------------------------------------------------
-#if(BUILD_TESTING)
-  add_subdirectory(testing)
-#endif()
+add_subdirectory(Testing)
 
 
 

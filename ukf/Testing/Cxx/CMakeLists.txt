@@ -137,6 +137,7 @@ add_test(NAME ${testname}
     ${TEMP}/2T_fw_fiber.vtk
     ${BASELINE}/2T_fw_fiber.vtk
 )
+set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_Test)
 
 

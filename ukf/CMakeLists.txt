@@ -58,6 +58,7 @@ set(MODULE_TARGET_LIBRARIES
 #include(${GenerateCLP_USE_FILE})
 
 #-----------------------------------------------------------------------------
+enable_testing()
 add_subdirectory(Testing)
 
 

@@ -8,7 +8,7 @@
 
 #include <string>
 #include <vector>
-#include "fiber.h"
+#include "ukffiber.h"
 #include "seed.h"
 
 #include <vnl/vnl_matrix.h>
@@ -84,21 +84,21 @@ public:
   /**
    * Follows one seed point for the 3 Tensor case
   */
-  void Follow3T(const int thread_id, const size_t seed_index, const SeedPointInfo& seed, Fiber& fiber,
+  void Follow3T(const int thread_id, const size_t seed_index, const SeedPointInfo& seed, UKFFiber& fiber,
                 bool is_branching, std::vector<SeedPointInfo>& branching_seeds,
                 std::vector<BranchingSeedAffiliation>& branching_seed_affiliation);
 
   /**
    * Follows one seed point for the 2 Tensor case
   */
-  void Follow2T(const int thread_id, const size_t seed_index, const SeedPointInfo& seed, Fiber& fiber,
+  void Follow2T(const int thread_id, const size_t seed_index, const SeedPointInfo& seed, UKFFiber& fiber,
                 bool is_branching, std::vector<SeedPointInfo>& branching_seeds,
                 std::vector<BranchingSeedAffiliation>& branching_seed_affiliation);
 
   /**
    * Follows one seed point for the 1 Tensor case
   */
-  void Follow1T(const int thread_id, const SeedPointInfo& seed, Fiber& fiber);
+  void Follow1T(const int thread_id, const SeedPointInfo& seed, UKFFiber& fiber);
 
 private:
   /**
@@ -137,7 +137,7 @@ private:
    * Saves one point along the fiber so that everything can be written to a
    * file at the end.
   */
-  void Record(const vec_t& x, double fa, double fa2, const State& state, const vnl_matrix<double> p, Fiber& fiber,
+  void Record(const vec_t& x, double fa, double fa2, const State& state, const vnl_matrix<double> p, UKFFiber& fiber,
               double dNormMSE, double trace, double trace2);
 
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */

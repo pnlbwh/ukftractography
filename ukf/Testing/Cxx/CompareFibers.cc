@@ -1,5 +1,5 @@
 #include "vtkReader.h"
-#include "CompareFiber.h"
+#include "fiber.h"
 #include <iostream>
 
 #ifndef EXIT_FAILURE
@@ -10,7 +10,8 @@
 #define EXIT_SUCCESS 0
 #endif
 
-// DELETEME static int RegressionTestImage (const char *, const char *, int, bool);
+
+typedef Fiber Fiber;
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
   std::vector<Fiber> test_fibers;
   std::vector<Fiber> compare_fibers;
 
-  vtkReader * const reader = new vtkReader();
+  vtkReader<Fiber> * const reader = new vtkReader<Fiber>();
 
   std::cout << "** Reading test VTK file... " << argv[1] << "\n";
   reader->SetInputPath(argv[1]);

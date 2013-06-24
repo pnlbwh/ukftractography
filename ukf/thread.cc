@@ -64,7 +64,7 @@ ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg)
     (thread_struct *)( ( (itk::MultiThreader::ThreadInfoStruct *)( arg ) )->UserData );
   WorkDistribution                                     work_distribution = *str->work_distribution;
   WorkList &                                           work_list_ = work_distribution[id_];
-  std::vector<Fiber>&                                  output_fiber_group_ = *str->output_fiber_group_;
+  std::vector<UKFFiber>&                                  output_fiber_group_ = *str->output_fiber_group_;
   std::vector<SeedPointInfo>&                          seed_infos_ = *str->seed_infos_;
   std::vector<std::vector<SeedPointInfo> >&            branching_seed_info_vec = *str->branching_seed_info_vec;
   std::vector<std::vector<BranchingSeedAffiliation> >& branching_seed_affiliation_vec =

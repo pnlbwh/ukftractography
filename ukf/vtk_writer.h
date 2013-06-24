@@ -1,6 +1,6 @@
 /**
  * \file vtk_writer.h
- * \brief Fiber writing functionality
+ * \brief UKFFiber writing functionality
  *
  * Contains Class definition of the VtkWriter, used for storing the fiber vector to a .vtk file
  * \todo Could be done more elegantly with VTK
@@ -13,8 +13,8 @@
 #include <vector>
 #include "linalg.h"
 #include "tractography.h"
+#include "ukffiber.h"
 
-struct Fiber;
 
 class ISignalData;
 
@@ -42,11 +42,11 @@ public:
    *                                   This one is optional.
    * \param[in] store_glyphs Write glyphs (i.e. main tensor directions) to a file named glyphs_{tracts}.
   */
-  bool Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<Fiber>& fibers,
+  bool Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
              bool write_state, bool store_glyphs);
 
   /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}. */
-  bool WriteGlyphs(const std::string& file_name, const std::vector<Fiber>& fibers);
+  bool WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
 
   /** Sets the variable that toggles the transform from ijk to RAS before writing the fiber to VTK. */
   void set_transform_position(bool transform_position)
@@ -64,7 +64,7 @@ protected:
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */
-  void writeFibersAndTensors(std::ofstream & output, const std::vector<Fiber>& fibers, const int tensorNumber);
+  void writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber);
 
   /**
    * \brief Reconstructs the tensor from the state for each case

@@ -4,14 +4,14 @@
  * \author Yinpeng Li (mousquetaires@unc.edu)
 */
 
-#include "fiber.h"
+#include "ukffiber.h"
 #include <iostream>
 
-void PostProcessFibers( const std::vector<Fiber>& raw_primary,
-                        const std::vector<Fiber>& raw_branch,
+void PostProcessFibers( const std::vector<UKFFiber>& raw_primary,
+                        const std::vector<UKFFiber>& raw_branch,
                         const std::vector<BranchingSeedAffiliation>& branching_seed_affiliation,
                         const bool branches_only,
-                        std::vector<Fiber>& fibers)
+                        std::vector<UKFFiber>& fibers)
 {
   assert(fibers.empty() );
   const int num_half_fibers = static_cast<int>(raw_primary.size() );
@@ -96,8 +96,8 @@ void PostProcessFibers( const std::vector<Fiber>& raw_primary,
       continue;
       }
 
-    const Fiber& first_half = raw_primary[2 * i];
-    const Fiber& second_half = raw_primary[2 * i + 1];
+    const UKFFiber& first_half = raw_primary[2 * i];
+    const UKFFiber& second_half = raw_primary[2 * i + 1];
 
     fibers[counter].position.resize(num_points_on_primary_fiber[i]);
     if( record_fa )
@@ -239,9 +239,9 @@ void PostProcessFibers( const std::vector<Fiber>& raw_primary,
       first_half_index = static_cast<int>(fiber_index) - 1;
       }
 
-    const Fiber& first_half = raw_primary[first_half_index];
-    const Fiber& second_half = raw_primary[second_half_index];
-    const Fiber& branch = raw_branch[i];  // This is the un-back-traced branch
+    const UKFFiber& first_half = raw_primary[first_half_index];
+    const UKFFiber& second_half = raw_primary[second_half_index];
+    const UKFFiber& branch = raw_branch[i];  // This is the un-back-traced branch
 
     fibers[counter].position.resize(num_points_on_branch[i]);
     if( record_fa )

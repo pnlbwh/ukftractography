@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME vtkFilter)
@@ -25,8 +27,7 @@ if (UKFTractography_SuperBuild)
 endif()
 
 set(MODULE_SRCS
-    vtkFilter.cxx 
-    vtkReader.cc
+    vtkFilter.cxx
     vtkWriter.cc
     FiberFilter.cc
     Region.cc
@@ -36,6 +37,7 @@ set(MODULE_SRCS
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
+    UKFCommonLib
   )
 
 if(UKFTractography_SuperBuild)

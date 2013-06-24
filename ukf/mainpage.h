@@ -144,7 +144,7 @@
  *   this value (default: 0.1)</td>
  * </tr>
  * </table></p>
- * <p><b>Fiber Scalar Fields</b></p>
+ * <p><b>UKFFiber Scalar Fields</b></p>
  * <p><table border=0>
  * <tr>
  *   <td width=33%>--recordFA</td>

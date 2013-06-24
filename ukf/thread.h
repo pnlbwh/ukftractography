@@ -36,7 +36,7 @@ struct thread_struct
   std::vector<SeedPointInfo>* seed_infos_;
   bool branching_;
   int num_tensors_;
-  std::vector<Fiber>* output_fiber_group_;
+  std::vector<UKFFiber>* output_fiber_group_;
   std::vector<std::vector<SeedPointInfo> >* branching_seed_info_vec;
   std::vector<std::vector<BranchingSeedAffiliation> >* branching_seed_affiliation_vec;
   };

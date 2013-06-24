@@ -10,7 +10,7 @@
 #include <sstream>
 #include "ISignalData.h"
 #include "utilities.h"
-#include "fiber.h"
+#include "ukffiber.h"
 
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_vector.h>
@@ -107,7 +107,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 
 }
 
-void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<Fiber>& fibers, const int tensorNumber)
+void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber)
 {
   // Write file version and identifier
   output << "#vtk DataFile Version 3.0" << std::endl;
@@ -195,7 +195,7 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
 }
 
 bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWithSecondTensor,
-                      const std::vector<Fiber>& fibers,
+                      const std::vector<UKFFiber>& fibers,
                       bool write_state, bool store_glyphs)
 {
   if( fibers.size() == 0 )
@@ -565,7 +565,7 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
 }
 
 bool VtkWriter::WriteGlyphs(const std::string& file_name,
-                            const std::vector<Fiber>& fibers)
+                            const std::vector<UKFFiber>& fibers)
 {
   if( fibers.size() == 0 )
     {

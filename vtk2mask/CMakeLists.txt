@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME vtk2mask)
@@ -27,13 +29,13 @@ if (UKFTractography_SuperBuild)
 endif()
 
 set(MODULE_SRCS
-    vtk2mask.cxx 
-    vtkReader.cc 
+    vtk2mask.cxx
     Converter.cc
-    ) 
+    )
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
+    UKFCommonLib
   )
 
 #GENERATECLP(vtk2mask_SOURCE vtk2mask.xml)

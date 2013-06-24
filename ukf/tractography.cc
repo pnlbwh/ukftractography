@@ -443,7 +443,7 @@ void Tractography::Run()
     _ukf.push_back(new UnscentedKalmanFilter(_model) );   // Create one Kalman filter for each thread
     }
 
-  std::vector<Fiber> raw_primary;
+  std::vector<UKFFiber> raw_primary;
 
     {
     std::cout << "Tracing " << primary_seed_infos.size() << " primary fibers:" << std::endl;
@@ -495,7 +495,7 @@ void Tractography::Run()
       }
     }
 
-  std::vector<Fiber> raw_branch;
+  std::vector<UKFFiber> raw_branch;
   if( _is_branching )
     {
     assert(_num_tensors == 2 || _num_tensors == 3);
@@ -527,7 +527,7 @@ void Tractography::Run()
     // std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
     }
 
-  std::vector<Fiber> fibers;
+  std::vector<UKFFiber> fibers;
   PostProcessFibers(raw_primary, raw_branch, branch_seed_affiliation, _branches_only, fibers);
   std::cout << "fiber size after postprocessibers: " << fibers.size() << std::endl;
 
@@ -675,7 +675,7 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
 void Tractography::Follow3T(const int thread_id,
                             const size_t seed_index,
                             const SeedPointInfo& seed,
-                            Fiber& fiber,
+                            UKFFiber& fiber,
                             bool is_branching,
                             std::vector<SeedPointInfo>& branching_seeds,
                             std::vector<BranchingSeedAffiliation>& branching_seed_affiliation)
@@ -855,7 +855,7 @@ void Tractography::Follow3T(const int thread_id,
 void Tractography::Follow2T(const int thread_id,
                             const size_t seed_index,
                             const SeedPointInfo& seed,
-                            Fiber& fiber,
+                            UKFFiber& fiber,
                             bool is_branching,
                             std::vector<SeedPointInfo>& branching_seeds,
                             std::vector<BranchingSeedAffiliation>& branching_seed_affiliation)
@@ -970,7 +970,7 @@ void Tractography::Follow2T(const int thread_id,
 // function here.
 void Tractography::Follow1T(const int thread_id,
                             const SeedPointInfo& seed,
-                            Fiber& fiber)
+                            UKFFiber& fiber)
 {
 
   assert(_model->signal_dim() == _signal_data->GetSignalDimension() * 2);
@@ -1388,7 +1388,7 @@ void Tractography::SwapState2T( State& state,
 
 void Tractography::Record(const vec_t& x, double fa, double fa2, const State& state,
                           const vnl_matrix<double> p,
-                          Fiber& fiber, double dNormMSE, double trace, double trace2)
+                          UKFFiber& fiber, double dNormMSE, double trace, double trace2)
 {
 
   assert(_model->state_dim() == static_cast<int>(state.size() ) );

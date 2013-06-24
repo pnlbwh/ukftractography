@@ -29,39 +29,35 @@ endif()
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
     ${Teem_INCLUDE_DIRS}
-  )
-include_directories(${Teem_INCLUDE_DIRS})
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common
+    ${CMAKE_CURRENT_SOURCE_DIR}
+ )
+
+include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
+
 set(MODULE_SRCS
-    tractography.cc 
-    unscented_kalman_filter.cc 
-    filter_model.cc   
-    seed.cc 
-    fiber.cc 
-    NrrdData.cc 
-    vtk_writer.cc 
-    dwi_normalize.cc 
-    utilities.cc 
-    thread.cc 
+    tractography.cc
+    unscented_kalman_filter.cc
+    filter_model.cc
+    seed.cc
+    ukffiber.cc
+    NrrdData.cc
+    vtk_writer.cc
+    dwi_normalize.cc
+    utilities.cc
+    thread.cc
     QuadProg++_vnl.cc
     )
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
-    teem 
+    teem
     ${CMAKE_THREAD_LIBS_INIT}
   )
-
-
-#if (NOT GenerateCLP_FOUND)
-  #find_package(GenerateCLP REQUIRED)
-#endif (NOT GenerateCLP_FOUND)
-#include(${GenerateCLP_USE_FILE})
 
 #-----------------------------------------------------------------------------
 enable_testing()
 add_subdirectory(Testing)
-
-
 
 #-----------------------------------------------------------------------------
 if(UKFTractography_SuperBuild)

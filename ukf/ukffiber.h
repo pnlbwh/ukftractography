@@ -4,8 +4,8 @@
  * \author Yinpeng Li (mousquetaires@unc.edu)
 */
 
-#ifndef FIBER_H_
-#define FIBER_H_
+#ifndef UKFFIBER_H_
+#define UKFFIBER_H_
 
 #include <vector>
 #include <cassert>
@@ -15,14 +15,14 @@
 #include <vnl/vnl_matrix.h>
 
 /**
- * \struct Fiber
+ * \struct UKFFiber
  * \brief Points of a fiber, and scalars corresponding to the points
  *
  * The points that make a fiber are defined as a vector of 3D points. In addition
  * there is a vector of scalar values for each scalar value that can be recorded
  * of the same length
 */
-struct Fiber
+struct UKFFiber
   {
 
   /** vector of 3D points defining the fiber path */
@@ -65,11 +65,11 @@ struct BranchingSeedAffiliation
  * A pair of two primary fibers are started from each seed point in two opposite directions. This functions joins them up pairly to
  * form complete primary fibers, and eliminates fibers that are too short. Besides, each branch is back traced to form a whole fiber
 */
-void PostProcessFibers( const std::vector<Fiber>& raw_primary, const std::vector<Fiber>& raw_branch,
+void PostProcessFibers( const std::vector<UKFFiber>& raw_primary, const std::vector<UKFFiber>& raw_branch,
                         const std::vector<BranchingSeedAffiliation>& branching_seed_affiliation,
-                        const bool branches_only, std::vector<Fiber>& fibers);
+                        const bool branches_only, std::vector<UKFFiber>& fibers);
 
-/** The minimum number of points on a fiber. Fiber with fewer points are rejected */
+/** The minimum number of points on a fiber. UKFFiber with fewer points are rejected */
 const int MINIMUM_NUM_POINTS_ON_FIBER = 10;
 
 /** Used to get rid of branches, that start near the end of primary fibers. See fiber.cc:70. */

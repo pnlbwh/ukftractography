@@ -36,16 +36,16 @@ namespace LU_Solver
  * \param   n Dimension of the matrix.
  * \return  0 if succesful, and -1 if A is singular
 */
-int LUdecmpDoolittle(double *A, int n)
+int LUdecmpDoolittle(double * const A, const int n)
 {
-  int     i, j, k, l;
-  double *pK, *pRow, *pCol;
+  double * pK = A;
 
-  for( k = 0, pK = A; k < n; pK += n, k++ )
+  for( int k = 0; k < n; pK += n, ++k )
     {
-    for( j = k; j < n; j++ )
+    for( int j = k; j < n; ++j )
       {
-      for( l = 0, pCol = A; l < k; pCol += n,  l++ )
+      const double * pCol = A;
+      for( int l = 0; l < k; pCol += n,  ++l )
         {
         *(pK + j) -= *(pK + l) * *(pCol + j);
         }
@@ -54,9 +54,11 @@ int LUdecmpDoolittle(double *A, int n)
       {
       return -1;                         // make sure is non-singular
       }
-    for( i = k + 1, pRow = pK + n; i < n; pRow += n, i++ )
+    double * pRow = pK + n;
+    for( int i = k + 1; i < n; pRow += n, ++i )
       {
-      for( l = 0, pCol = A; l < k; pCol += n, l++ )
+      const double * pCol = A;
+      for( int l = 0; l < k; pCol += n, ++l )
         {
         *(pRow + k) -= *(pRow + l) * *(pCol + k);
         }
@@ -76,34 +78,31 @@ int LUdecmpDoolittle(double *A, int n)
  * \param   nCols The number of columns in B, and X
  * \return  returns 0 if succesful, and -1 if singular
 */
-int LUsolveDoolittle(double *LU, double *X, int nRows, int nCols)
+int LUsolveDoolittle(const double * const LU, double * const X, const int nRows, const int nCols)
 {
-  int i, j, k;
-  int iRows, iCols;
-
-  for( i = 0; i < nRows; i++ )
+  for( int i = 0; i < nRows; ++i )
     {
-    for( j = 0; j < nCols; j++ )
+    for( int j = 0; j < nCols; ++j )
       {
-      iRows = i * nRows;
-      iCols = i * nCols;
+      const int iRows = i * nRows;
+      const int iCols = i * nCols;
       if( *(LU + iCols + j) == 0.0 )
         {
         return -1;                               // cannot have singular matrix
         }
-      for( k = 0; k < i; k++ )
+      for( int k = 0; k < i; ++k )
         {
         *(X + iCols + j) -= *(LU + iRows + k) * *(X + k * nCols + j);
         }
       }
     }
-  for( i = nRows - 1; i >= 0; i-- )
+  for( int i = nRows - 1; i >= 0; --i )
     {
-    for( j = nCols - 1; j >= 0; j-- )
+    for( int j = nCols - 1; j >= 0; --j )
       {
-      iRows = i * nRows;
-      iCols = i * nCols;
-      for( k = nRows - 1; k > i; k-- )
+      const int iRows = i * nRows;
+      const int iCols = i * nCols;
+      for( int k = nRows - 1; k > i; k-- )
         {
         *(X + iCols + j) -= *(LU + iRows + k) * *(X + k * nCols + j);
         }
@@ -122,24 +121,21 @@ int LUsolveDoolittle(double *LU, double *X, int nRows, int nCols)
  * \return  0 if succesful, and -1 if A is singular
 */
 
-int LUdecmpCrout(double * A, int n, int * indx)
+int LUdecmpCrout(double * const A, const int n, int * const indx)
 {
-  int                 i;
-  int                 imax = 0;
-  int                 j, k;
-  double              big = 0;
-  double              dum, sum, temp;
-  std::vector<double> vv(n);
-
-  for( i = 0; i < n; i++ )
+  for( int i = 0; i < n; ++i )
     {
     *(indx + i) = i;
     }
-  for( i = 0; i < n; i++ )
+
+  std::vector<double> vv(n);
+  double              big = 0.0;
+  for( int i = 0; i < n; ++i )
     {
-    for( j = 0; j < n; j++ )
+    for( int j = 0; j < n; ++j )
       {
-      if( (temp = fabs(*(A + i * n + j) ) ) > big )
+      const double temp = fabs(*(A + i * n + j) );
+      if( temp > big )
         {
         big = temp;
         }
@@ -150,27 +146,30 @@ int LUdecmpCrout(double * A, int n, int * indx)
       }
     vv[i] = 1.0 / big;
     }
-  for( j = 0; j < n; j++ )
+
+  int imax = 0;
+  for( int j = 0; j < n; ++j )
     {
-    for( i = 0; i < j; i++ )
+    for( int i = 0; i < j; ++i )
       {
-      sum = *(A + i * n + j);
-      for( k = 0; k < i; k++ )
+      double sum = *(A + i * n + j);
+      for( int k = 0; k < i; ++k )
         {
         sum -= *(A + i * n + k) * *(A + k * n + j);
         }
       *(A + i * n + j) = sum;
       }
     big = 0.0;
-    for( i = j; i < n; i++ )
+    for( int i = j; i < n; ++i )
       {
-      sum = *(A + i * n + j);
-      for( k = 0; k < j; k++ )
+      double sum = *(A + i * n + j);
+      for( int k = 0; k < j; ++k )
         {
         sum -= *(A + i * n + k) * *(A + k * n + j);
         }
       *(A + i * n + j) = sum;
-      if( (dum = vv[i] * fabs(sum) ) >= big )
+      const double dum = vv[i] * fabs(sum);
+      if( dum >= big )
         {
         big = dum;
         imax = i;
@@ -178,14 +177,14 @@ int LUdecmpCrout(double * A, int n, int * indx)
       }
     if( j != imax )
       {
-      for( k = 0; k < n; k++ )
+      for( int k = 0; k < n; ++k )
         {
-        dum = *(A + imax * n + k);
+        const double dum = *(A + imax * n + k);
         *(A + imax * n + k) = *(A + j * n + k);
         *(A + j * n + k) = dum;
         }
 
-      temp = *(indx + j);
+      const double temp = *(indx + j);
       *(indx + j) = *(indx + imax);
       *(indx + imax) = temp;
 
@@ -198,8 +197,8 @@ int LUdecmpCrout(double * A, int n, int * indx)
 
     if( j != n - 1 )
       {
-      dum = 1.0 / *(A + j * n + j);
-      for( i = j + 1; i < n; i++ )
+      const double dum = 1.0 / *(A + j * n + j);
+      for( int i = j + 1; i < n; ++i )
         {
         *(A + i * n + j) *= dum;
         }
@@ -219,35 +218,33 @@ int LUdecmpCrout(double * A, int n, int * indx)
  * \param   order The original order of the rows. It's used to undo the permutation of the LU decomposition later. (out)
  * \return  returns 0 if succesful, and -1 if singular
 */
-int LUsolveCrout(double *LU, double *B, double *X, int nRows, int nCols, int *order)
+int LUsolveCrout(const double * const LU, const double *const B, double *const X, const int nRows, const int nCols,
+                 const int *const order)
 {
-  int i, j, k;
-  int iRows, iCols;
-
-  for( i = 0; i < nRows; i++ )
+  for( int i = 0; i < nRows; ++i )
     {
-    for( j = 0; j < nCols; j++ )
+    for( int j = 0; j < nCols; ++j )
       {
-      iRows = i * nRows;
-      iCols = i * nCols;
+      const int iRows = i * nRows;
+      const int iCols = i * nCols;
       if( *(LU + iRows + i) == 0.0 )
         {
         return -1;   // i don't like singular matrices
         }
       *(X + iCols + j) = *(B + *(order + i) * nCols + j);
-      for( k = 0; k < i; k++ )
+      for( int k = 0; k < i; ++k )
         {
         *(X + iCols + j) -= *(LU + iRows + k) * *(X + k * nCols + j);
         }
       }
     }
-  for( i = nRows - 1; i >= 0; i-- )
+  for( int i = nRows - 1; i >= 0; i-- )
     {
-    for( j = nCols - 1; j >= 0; j-- )
+    for( int j = nCols - 1; j >= 0; j-- )
       {
-      iRows = i * nRows;
-      iCols = i * nCols;
-      for( k = nRows - 1; k > i; k-- )
+      const int iRows = i * nRows;
+      const int iCols = i * nCols;
+      for( int k = nRows - 1; k > i; k-- )
         {
         *(X + iCols + j) -= *(LU + iRows + k) * *(X + k * nCols + j);
         }

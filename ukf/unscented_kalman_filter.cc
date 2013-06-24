@@ -144,13 +144,15 @@ void UnscentedKalmanFilter::Constrain(vnl_vector<double>& x, const vnl_matrix<do
 }
 
 // matrix version
-void UnscentedKalmanFilter::Constrain(vnl_matrix<double>& X, const vnl_matrix<double>& W)
+void UnscentedKalmanFilter::Constrain(vnl_matrix<double>& localX, const vnl_matrix<double>& localW)
 {
-  for( unsigned int i = 0; i < X.cols(); ++i )
+  const unsigned int numCols = localX.cols();
+
+  for( unsigned int i = 0; i < numCols; ++i )
     {
-    vnl_vector<double> x = X.get_column(i);
-    Constrain(x, W);
-    X.set_column(i, &x[0]);
+    vnl_vector<double> x = localX.get_column(i);
+    Constrain(x, localW);
+    localX.set_column(i, &x[0]);
     }
 }
 
@@ -175,30 +177,33 @@ void UnscentedKalmanFilter::Filter(const State& x,
                                    vnl_matrix<double>& p_new,
                                    double& dNormMSE )
 {
+  // Force a const version of the _filter_model to be used to ensure that it is not modified.
+  FilterModel const * const local_const_filter_model = _filter_model;
 
-  assert(static_cast<int>(x.size() ) == _filter_model->state_dim() );
-  assert(static_cast<int>(z.size() ) == _filter_model->signal_dim() );
-  assert(static_cast<int>(x_new.size() ) == _filter_model->state_dim() );
-  assert(static_cast<int>(p.rows() ) == _filter_model->state_dim() &&
-         static_cast<int>(p.cols() ) == _filter_model->state_dim() );
-  assert(static_cast<int>(p_new.rows() ) == _filter_model->state_dim() &&
-         static_cast<int>(p_new.cols() ) == _filter_model->state_dim() );
-  assert(_filter_model);
-  assert(static_cast<int>(_w.size() ) == 2 * _filter_model->state_dim() + 1);
+  assert(static_cast<int>(x.size() ) == local_const_filter_model->state_dim() );
+  assert(static_cast<int>(z.size() ) == local_const_filter_model->signal_dim() );
+  assert(static_cast<int>(x_new.size() ) == local_const_filter_model->state_dim() );
+  assert(static_cast<int>(p.rows() ) == local_const_filter_model->state_dim() &&
+         static_cast<int>(p.cols() ) == local_const_filter_model->state_dim() );
+  assert(static_cast<int>(p_new.rows() ) == local_const_filter_model->state_dim() &&
+         static_cast<int>(p_new.cols() ) == local_const_filter_model->state_dim() );
+  assert(local_const_filter_model);
+  assert(static_cast<int>(_w.size() ) == 2 * local_const_filter_model->state_dim() + 1);
 
-  const vnl_matrix<double> Q = _filter_model->Q();
-  const vnl_matrix<double> R = _filter_model->R();
+  // Use const reference to avoid copying
+  const vnl_matrix<double> & Q = local_const_filter_model->Q();
+  const vnl_matrix<double> & R = local_const_filter_model->R();
 
   // Create sigma points.
   SigmaPoints(x, p, X); // doesnt change p, its const
 
-  if( _filter_model->isConstrained() )
+  if( local_const_filter_model->isConstrained() )
     {
     // vnl_matrix<double> p_tmp = p; // will be changed in QuadProg
     Constrain(X, p);
     }
 
-  _filter_model->F(X); // slightly negative fw is fixed here
+  local_const_filter_model->F(X); // slightly negative fw is fixed here
 
   vnl_vector_ref<double> _w_vnl(_w.size(), &_w.front() );
   vnl_vector_ref<double> x_new_vnl(x_new.size(), &x_new.front() );
@@ -216,7 +221,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   p_new = X_ * _w_ * X_.transpose() + Q;
 
-  _filter_model->H(X, Y);
+  local_const_filter_model->H(X, Y);
 
   Y_hat = Y * _w_vnl;
   for( size_t i = 0; i < signaldim_dimext.cols(); ++i )
@@ -251,7 +256,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   //    Instead the copy in function of the vnl_vector base class is used.
   x_new_vnl.copy_in( &( (K.transpose() * Y_hat + X_hat)[0]) );
 
-  if( _filter_model->isConstrained() )
+  if( local_const_filter_model->isConstrained() )
     {
     Constrain(x_new_vnl, p_new);
     }

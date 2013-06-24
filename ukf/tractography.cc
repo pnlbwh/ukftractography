@@ -45,7 +45,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
 
                            const int num_threads
                            ) :
-  _ukf(NULL), _model(model), _filter_model_type(filter_model_type),
+  _ukf(0, NULL), _model(model), _filter_model_type(filter_model_type),
 
   _output_file(output_file), _output_file_with_second_tensor(output_file_with_second_tensor),
   _record_fa(record_fa), _record_nmse(record_nmse), _record_trace(record_trace), _record_state(record_state),
@@ -409,10 +409,10 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     // make sure covariances are really empty
     info.covariance.fill(0);
     info_inv.covariance.fill(0);
-    for( int i = 0; i < state_dim; ++i )
+    for( int local_i = 0; local_i < state_dim; ++local_i )
       {
-      info.covariance(i, i) = _p0;
-      info_inv.covariance(i, i) = _p0;
+      info.covariance(local_i, local_i) = _p0;
+      info_inv.covariance(local_i, local_i) = _p0;
       }
 
     seed_infos.push_back(info);
@@ -808,43 +808,43 @@ void Tractography::Follow3T(const int thread_id,
         if( add_m2 )
           {
           branching_seeds.push_back(SeedPointInfo() );
-          SeedPointInfo& seed = branching_seeds[branching_seeds.size() - 1];
+          SeedPointInfo& local_seed = branching_seeds[branching_seeds.size() - 1];
           branching_seed_affiliation.push_back(BranchingSeedAffiliation() );
           BranchingSeedAffiliation& affiliation = branching_seed_affiliation[branching_seed_affiliation.size() - 1];
 
           affiliation.fiber_index_ = seed_index;
           affiliation.position_on_fiber_ = stepnr;
 
-          seed.state.resize(state_dim);
-          seed.state = state;
+          local_seed.state.resize(state_dim);
+          local_seed.state = state;
 
-          seed.covariance.set_size(state_dim, state_dim);
-          seed.covariance = p;
+          local_seed.covariance.set_size(state_dim, state_dim);
+          local_seed.covariance = p;
 
-          SwapState3T(seed.state, seed.covariance, 2);
-          seed.point = x;
-          seed.start_dir = m2;
-          seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
+          SwapState3T(local_seed.state, local_seed.covariance, 2);
+          local_seed.point = x;
+          local_seed.start_dir = m2;
+          local_seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
           }
         // Same for the third tensor.
         if( add_m3 )
           {
           branching_seeds.push_back(SeedPointInfo() );
-          SeedPointInfo& seed = branching_seeds[branching_seeds.size() - 1];
+          SeedPointInfo& local_seed = branching_seeds[branching_seeds.size() - 1];
           branching_seed_affiliation.push_back(BranchingSeedAffiliation() );
           BranchingSeedAffiliation& affiliation = branching_seed_affiliation[branching_seed_affiliation.size() - 1];
 
           affiliation.fiber_index_ = seed_index;
           affiliation.position_on_fiber_ = stepnr;
 
-          seed.state.resize(state_dim);
-          seed.state = state;
-          seed.covariance.set_size(state_dim, state_dim);
-          seed.covariance = p;
-          SwapState3T(seed.state, seed.covariance, 3);
-          seed.point = x;
-          seed.start_dir = m3;
-          seed.fa = l2fa(l3._[0], l3._[1], l3._[2]);
+          local_seed.state.resize(state_dim);
+          local_seed.state = state;
+          local_seed.covariance.set_size(state_dim, state_dim);
+          local_seed.covariance = p;
+          SwapState3T(local_seed.state, local_seed.covariance, 3);
+          local_seed.point = x;
+          local_seed.start_dir = m3;
+          local_seed.fa = l2fa(l3._[0], l3._[1], l3._[2]);
           }
         }
       }
@@ -941,7 +941,7 @@ void Tractography::Follow2T(const int thread_id,
       if( is_two && is_branch )
         {
         branching_seeds.push_back(SeedPointInfo() );
-        SeedPointInfo& seed = branching_seeds[branching_seeds.size() - 1];
+        SeedPointInfo& local_seed = branching_seeds[branching_seeds.size() - 1];
         branching_seed_affiliation.push_back(BranchingSeedAffiliation() );
         BranchingSeedAffiliation& affiliation = branching_seed_affiliation[branching_seed_affiliation.size() - 1];
 
@@ -949,18 +949,16 @@ void Tractography::Follow2T(const int thread_id,
         affiliation.position_on_fiber_ = stepnr;
 
         int state_dim = _model->state_dim();
-        seed.state.resize(state_dim);
-        seed.state = state;
-        seed.covariance.set_size(state_dim, state_dim);
-        seed.covariance = p;
-        SwapState2T(seed.state, seed.covariance);
-        seed.point = x;
-        seed.start_dir = m2;
-        seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
-
+        local_seed.state.resize(state_dim);
+        local_seed.state = state;
+        local_seed.covariance.set_size(state_dim, state_dim);
+        local_seed.covariance = p;
+        SwapState2T(local_seed.state, local_seed.covariance);
+        local_seed.point = x;
+        local_seed.start_dir = m2;
+        local_seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
         }
       }
-
     }
 
 //   stateFile.close();

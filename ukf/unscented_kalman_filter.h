@@ -73,7 +73,7 @@ private:
   FilterModel *_filter_model;
 
   /** state vector dimension */
-  int _state_dim;
+  // HACK REMOVE int _state_dim;
 
   /** for the distribution of the sigma ponts (:= sqrt(dim + _k) ) */
   double _scale;

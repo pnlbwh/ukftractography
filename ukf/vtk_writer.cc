@@ -171,17 +171,17 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
 
   if( _write_tensors )
     {
-    for( int tensorNumber = 1; tensorNumber <= _num_tensors; ++tensorNumber )
+    for( int local_tensorNumber = 1; local_tensorNumber <= _num_tensors; ++local_tensorNumber )
       {
-      output << "TENSORS Tensor" << tensorNumber << " float" << std::endl;
+      output << "TENSORS Tensor" << local_tensorNumber << " float" << std::endl;
       for( int i = 0; i < num_fibers; i++ )
         {
         const int fiber_size = static_cast<int>(fibers[i].position.size() );
         for( int j = 0; j < fiber_size; j++ )
           {
-          State state = fibers[i].state[j];
-          mat_t D;
-          State2Tensor(state, D, tensorNumber);
+          const State & state = fibers[i].state[j];
+          mat_t         D;
+          State2Tensor(state, D, local_tensorNumber);
           output << D._[0] * _eigenScaleFactor << " " << D._[1] * _eigenScaleFactor << " " << D._[2]
           * _eigenScaleFactor << std::endl;
           output << D._[3] * _eigenScaleFactor << " " << D._[4] * _eigenScaleFactor << " " << D._[5]
@@ -763,15 +763,14 @@ void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
   ++counter;
 }
 
-void VtkWriter::State2Tensor(State & state, mat_t & D, int tensorNumber)
+void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNumber) const
 {
 
   vec_t eigenVec1, eigenVec2, eigenVec3;
 
   if( _full )
     {
-
-    mat_t R =
+    const mat_t & R =
       rotation(state[6 * (tensorNumber - 1) + _p_phi], state[6 * (tensorNumber - 1) + _p_theta],
                state[6 * (tensorNumber - 1) + _p_phi]);
 
@@ -801,16 +800,16 @@ void VtkWriter::State2Tensor(State & state, mat_t & D, int tensorNumber)
   eigenVec3 = _sizeFreeI2R * eigenVec3;
 
   // Renormalize eigenvectors
-  double vecnorm = norm(eigenVec1);
-  eigenVec1 = make_vec(eigenVec1._[0] / vecnorm, eigenVec1._[1] / vecnorm, eigenVec1._[2] / vecnorm);
-  vecnorm = norm(eigenVec2);
-  eigenVec2 = make_vec(eigenVec2._[0] / vecnorm, eigenVec2._[1] / vecnorm, eigenVec2._[2] / vecnorm);
-  vecnorm = norm(eigenVec3);
-  eigenVec3 = make_vec(eigenVec3._[0] / vecnorm, eigenVec3._[1] / vecnorm, eigenVec3._[2] / vecnorm);
+  const double vecnorm1 = norm(eigenVec1);
+  eigenVec1 = make_vec(eigenVec1._[0] / vecnorm1, eigenVec1._[1] / vecnorm1, eigenVec1._[2] / vecnorm1);
+  const double vecnorm2 = norm(eigenVec2);
+  eigenVec2 = make_vec(eigenVec2._[0] / vecnorm2, eigenVec2._[1] / vecnorm2, eigenVec2._[2] / vecnorm2);
+  const double vecnorm3 = norm(eigenVec3);
+  eigenVec3 = make_vec(eigenVec3._[0] / vecnorm3, eigenVec3._[1] / vecnorm3, eigenVec3._[2] / vecnorm3);
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-  mat_t Q = make_mat(
+  const mat_t & Q = make_mat(
       eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
       eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
       eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]

@@ -6,7 +6,7 @@
 #include "filter_model.h"
 #include <iostream>
 
-double FilterModel::CheckZero(const double & d)
+double FilterModel::CheckZero(const double & d) const
 {
   if( d < 0 )
     {
@@ -24,7 +24,7 @@ double FilterModel::CheckZero(const double & d)
 }
 
 // Functions for 1-tensor full model.
-void Full1T::F(vnl_matrix<double>& X)
+void Full1T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -39,7 +39,7 @@ void Full1T::F(vnl_matrix<double>& X)
 }
 
 void Full1T::H(const  vnl_matrix<double>& X,
-               vnl_matrix<double>& Y)
+               vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -55,12 +55,12 @@ void Full1T::H(const  vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    double l1 = std::max(X(3, i), _lambda_min);
-    double l2 = std::max(X(4, i), _lambda_min);
-    double l3 = std::max(X(5, i), _lambda_min);
+    const double l1 = std::max(X(3, i), _lambda_min);
+    const double l2 = std::max(X(4, i), _lambda_min);
+    const double l3 = std::max(X(5, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    mat_t D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat_t & D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -82,7 +82,7 @@ void Full1T::State2Tensor(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor full model.
-void Full2T::F(vnl_matrix<double>& X)
+void Full2T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -100,7 +100,7 @@ void Full2T::F(vnl_matrix<double>& X)
 }
 
 void Full2T::H(const  vnl_matrix<double>& X,
-               vnl_matrix<double>& Y)
+               vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -171,7 +171,7 @@ void Full2T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor full model.
-void Full3T::F(vnl_matrix<double>& X)
+void Full3T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -192,7 +192,7 @@ void Full3T::F(vnl_matrix<double>& X)
 }
 
 void Full3T::H(const  vnl_matrix<double>& X,
-               vnl_matrix<double>& Y)
+               vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -282,7 +282,7 @@ void Full3T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 1-tensor simple model.
-void Simple1T::F(vnl_matrix<double>& X)
+void Simple1T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -307,7 +307,7 @@ void Simple1T::F(vnl_matrix<double>& X)
 }
 
 void Simple1T::H(const  vnl_matrix<double>& X,
-                 vnl_matrix<double>& Y)
+                 vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -363,7 +363,7 @@ void Simple1T::State2Tensor(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor simple model.
-void Simple2T::F(vnl_matrix<double>& X)
+void Simple2T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -402,7 +402,7 @@ void Simple2T::F(vnl_matrix<double>& X)
 }
 
 void Simple2T::H(const  vnl_matrix<double>& X,
-                 vnl_matrix<double>& Y)
+                 vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -483,7 +483,7 @@ void Simple2T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor simple model.
-void Simple3T::F(vnl_matrix<double>& X)
+void Simple3T::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -535,7 +535,7 @@ void Simple3T::F(vnl_matrix<double>& X)
 }
 
 void Simple3T::H(const  vnl_matrix<double>& X,
-                 vnl_matrix<double>& Y)
+                 vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -640,7 +640,7 @@ void Simple3T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
 ///////  1T SIMPLE MODEL ////
 
 // Functions for 1-tensor simple model.
-void Simple1T_FW::F(vnl_matrix<double>& X)
+void Simple1T_FW::F(vnl_matrix<double>& X) const
 {
 
   assert(_signal_dim > 0);
@@ -677,7 +677,7 @@ void Simple1T_FW::F(vnl_matrix<double>& X)
 }
 
 void Simple1T_FW::H(const vnl_matrix<double>& X,
-                    vnl_matrix<double>& Y)
+                    vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -766,7 +766,7 @@ void Simple1T_FW::State2Tensor(const State& x, vec_t& m, vec_t& l)
 
 ///////  1T FULL MODEL ///
 // Functions for 1-tensor full model.
-void Full1T_FW::F(vnl_matrix<double>& X)
+void Full1T_FW::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -788,7 +788,7 @@ void Full1T_FW::F(vnl_matrix<double>& X)
 }
 
 void Full1T_FW::H(const vnl_matrix<double>& X,
-                  vnl_matrix<double>& Y)
+                  vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -847,7 +847,7 @@ void Full1T_FW::State2Tensor(const State& x, vec_t& m, vec_t& l)
 
 ////////// 2T SIMPLE MODEL ///
 // Functions for 2-tensor simple model.
-void Simple2T_FW::F(vnl_matrix<double>& X)
+void Simple2T_FW::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -892,7 +892,7 @@ void Simple2T_FW::F(vnl_matrix<double>& X)
 }
 
 void Simple2T_FW::H(const   vnl_matrix<double>& X,
-                    vnl_matrix<double>& Y)
+                    vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -995,7 +995,7 @@ void Simple2T_FW::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 ////////// 2T FULL MODEL ///
-void Full2T_FW::F(vnl_matrix<double>& X)
+void Full2T_FW::F(vnl_matrix<double>& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -1020,7 +1020,7 @@ void Full2T_FW::F(vnl_matrix<double>& X)
 }
 
 void Full2T_FW::H(const   vnl_matrix<double>& X,
-                  vnl_matrix<double>& Y)
+                  vnl_matrix<double>& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&

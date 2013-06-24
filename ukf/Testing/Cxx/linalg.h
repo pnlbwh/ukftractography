@@ -1,6 +1,6 @@
 /**
  * \file linalg.h
- * 
+ *
  * \brief Contains commonly used definitions and functions for linear algebra in 3 dimensions
 */
 
@@ -13,18 +13,20 @@
 
 #include <cmath>
 
-/** 
+/**
  * \struct vec_t
  * \brief Defines simple 3D vector and matrices. 3
 */
-typedef struct {
+typedef struct
+  {
   double _[3];
-} vec_t;
+  } vec_t;
 
 /** Make a 3D vector */
 inline vec_t make_vec(double x, double y, double z)
 {
   vec_t m = { {x, y, z} };
+
   return m;
 }
 
@@ -33,6 +35,7 @@ inline vec_t make_vec(double th, double phi)
 {
   double cosphi = cos(phi);
   double x = cosphi * cos(th), y = cosphi * sin(th), z = sin(phi);
+
   return make_vec(x, y, z);
 }
 
@@ -40,6 +43,7 @@ inline vec_t make_vec(double th, double phi)
 inline vec_t make_vec_s(double *sph)
 {
   double th = sph[0], phi = sph[1];
+
   return make_vec(th, phi);
 }
 
@@ -53,16 +57,18 @@ inline vec_t make_vec_c(double *m)
 inline void vec2sph(vec_t m, double *sph)
 {
   double x = m._[0], y = m._[1], z = m._[2];
+
   sph[0] = atan2(y, x);
-  sph[1] = atan2(z, hypot(x, y));
+  sph[1] = atan2(z, hypot(x, y) );
 }
 
 /** Make a double array of three from a 3D vector */
 inline void vec2mem(vec_t v, double *m)
 {
-  for (int i = 0; i < 3; i++) {
+  for( int i = 0; i < 3; i++ )
+    {
     m[i] = v._[i];
-  }
+    }
 }
 
 // Operators
@@ -92,7 +98,7 @@ inline vec_t operator+(double a, vec_t b)
 }
 
 /** Agumented assignment of scalar to vector */
-inline void operator+=(vec_t &a, double b)
+inline void operator+=(vec_t & a, double b)
 {
   a._[0] += b;
   a._[1] += b;
@@ -118,7 +124,7 @@ inline vec_t operator-(double a, vec_t b)
 }
 
 /** Substraction compound assignment */
-inline void operator-=(vec_t &a, double b)
+inline void operator-=(vec_t & a, double b)
 {
   a._[0] -= b;
   a._[1] -= b;
@@ -138,7 +144,7 @@ inline vec_t operator*(double a, vec_t b)
 }
 
 /** Compound assignment scaling */
-inline void operator*=(vec_t &a, double b)
+inline void operator*=(vec_t & a, double b)
 {
   a._[0] *= b;
   a._[1] *= b;
@@ -158,14 +164,14 @@ inline vec_t operator/(double a, vec_t b)
 }
 
 /** Compound assignment scaling by division */
-inline void operator/=(vec_t &a, double b)
+inline void operator/=(vec_t & a, double b)
 {
   a._[0] /= b;
   a._[1] /= b;
   a._[2] /= b;
 }
 
-/** Calculate the euler-norm of a vector */ 
+/** Calculate the euler-norm of a vector */
 inline double norm(vec_t a)
 {
   return sqrt(a._[0] * a._[0] + a._[1] * a._[1] + a._[2] * a._[2]);
@@ -183,13 +189,14 @@ inline double dot(vec_t a, vec_t b)
   return a._[0] * b._[0] + a._[1] * b._[1] + a._[2] * b._[2];
 }
 
-/** 
+/**
  * \struct mat_t
- * \brief Defines a 3-by-3 Matrix 
+ * \brief Defines a 3-by-3 Matrix
 */
-typedef struct {
+typedef struct
+  {
   double _[9];
-} mat_t;
+  } mat_t;
 
 /** Make a matrix */
 inline mat_t make_mat(double a, double b, double c,
@@ -197,6 +204,7 @@ inline mat_t make_mat(double a, double b, double c,
                       double g, double h, double i)
 {
   mat_t m = { {a, b, c, d, e, f, g, h, i} };
+
   return m;
 }
 
@@ -204,6 +212,7 @@ inline mat_t make_mat(double a, double b, double c,
 inline mat_t diag(double a, double b, double c)
 {
   mat_t m = { {a, 0, 0, 0, b, 0, 0, 0, c} };
+
   return m;
 }
 
@@ -256,9 +265,9 @@ inline mat_t operator*(mat_t a, mat_t b)
 /** Calculate the determinant of a 3-by-3 matrix */
 inline double det(mat_t M)
 {
-  return M._[0] * (M._[4] * M._[8] - M._[5] * M._[7]) -
-         M._[1] * (M._[3] * M._[8] - M._[5] * M._[6]) +
-         M._[2] * (M._[3] * M._[7] - M._[4] * M._[6]);
+  return M._[0] * (M._[4] * M._[8] - M._[5] * M._[7])
+         - M._[1] * (M._[3] * M._[8] - M._[5] * M._[6])
+         + M._[2] * (M._[3] * M._[7] - M._[4] * M._[6]);
 }
 
 /** Conjugate transpose of a 3-by-3 matrix */
@@ -272,16 +281,17 @@ inline mat_t ct(mat_t M)
 /** Inversion of a 3-by-3 matrix */
 inline mat_t inv(mat_t M)
 {
-  return (1 / det(M)) * ct(M);
+  return (1 / det(M) ) * ct(M);
 }
 
 /** Make a diffusion tensor matrix from one principal direction, and major and minor EV */
 inline mat_t diffusion(vec_t m, double l1, double l2)
 {
   double x = m._[0], y = m._[1], z = m._[2];
-  mat_t R = make_mat(x, y, z,
-                     y, y * y / (1 + x) - 1, y * z / (1 + x),
-                     z, y * z / (1 + x), z * z / (1 + x) - 1);
+  mat_t  R = make_mat(x, y, z,
+                      y, y * y / (1 + x) - 1, y * z / (1 + x),
+                      z, y * z / (1 + x), z * z / (1 + x) - 1);
+
   return R * diag(l1, l2, l2) * t(R) * 1e-6;
 }
 
@@ -308,6 +318,7 @@ inline mat_t rotation(double theta, double phi, double psi)
   mat_t Q = make_mat(q11, q12, q13,
                      q21, q22, q23,
                      q31, q32, q33);
+
   return Q;
 }
 
@@ -333,6 +344,7 @@ inline mat_t diffusion_euler(double theta, double phi, double psi,
                              double l1, double l2, double l3)
 {
   mat_t Q = rotation(theta, phi, psi);
+
   return Q * diag(l1, l2, l3) * t(Q) * 1e-6;
 }
 

@@ -28,19 +28,19 @@ public:
 
   /** Constructor */
   NrrdData(double sigma_signal, double sigma_mask);
-  
+
   /** Destructor */
   ~NrrdData();
 
   /** Interpolates the DWI signal at a certain position */
   virtual void Interp3Signal(const vec_t& pos, std::vector<double>& signal) const;
-  
+
   /** Interpolates the brain mask at a certain position */
   virtual double Interp3ScalarMask(const vec_t& pos) const;
 
-  /** 
-   * \brief Get the seed points from the nrrd file 
-   * 
+  /**
+   * \brief Get the seed points from the nrrd file
+   *
    * Takes care of different seed data types by type casting
    *
    * \param[in]  labels  a vector of labels that define the seed region
@@ -49,24 +49,27 @@ public:
   virtual void GetSeeds(const std::vector<int>& labels, std::vector<vec_t>& seeds) const;
 
   /** returns the gradients of the diffusion image */
-  virtual const std::vector<vec_t>& gradients() const {
+  virtual const std::vector<vec_t> & gradients() const
+  {
     return _gradients;
   }
 
-  /** 
+  /**
    * returns the vector of b-values of the diffusion image<br>
    * Note: Except for cases recorded with multiple b-values it
    *       contains identical values
   */
-  virtual const std::vector<double>& GetBValues() const { 
+  virtual const std::vector<double> & GetBValues() const
+  {
     return _b_values;
   }
 
-  /** 
+  /**
    * returns the dimension of the signal <br>
    * Note: The actual signal vector will be twice this size
   */
-  virtual int GetSignalDimension() const {
+  virtual int GetSignalDimension() const
+  {
     return _num_gradients;
   }
 
@@ -80,21 +83,18 @@ public:
     *
     * Loads all the data necessary to perform tractography
   */
-  virtual bool LoadData(const std::string& data_file,
-                        const std::string& seed_file,
-                        const std::string& mask_file,
-                        const bool normalizedDWIData,
-                        const bool outputNormalizedDWIData
-                       );
+  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
+                        const bool normalizedDWIData, const bool outputNormalizedDWIData);
 
-  /** 
-    * Load the signal, called by LoadData 
+  /**
+    * Load the signal, called by LoadData
     * \todo Should be a private function of this class, and not implementing ISignalData
   */
   virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData);
 
   /** Returns the dimensions of the signal in each directions as a vector */
-  virtual vec_t dim() const {
+  virtual vec_t dim() const
+  {
     return _dim;
   }
 
@@ -129,6 +129,5 @@ private:
   /** The actual mask data */
   Nrrd *_mask_nrrd;
 };
-
 
 #endif  // NRRDDATA_H_

@@ -12,12 +12,15 @@ Region::UIntImageType::Pointer Region::refImage;
 Region::Region(const std::string & path, const std::vector<int> & labels)
 {
 
-  if (path.empty()) {
+  if( path.empty() )
+    {
     _bEmpty = true;
-  } else {
+    }
+  else
+    {
     _bEmpty = false;
 
-    typedef itk::ImageFileReader<UIntImageType> FileReaderType;
+    typedef itk::ImageFileReader<UIntImageType>          FileReaderType;
     typedef itk::ImageRegionConstIterator<UIntImageType> ConstIteratorType;
 
     FileReaderType::Pointer reader = FileReaderType::New();
@@ -26,8 +29,8 @@ Region::Region(const std::string & path, const std::vector<int> & labels)
     refImage = reader->GetOutput();
 
     UIntImageType::RegionType region;
-    UIntImageType::IndexType index;
-    UIntImageType::SizeType size;
+    UIntImageType::IndexType  index;
+    UIntImageType::SizeType   size;
 
     region = refImage->GetLargestPossibleRegion();
     size = region.GetSize();
@@ -38,23 +41,28 @@ Region::Region(const std::string & path, const std::vector<int> & labels)
 
     ConstIteratorType cit( refImage, region );
 
-    while( !cit.IsAtEnd() ) {
-      if (inVector(cit.Get(), labels)) {
+    while( !cit.IsAtEnd() )
+      {
+      if( inVector(cit.Get(), labels) )
+        {
         index = cit.GetIndex();
         _lut.push_back(_nSizeZ * _nSizeY * index[0] + _nSizeZ * index[1] + index[2]);
-      }
+        }
       ++cit;
-    }
+      }
 
-  }
+    }
 
 }
 
 bool Region::inVector(const int & n, const std::vector<int> & v)
 {
-  for (unsigned int i = 0; i < v.size(); ++i) {
-    if (v[i] == n)
+  for( unsigned int i = 0; i < v.size(); ++i )
+    {
+    if( v[i] == n )
+      {
       return true;
-  }
+      }
+    }
   return false;
 }

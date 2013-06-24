@@ -20,8 +20,8 @@
  * before invocation
 */
 
-void dwiNormalize(const Nrrd *raw, Nrrd *&normalized) ;
+void dwiNormalize(const Nrrd *raw, Nrrd *& normalized);
 
-const int DATA_DIMENSION = 4 ;
+const int DATA_DIMENSION = 4;
 
 #endif

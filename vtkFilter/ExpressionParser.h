@@ -1,5 +1,5 @@
 /**
- * \file ExpressionParser.h 
+ * \file ExpressionParser.h
  * \brief Contains class ExpressionParser for converting logical Infix expressions to Postfix expressions.
  * \author Christian Baumgartner (c.f.baumgartner@gmail.com)
 */
@@ -12,7 +12,7 @@
 
 /**
  * \class ExpressionParser
- * \brief Converts a logical expression in infix to postfix 
+ * \brief Converts a logical expression in infix to postfix
 */
 class ExpressionParser
 {
@@ -28,17 +28,20 @@ public:
   bool Run();
 
   /** Set input infix notation */
-  void SetInput(std::string s) {
+  void SetInput(std::string s)
+  {
     _sInfix = s;
   }
 
   /** Set whether to output execution details in console */
-  void SetVerbose(bool b) {
+  void SetVerbose(bool b)
+  {
     _bVerbose = b;
   }
 
   /** Return the postfix Notation after running the expression parser */
-  std::string GetPostfix() {
+  std::string GetPostfix()
+  {
     return _sPostfix;
   }
 
@@ -70,7 +73,6 @@ protected:
 
   /** Toggles command line output */
   bool _bVerbose;
-
 
 };
 

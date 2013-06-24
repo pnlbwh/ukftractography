@@ -245,8 +245,8 @@ int main(int argc, char **argv)
   }
 
   // Initialize the tractography object.
-  FilterModel *filter_model;
-  Tractography::model_type filter_model_type;
+  FilterModel *filter_model = NULL; //Silence warnings.  This will cause segfault if it ever reaches this point.
+  Tractography::model_type filter_model_type = Tractography::_1T;
 
   if (numTensor == 1) {
     if (simpleTensorModel && !freeWater) {
@@ -289,20 +289,20 @@ int main(int argc, char **argv)
       std::cout << "Using 3-tensor simple model." << std::endl;
       filter_model = new Simple3T(Qm, Ql, Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_3T;
-    } else if (!simpleTensorModel) {
+    } else {
       std::cout << "Using 3-tensor full model." << std::endl;
       filter_model = new Full3T(Qm, Ql, Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_3T_FULL;
     }
-
   }
+
 
 
   std::cout << std::endl ;
 
   Tractography *tract = new Tractography(filter_model, filter_model_type,
                                          tracts, tractsWithSecondTensor,
-                                         recordFA, recordNMSE, recordTrace, recordState, 
+                                         recordFA, recordNMSE, recordTrace, recordState,
                                          recordCovariance, recordFreeWater, recordTensors,
                                          !noTransformPosition, storeGlyphs, branchesOnly,
 

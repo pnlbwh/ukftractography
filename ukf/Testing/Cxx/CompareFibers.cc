@@ -11,8 +11,6 @@
 #endif
 
 
-typedef Fiber Fiber;
-
 int main(int argc, char *argv[])
 {
   if( argc < 3 )

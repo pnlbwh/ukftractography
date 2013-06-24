@@ -64,7 +64,7 @@ public:
   }
 
   /** Return if the region is empty, i.e. no path to label file is given */
-  const bool IsEmpty() const
+  bool IsEmpty() const
   {
     return _bEmpty;
   }

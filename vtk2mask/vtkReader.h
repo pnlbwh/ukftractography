@@ -12,23 +12,28 @@
 #include <map>
 #include "linalg.h"
 #include "fiber.h"
-#include <fstream> 
+#include <fstream>
 
 /**
- * \class vtkReader 
+ * \class vtkReader
  * \brief Class that allows to read a .vtk file.
 */
-class vtkReader {
- public:
+class vtkReader
+{
+public:
   /** Constructor */
-  vtkReader() { }
+  vtkReader()
+  {
+  }
 
   /** Destructor */
-  virtual ~vtkReader() { }
+  virtual ~vtkReader()
+  {
+  }
 
   /** Start the reading of the file with the specified values */
   bool Run();
-  
+
   /** Set the path of the vtk file to be read */
   void SetInputPath(const std::string & path);
 
@@ -39,19 +44,22 @@ class vtkReader {
   void SetReadFieldData(const bool option);
 
   /** Set wheater the program should outputput execution infos on the commandline */
-  void SetVerbose(bool b) { _bVerbose = b; }
+  void SetVerbose(bool b)
+  {
+    _bVerbose = b;
+  }
 
- protected:
-   
+protected:
+
   /** Pointer to the input path of the vtk File */
   const char * _sInputPath;
 
   /** Pointer to the fiber vector where the input is stored */
   std::vector<Fiber> * _fibers;
-  
+
   /** Array to temporalily store the lines field of the vtk */
   std::vector<std::vector<unsigned int> > _lines;
-  
+
   /** Total number of points in the vtk */
   int _nNumOfPoints;
 
@@ -66,13 +74,13 @@ class vtkReader {
 
   /** Wheater to output execution infos on the command line */
   bool _bVerbose;
-  
+
   /** Read the Line information of the vtk, needs to be done before reading points. */
   bool ReadLines(std::ifstream & input);
 
   /** Read the points data, and field data */
   bool ReadRest(std::ifstream & input);
-  
+
 };
 
 #endif  // VTKREADER_H_

@@ -967,7 +967,7 @@ void Full2T_FW::H(const 	vnl_matrix<double>& X,
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          (X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
-          X.rows() == 1));
+          X.cols() == 1));
   assert(Y.rows() == static_cast<unsigned int>(_signal_dim) &&
          (Y.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
           Y.cols() == 1));

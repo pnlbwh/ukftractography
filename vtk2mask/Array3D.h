@@ -31,9 +31,12 @@ public:
   T * * *_;
 
   /** Constructor, allocates the space in each dimension */
-  Array3D(int x, int y, int z)
+  Array3D(const int x, const int y, const int z)
   {
-    _nDimX = x; _nDimY = y; _nDimZ = z;
+    _nDimX = x;
+    _nDimY = y;
+    _nDimZ = z;
+
     _ = new T * *[_nDimX];
     for( int i = 0; i < _nDimX; ++i )
       {
@@ -48,7 +51,7 @@ public:
   /** Deconstructor, deletes the data */
   ~Array3D()
   {
-    delete _;
+    delete _; //HACK: This is a huge memory leak here
   };                          // maybe have to iterate through matrix and delete
 
   /** Get the X dimensions */

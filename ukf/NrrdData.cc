@@ -275,7 +275,7 @@ bool NrrdData::LoadData(const std::string& data_file,
       std::cout << "Failed while saving the normalized data!" << std::endl;
       char *txt = biffGetDone(NRRD);
       std::cout << txt << std::endl;
-      delete txt;
+      free( txt );
       return true;
       }
     }
@@ -292,7 +292,7 @@ bool NrrdData::LoadData(const std::string& data_file,
       {
       err = biffGetDone(NRRD);
       std::cout << "Trouble reading " << seed_file << ": " << err << std::endl;
-      delete err;
+      free( err );
       return true;
       }
 
@@ -306,7 +306,7 @@ bool NrrdData::LoadData(const std::string& data_file,
     {
     err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
-    delete err;
+    free( err );
     return true;
     }
 
@@ -342,7 +342,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     {
     err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
-    delete err;
+    free( err );
     return true;
     }
 

@@ -106,7 +106,7 @@ void Full2T::H(const 	vnl_matrix<double>& X,
          (Y.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
           Y.cols() == 1));
   assert(_signal_data);
-  
+
   const std::vector<vec_t>& gradients = _signal_data->gradients();
   const std::vector<double> & b       = _signal_data->GetBValues();
 
@@ -433,7 +433,7 @@ void Simple2T::H(const 	vnl_matrix<double>& X,
     // Reconstruct signal.
     for (int j = 0; j < _signal_dim; ++j) {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, D1 * u)) * weights_on_tensors_[0] + 
+      Y(j, i) = exp(-b[j] * dot(u, D1 * u)) * weights_on_tensors_[0] +
                 exp(-b[j] * dot(u, D2 * u)) * weights_on_tensors_[1] ;
     }
   }
@@ -709,7 +709,7 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
     for (int j = 0; j < _signal_dim; ++j) {
       const vec_t& u = gradients[j];
 
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u)) + 
+      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u)) +
                 (1 - w) * exp(-b[j] * dot(u, D_iso * u)) ;
     }
   }
@@ -786,7 +786,7 @@ void Full1T_FW::H(const vnl_matrix<double>& X,
     // Reconstruct signal.
     for (int j = 0; j < _signal_dim; ++j) {
       const vec_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u)) + 
+      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u)) +
                 (1 - w) * exp(-b[j] * dot(u, D_iso * u)) ;
     }
   }
@@ -918,7 +918,7 @@ void Simple2T_FW::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
   l1._[0] = CheckZero(x[3]);
   l1._[1] = CheckZero(x[4]);
   l1._[2] = l1._[1];
-  
+
   CheckZero(x[9]);
   l2._[0] = CheckZero(x[8]);
   l2._[1] = CheckZero(x[9]);

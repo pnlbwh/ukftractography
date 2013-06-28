@@ -88,9 +88,9 @@ bool ExpressionParser::Run()
   if( _bVerbose )
     {
     std::cout << "-Postfix: ";
-    for( unsigned int i = 0; i < _sPostfix.size(); i++ )
+    for( unsigned int ii = 0; ii < _sPostfix.size(); ++ii )
       {
-      std::cout << _sPostfix[i];
+      std::cout << _sPostfix[ii];
       }
     std::cout << std::endl;
     }

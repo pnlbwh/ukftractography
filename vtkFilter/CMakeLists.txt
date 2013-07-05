@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME vtkFilter)
@@ -25,8 +27,7 @@ if (UKFTractography_SuperBuild)
 endif()
 
 set(MODULE_SRCS
-    vtkFilter.cxx 
-    vtkReader.cc
+    vtkFilter.cxx
     vtkWriter.cc
     FiberFilter.cc
     Region.cc
@@ -36,6 +37,7 @@ set(MODULE_SRCS
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
+    UKFCommonLib
   )
 
 if(UKFTractography_SuperBuild)
@@ -45,6 +47,12 @@ if(UKFTractography_SuperBuild)
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
         EXECUTABLE_ONLY
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 else()
     SEMMacroBuildCLI(
@@ -52,6 +60,12 @@ else()
         TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 endif()
 

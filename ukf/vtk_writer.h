@@ -1,7 +1,7 @@
 /**
  * \file vtk_writer.h
- * \brief Fiber writing functionality
- * 
+ * \brief UKFFiber writing functionality
+ *
  * Contains Class definition of the VtkWriter, used for storing the fiber vector to a .vtk file
  * \todo Could be done more elegantly with VTK
 */
@@ -13,8 +13,8 @@
 #include <vector>
 #include "linalg.h"
 #include "tractography.h"
+#include "ukffiber.h"
 
-struct Fiber;
 
 class ISignalData;
 
@@ -31,25 +31,26 @@ public:
   VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type,  bool write_tensors);
 
   /** Destructor */
-  virtual ~VtkWriter() { }
+  virtual ~VtkWriter()
+  {
+  }
 
-  /** 
-   * \brief Writes the fibers to the VTK file and attaches the selected values to the fiber 
+  /**
+   * \brief Writes the fibers to the VTK file and attaches the selected values to the fiber
    * \param[in] file_name The path of the output fiber file (*.vtk)
    * \param[in] tractsWithSecondTensor File path for the fibers generated with the second tensor
    *                                   This one is optional.
    * \param[in] store_glyphs Write glyphs (i.e. main tensor directions) to a file named glyphs_{tracts}.
   */
-  bool Write(const std::string& file_name, const std::string &tractsWithSecondTensor,
-             const std::vector<Fiber>& fibers, bool write_state, 
-             bool store_glyphs);
+  bool Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
+             bool write_state, bool store_glyphs);
 
-  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}. */ 
-  bool WriteGlyphs(const std::string& file_name,
-                   const std::vector<Fiber>& fibers);
+  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}. */
+  bool WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
 
   /** Sets the variable that toggles the transform from ijk to RAS before writing the fiber to VTK. */
-  void set_transform_position(bool transform_position) {
+  void set_transform_position(bool transform_position)
+  {
     _transform_position = transform_position;
   }
 
@@ -60,17 +61,17 @@ protected:
   */
   void WritePoint(const vec_t& point, std::ofstream& output, int& counter);
 
-  /** 
-   * Writes the fibers and all values attached to them to a VTK file 
+  /**
+   * Writes the fibers and all values attached to them to a VTK file
   */
-  void writeFibersAndTensors(std::ofstream &output, const std::vector<Fiber>& fibers, const int tensorNumber) ;
-  
-  /** 
+  void writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber);
+
+  /**
    * \brief Reconstructs the tensor from the state for each case
    * \param[out] D The calculated diffusion tensor
-   * \todo I think there is something wrong with choosing a orthonormal basis for the tensor 
+   * \todo I think there is something wrong with choosing a orthonormal basis for the tensor
   */
-  void State2Tensor(State & state, mat_t & D, int tensorNumber);
+  void State2Tensor(const State & state, mat_t & D, const int tensorNumber) const;
 
   /** The diffusion weighted signal data */
   const ISignalData *_signal_data;
@@ -80,7 +81,7 @@ protected:
 
   /** What model was the tractography performed with */
   const Tractography::model_type _filter_model_type;
-  
+
   /** Scaling of the glyphs */
   const double _scale_glyphs;
 
@@ -100,7 +101,7 @@ protected:
 
   /** Was the full or simplified tensor model used? */
   bool _full;
-  
+
   /** Additional scaling of the eigenvalues before writing */
   const double _eigenScaleFactor;
 

@@ -1,5 +1,5 @@
 /**
- * \file ExpressionEvaluator.h 
+ * \file ExpressionEvaluator.h
  * \brief Contains class ExpressionEvaluator for evaluating logical expressions on fibers
  * \author Christian Baumgartner (c.f.baumgartner@gmail.com)
 */
@@ -46,17 +46,16 @@ public:
   void SetVerbose(const bool & b);
 
   /** Set pointer to input fibers */
-  void SetInputFibers(const std::vector< Fiber > & fibers);
+  void SetInputFibers(const std::vector<Fiber> & fibers);
 
   /** Set pointer to output fibers */
-  void SetOutputFibers(std::vector< Fiber > & fibers);
+  void SetOutputFibers(std::vector<Fiber> & fibers);
 
   /** Set the posfix expression */
   void SetPostfixExpr(const std::string & str);
 
   /** Pointer to the output Fibers */
-  std::vector< Fiber > * _outFibers;
-
+  std::vector<Fiber> * _outFibers;
 protected:
 
   /** Pointer to region A */
@@ -72,7 +71,7 @@ protected:
   const Region * _regionD;
 
   /** Pointer to input fibers */
-  const std::vector< Fiber > * _inFibers;
+  const std::vector<Fiber> * _inFibers;
 
   /** Was Region A set? */
   bool _bASet;
@@ -81,7 +80,7 @@ protected:
   bool _bBSet;
 
   /** Was Region C set? */
-  bool _bCSet; 
+  bool _bCSet;
 
   /** Was Region D set? */
   bool _bDSet;
@@ -93,7 +92,7 @@ protected:
   std::string _sPostfixExpr;
 
   /** Stack of operands */
-  std::vector< std::vector<Fiber> > _operandStack;
+  std::vector<std::vector<Fiber> > _operandStack;
 
   /** A pointer to the fiber filter */
   FiberFilter * _filter;
@@ -120,8 +119,6 @@ protected:
   /** Pops to elements from the opperand stack and uses the latest opertor to evaluate the elements */
   std::vector<Fiber> evaluateOperand(char operand);
 
-} ;
-
-
+};
 
 #endif // EXPRESSIONEVALUATOR_H_

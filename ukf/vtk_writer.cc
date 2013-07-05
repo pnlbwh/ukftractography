@@ -15,6 +15,10 @@
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_vector.h>
 
+/** Historical VTK File formats are VERY sensitive to their format **/
+/** http://www.vtk.org/VTK/img/file-formats.pdf **/
+static const char * const VTK_LEGACY_FORMAT_HEADER = "# vtk DataFile Version 3.0";
+
 VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type, bool write_tensors) :
   _signal_data(signal_data),
   _transform_position(true),
@@ -110,7 +114,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber)
 {
   // Write file version and identifier
-  output << "#vtk DataFile Version 3.0" << std::endl;
+  output << VTK_LEGACY_FORMAT_HEADER << std::endl;
 
   // Write header
   output << "Tracts generated with tensor " << tensorNumber << std::endl;
@@ -584,7 +588,7 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
   std::cout << "Writing glyphs to " << file_name << "." << std::endl;
 
   // Write header information
-  output << "#vtk DataFile Version 3.0" << std::endl;
+  output << VTK_LEGACY_FORMAT_HEADER << std::endl;
   output << "TractographyGlyphs" << std::endl;
   output << "ASCII" << std::endl;
 

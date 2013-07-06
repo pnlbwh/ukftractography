@@ -43,9 +43,6 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   else if( filter_model_type == Tractography::_1T_FULL || filter_model_type == Tractography::_1T_FW_FULL )
     {
     _full = true;
-    _p_phi = 0;
-    _p_theta = 1;
-    _p_psi = 2;
     _p_l1 = 3,
     _p_l2 = 4;
     _p_l3 = 5;
@@ -67,9 +64,6 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   else if( filter_model_type == Tractography::_2T_FULL || filter_model_type == Tractography::_2T_FW_FULL )
     {
     _full = true;
-    _p_phi = 0;
-    _p_theta = 1;
-    _p_psi = 2;
     _p_l1 = 3, _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 2;
@@ -90,9 +84,6 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   else if( filter_model_type == Tractography::_3T_FULL )
     {
     _full = true;
-    _p_phi = 0;
-    _p_theta = 1;
-    _p_psi = 2;
     _p_l1 = 3, _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 3;
@@ -766,15 +757,20 @@ void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
 
 void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNumber) const
 {
+  static const size_t local_phi_index = 0;
+  static const size_t local_theta_index = 1;
+  static const size_t local_psi_index =2;
 
   vec_t eigenVec1, eigenVec2, eigenVec3;
 
   if( _full )
     {
+    const size_t local_start_index = 6 * (tensorNumber - 1);
     const mat_t & R =
-      rotation(state[6 * (tensorNumber - 1) + _p_phi],
-               state[6 * (tensorNumber - 1) + _p_theta],
-               state[6 * (tensorNumber - 1) + _p_psi]);
+      rotation(
+        state[local_start_index + local_phi_index],
+        state[local_start_index + local_theta_index],
+        state[local_start_index + local_psi_index]);
 
     // Extract eigenvectors
     eigenVec1 = make_vec(R._[0], R._[3], R._[6]);
@@ -787,13 +783,13 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
     // Extract eigenvectors
     eigenVec1 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-                state[5 * (tensorNumber - 1) + _p_m3]);
+        state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec2 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
-                state[5 * (tensorNumber - 1) + _p_m3]);
+        state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec3 =
       make_vec(-state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-               state[5 * (tensorNumber - 1) + _p_m3]);
+        state[5 * (tensorNumber - 1) + _p_m3]);
     }
 
   // Perform ijk->RAS transform on eigen vectors
@@ -812,12 +808,11 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
   const mat_t & Q = make_mat(
-      eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
-      eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
-      eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]
-      );
+    eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
+    eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
+    eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]
+  );
   D = Q
     * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
-           state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
-
+      state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
 }

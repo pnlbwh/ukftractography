@@ -91,7 +91,6 @@ protected:
   // Positions of the eigenvalues, directions, or angles, respectively, in the state.
   int _p_l1, _p_l2, _p_l3;
   int _p_m1, _p_m2, _p_m3;
-  int _p_psi, _p_theta, _p_phi;
 
   /** How many indeces in the state are used up by 1 tensor */
   int _tensor_space;

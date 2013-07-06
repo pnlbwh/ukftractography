@@ -6,11 +6,11 @@
 #include "filter_model.h"
 #include <iostream>
 
-double FilterModel::CheckZero(const double & d) const
+double FilterModel::CheckZero(const double & local_d) const
 {
-  if( d < 0 )
+  if( local_d < 0 )
     {
-    if( d >= -1.0e-4 ) // for small errors just round it to 0
+    if( local_d >= -1.0e-4 ) // for small errors just round it to 0
       {
       return 0.0;
       }
@@ -20,7 +20,7 @@ double FilterModel::CheckZero(const double & d) const
       exit(1);
       }
     }
-  return d;
+  return local_d;
 }
 
 // Functions for 1-tensor full model.
@@ -60,17 +60,17 @@ void Full1T::H(const  vnl_matrix<double>& X,
     const double l3 = std::max(X(5, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    const mat_t & D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = exp(-b[j] * dot(u, local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
 
-void Full1T::State2Tensor(const State& x, vec_t& m, vec_t& l)
+void Full1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
   m = rotation_main_dir(x[0], x[1], x[2]);
@@ -137,7 +137,7 @@ void Full2T::H(const  vnl_matrix<double>& X,
     }
 }
 
-void Full2T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Full2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                           vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // First orientation.
@@ -233,7 +233,7 @@ void Full3T::H(const  vnl_matrix<double>& X,
     }
 }
 
-void Full3T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Full3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
                           vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                           vec_t& l3)
 {
@@ -338,17 +338,17 @@ void Simple1T::H(const  vnl_matrix<double>& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t D = diffusion(m, l1, l2); // l3 == l2
+    mat_t local_D = diffusion(m, l1, l2); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = exp(-b[j] * dot(u, local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
 
-void Simple1T::State2Tensor(const State& x, vec_t& m, vec_t& l)
+void Simple1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
   m = make_vec(x[0], x[1], x[2]);
@@ -453,7 +453,7 @@ void Simple2T::H(const  vnl_matrix<double>& X,
     }
 }
 
-void Simple2T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Simple2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                             vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // Orientations;
@@ -597,7 +597,7 @@ void Simple3T::H(const  vnl_matrix<double>& X,
     }
 }
 
-void Simple3T::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Simple3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
                             vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3)
 {
@@ -731,7 +731,7 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t D = diffusion(m, l1, l2); // l3 == l2
+    mat_t local_D = diffusion(m, l1, l2); // l3 == l2
     mat_t D_iso = make_mat(_d_iso, 0, 0,
                            0, _d_iso, 0,
                            0, 0, _d_iso);
@@ -739,13 +739,13 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u) )
+      Y(j, i) =     (w) * exp(-b[j] * dot(u, local_D * u) )
         + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
       }
     }
 }
 
-void Simple1T_FW::State2Tensor(const State& x, vec_t& m, vec_t& l)
+void Simple1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
   m = make_vec(x[0], x[1], x[2]);
@@ -817,7 +817,7 @@ void Full1T_FW::H(const vnl_matrix<double>& X,
     double w = CheckZero(X(6, i) );
 
     // Calculate diffusion matrix.
-    mat_t D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    mat_t local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     mat_t D_iso = make_mat(_d_iso, 0, 0,
                            0, _d_iso, 0,
                            0, 0, _d_iso);
@@ -825,13 +825,13 @@ void Full1T_FW::H(const vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, D * u) )
+      Y(j, i) =     (w) * exp(-b[j] * dot(u, local_D * u) )
         + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
       }
     }
 }
 
-void Full1T_FW::State2Tensor(const State& x, vec_t& m, vec_t& l)
+void Full1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
   m = rotation_main_dir(x[0], x[1], x[2]);
@@ -958,7 +958,7 @@ void Simple2T_FW::H(const   vnl_matrix<double>& X,
 
 }
 
-void Simple2T_FW::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Simple2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                                vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // Orientations;
@@ -1070,7 +1070,7 @@ void Full2T_FW::H(const   vnl_matrix<double>& X,
     }
 }
 
-void Full2T_FW::State2Tensor(const State& x, const vec_t& old_m, vec_t& m1,
+void Full2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                              vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // First orientation.

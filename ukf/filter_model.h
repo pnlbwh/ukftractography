@@ -25,8 +25,9 @@ struct FilterModel
   {
 
   /** Constructor */
-  FilterModel(int state_dim, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
-    : _state_dim(state_dim), _rs(rs), _signal_dim(0), _signal_data(NULL), weights_on_tensors_(weights_on_tensors),
+  FilterModel(const int local_state_dim, const double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+    : _state_dim(local_state_dim),
+      _rs(rs), _signal_dim(0), _signal_data(NULL), weights_on_tensors_(weights_on_tensors),
     _constrained(constrained)
   {
 
@@ -60,20 +61,20 @@ struct FilterModel
   // lambdas).
 
   /** Extracts principal diffusion direction and eigen values from the state for the 1T cases */
-  virtual void State2Tensor(const State &, vec_t &, vec_t & )
+  virtual void State2Tensor1T(const State &, vec_t &, vec_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 2T cases */
-  virtual void State2Tensor(const State &, const vec_t &, vec_t &,
+  virtual void State2Tensor2T(const State &, const vec_t &, vec_t &,
                             vec_t &, vec_t &, vec_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 3T cases */
-  virtual void State2Tensor(const State &, const vec_t &, vec_t &,
+  virtual void State2Tensor3T(const State &, const vec_t &, vec_t &,
                             vec_t &, vec_t &, vec_t &, vec_t &,
                             vec_t & )
   {
@@ -225,7 +226,7 @@ struct Full1T_FW : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -259,7 +260,7 @@ struct Full1T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -289,7 +290,7 @@ struct Full2T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -344,7 +345,7 @@ struct Full2T_FW : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -383,7 +384,7 @@ struct Full3T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
+  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
@@ -434,7 +435,7 @@ struct Simple1T_FW : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -467,7 +468,7 @@ struct Simple1T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
   const double _lambda_min;
   };
@@ -495,7 +496,7 @@ struct Simple2T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -547,7 +548,7 @@ struct Simple2T_FW : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -582,7 +583,7 @@ struct Simple3T : public FilterModel
 
   virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
 
-  virtual void State2Tensor(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
+  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */

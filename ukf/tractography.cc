@@ -1070,7 +1070,7 @@ void Tractography::Step3T(const int thread_id,
 
   vec_t old_dir = m1;
 
-  _model->State2Tensor(state, old_dir, m1, l1, m2, l2, m3, l3);
+  _model->State2Tensor3T(state, old_dir, m1, l1, m2, l2, m3, l3);
   trace = l1._[0] + l1._[1] + l1._[2];
   trace2 = l2._[0] + l2._[1] + l2._[2];
 
@@ -1163,7 +1163,7 @@ void Tractography::Step2T(const int thread_id,
 
   const vec_t old_dir = m1;   // Direction in last step
 
-  _model->State2Tensor(state, old_dir, m1, l1, m2, l2);   // The returned m1 and m2 are unit vector here
+  _model->State2Tensor2T(state, old_dir, m1, l1, m2, l2);   // The returned m1 and m2 are unit vector here
   trace = l1._[0] + l1._[1] + l1._[2];
   trace2 = l2._[0] + l2._[1] + l2._[2];
 
@@ -1275,7 +1275,7 @@ void Tractography::Step1T(const int thread_id,
   covariance = covariance_new;
 
   vec_t dir, l;
-  _model->State2Tensor(state, dir, l);
+  _model->State2Tensor1T(state, dir, l);
 
   trace = l._[0] + l._[1] + l._[2];
 

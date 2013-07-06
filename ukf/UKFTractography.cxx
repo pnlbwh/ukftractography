@@ -7,19 +7,18 @@
 */
 
 #include <cassert>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <vector>
+
+#include "BRAINSThreadControl.h"
 #include "filter_model.h"
 #include "tractography.h"
-#include "itkMultiThreader.h"
-
 #include "UKFTractographyCLP.h"
 
-#include <cassert>
-#include <string>
 
-bool verbose = true;
+static const bool verbose = true;
 
 void setAndTell(double & x, const double y, std::string name)
 {
@@ -43,12 +42,6 @@ int main(int argc, char **argv)
 
   std::cout << std::endl;
 
-  // TODO: implement a switch for single threaded execution without boost
-  // if (!boost_support) {
-  //   numThreads = 1;
-  //   std::cout << "Multiple threads only supported with boost. Forcing single thread.\n";
-  // }
-
   // CONSTANTS
   bool FULL_BRAIN                 = false;
   const double SIGMA_SIGNAL       = 1.66;
@@ -58,19 +51,17 @@ int main(int argc, char **argv)
   const double FULL_BRAIN_GA_MIN	= 0.18;
   const double D_ISO			        = 0.003; // Diffusion coefficient of free water
 
-  unsigned int numCores = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
-
-  if (numThreads < 0) {
-    std::cout << "Invalid thread number!" << std::endl << std::endl ;
-    return 1 ;
-  }
-
-  if (numThreads != 0) {
-    std::cout << "User set " << numThreads << "-threaded execution." << std::endl;
-  } else {
-    numThreads = numCores;
-    std::cout << "Found " << numCores << " cores on your system.\n";
-    std::cout << "Running tractography with " << numCores << " thread(s).\n";
+  // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
+  //        for entire program (i.e. when used as a slicer modules.
+  //        This also addresses the issue when the program is run as part of a batch processing
+  //        system so that the number of cores allocated by scheduler is respected rather than
+  //        blindly using all the cores that are found.
+  //        This implementation is taken from extensive testing of the BRAINSTools
+  const BRAINSUtils::StackPushITKDefaultNumberOfThreads TempDefaultNumberOfThreadsHolder(numThreads);
+  const int actuallNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
+  {
+    std::cout << "Found " << actuallNumThreadsUsed << " cores on your system.\n";
+    std::cout << "Running tractography with " << actuallNumThreadsUsed << " thread(s).\n";
   }
 
   std::cout << std::endl;
@@ -317,7 +308,7 @@ int main(int argc, char **argv)
                                          P0,  SIGMA_SIGNAL, SIGMA_MASK,
                                          MIN_RADIUS, FULL_BRAIN_GA_MIN,
 
-                                         numThreads
+                                         actuallNumThreadsUsed
                                         ) ;
 
   if (tract->LoadFiles(dwiFile, seedsFile, maskFile, normalizedDWIData, outputNormalizedDWIData)) {

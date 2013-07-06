@@ -36,6 +36,7 @@ set(MODULE_INCLUDE_DIRECTORIES
 include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
 
 set(MODULE_SRCS
+    BRAINSThreadControl.cxx
     tractography.cc
     unscented_kalman_filter.cc
     filter_model.cc
@@ -51,8 +52,8 @@ set(MODULE_SRCS
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
-    teem
     ${CMAKE_THREAD_LIBS_INIT}
+    teem
   )
 
 #-----------------------------------------------------------------------------

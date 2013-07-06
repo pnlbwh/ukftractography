@@ -181,17 +181,14 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
       for( int i = 0; i < num_fibers; i++ )
         {
         const int fiber_size = static_cast<int>(fibers[i].position.size() );
-        for( int j = 0; j < fiber_size; j++ )
+        for( int j = 0; j < fiber_size; ++j )
           {
           const State & state = fibers[i].state[j];
           mat_t         D;
           State2Tensor(state, D, local_tensorNumber);
-          output << D._[0] * _eigenScaleFactor << " " << D._[1] * _eigenScaleFactor << " " << D._[2]
-          * _eigenScaleFactor << std::endl;
-          output << D._[3] * _eigenScaleFactor << " " << D._[4] * _eigenScaleFactor << " " << D._[5]
-          * _eigenScaleFactor << std::endl;
-          output << D._[6] * _eigenScaleFactor << " " << D._[7] * _eigenScaleFactor << " " << D._[8]
-          * _eigenScaleFactor << std::endl;
+          output << D._[0] * _eigenScaleFactor << " " << D._[1] * _eigenScaleFactor << " " << D._[2] * _eigenScaleFactor << std::endl;
+          output << D._[3] * _eigenScaleFactor << " " << D._[4] * _eigenScaleFactor << " " << D._[5] * _eigenScaleFactor << std::endl;
+          output << D._[6] * _eigenScaleFactor << " " << D._[7] * _eigenScaleFactor << " " << D._[8] * _eigenScaleFactor << std::endl;
           }
         }
       }
@@ -775,8 +772,9 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
   if( _full )
     {
     const mat_t & R =
-      rotation(state[6 * (tensorNumber - 1) + _p_phi], state[6 * (tensorNumber - 1) + _p_theta],
-               state[6 * (tensorNumber - 1) + _p_phi]);
+      rotation(state[6 * (tensorNumber - 1) + _p_phi],
+               state[6 * (tensorNumber - 1) + _p_theta],
+               state[6 * (tensorNumber - 1) + _p_psi]);
 
     // Extract eigenvectors
     eigenVec1 = make_vec(R._[0], R._[3], R._[6]);

@@ -53,7 +53,7 @@
       <description>Mask for diffusion tractography</description>
     </image>
    
-    <geometry type="fiberbundle">
+    <geometry type="fiberbundle" fileExtensions=".vtk,.vtp">
       <name>tracts</name>
       <longflag>tracts</longflag>
       <label>Output Fibers (first tensor)</label>
@@ -61,7 +61,7 @@
       <description>Tracts generated, with first tensor output</description>
     </geometry>
 
-    <geometry type="fiberbundle">
+    <geometry type="fiberbundle" fileExtensions=".vtk,.vtp">
       <name>tractsWithSecondTensor</name>
       <longflag>tractsWithSecondTensor</longflag>
       <label>Output Fibers (second tensor, optional)</label>

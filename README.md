@@ -100,8 +100,8 @@ install it as a Slicer 4 module.  There will be 3 modules under
 `Diffusion-->Tractography`: `UKF Tractography`, `vtk2mask`, and `vtkFilter`.
 
 
+Notes
+-----
 
-TODO
-----
-
-* Get `make test` to work with superbuild
+On a Mac, there are rounding errors that affect the accuracy of 2T FW tracts.
+This explains why the 2T_FW ctest fails.

@@ -1,5 +1,5 @@
 /**
- * \file FiberFilter.h 
+ * \file FiberFilter.h
  * \brief Contains class FiberFilter for filtering VTK fibers that go through a certain Region of interest
  * \author Christian Baumgartner (c.f.baumgartner@gmail.com)
 */
@@ -30,19 +30,23 @@ class FiberFilter
 public:
 
   /** Unisgned image 3D Image type */
-  typedef itk::Image< unsigned int, 3> UIntImageType;
+  typedef itk::Image<unsigned int, 3> UIntImageType;
 
-  /** There are modes, 'connecting to', or 'ending in', where there is no distinction between 'ending in', and 'starting in' */
-  enum ConnectionMode {
+  /** There are modes, 'connecting to', or 'ending in', where there is no distinction between 'ending in', and 'starting
+    in' */
+  enum ConnectionMode
+    {
     PASS = true,
     END = false
-  };
+    };
 
   /** Constructor */
   FiberFilter();
 
   /** Virtual Destructor */
-  virtual ~FiberFilter() { }
+  virtual ~FiberFilter()
+  {
+  }
 
   /** Run the fiber filter when all parameters are set */
   bool Run();
@@ -69,16 +73,16 @@ protected:
 
   /** Pointer to a reference image */
   UIntImageType::Pointer _refImage;
-  
+
   /** Size of region in X */
   int _nx;
-  
+
   /** Size of region in X */
   int _ny;
-  
+
   /** Size of region in X */
   int _nz;
-  
+
   /** Size of the look-up table */
   unsigned int _nSizeLUT;
 

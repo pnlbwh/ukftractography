@@ -20,9 +20,17 @@ endif()
 if(NOT Slicer_SOURCE_DIR)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
+else()
+  #-----------------------------------------------------------------------------
+  find_package(SlicerExecutionModel REQUIRED GenerateCLP)
+  include(${GenerateCLP_USE_FILE})
+  include(${SlicerExecutionModel_USE_FILE})
+  include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 endif()
 
 #-----------------------------------------------------------------------------
+add_subdirectory(common)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
 add_subdirectory(vtk2mask)
 add_subdirectory(vtkFilter)

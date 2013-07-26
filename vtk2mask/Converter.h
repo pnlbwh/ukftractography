@@ -1,5 +1,5 @@
 /**
- * \file Converter.h 
+ * \file Converter.h
  * \brief Contains functionality to go from a VTK fiber to a NRRD Mask
 */
 
@@ -18,37 +18,39 @@
 #include <itkMetaDataObject.h>
 #include <itkNrrdImageIO.h>
 
-
 /**
  * \class Converter
  * \brief Functionality for converting a fiber vector to a scalar mask
  *
- * Converts each point of the fibers to the reference dwi space and 
- * stores a scalar value of the fiber at the respective map point 
+ * Converts each point of the fibers to the reference dwi space and
+ * stores a scalar value of the fiber at the respective map point
 */
-class Converter {
- public:
-  
+class Converter
+{
+public:
+
   /** A 3D ITK float vector, basic component of the dwi image */
-  typedef itk::Vector<float,3>    				                      VectorType;
+  typedef itk::Vector<float, 3> VectorType;
 
   /** Type of a float diffusion weighted MR Image */
-  typedef itk::Image<VectorType,3>				                      DiffusionImageType;
+  typedef itk::Image<VectorType, 3> DiffusionImageType;
 
   /** Type of a scalar float image */
-  typedef itk::Image< float, 3> 				                        FloatImageType;
+  typedef itk::Image<float, 3> FloatImageType;
 
   /** Type of a scalar unsigned int image */
-  typedef itk::Image< unsigned int, 3>		                      UIntImageType;
+  typedef itk::Image<unsigned int, 3> UIntImageType;
 
   /** A single float point */
-  typedef itk::Point< float, FloatImageType::ImageDimension > 	FloatPointType;
-   
-  /** Constructor */ 
+  typedef itk::Point<float, FloatImageType::ImageDimension> FloatPointType;
+
+  /** Constructor */
   Converter();
-  
+
   /** Virtual destructor */
-  virtual ~Converter() { }
+  virtual ~Converter()
+  {
+  }
 
   /** Run the conversion when all parameters are set */
   bool Run();
@@ -77,36 +79,38 @@ class Converter {
   /** Set what field should be extracted from the fiber, or binary map if left empty */
   void SetFieldName(std::string & field_name);
 
- protected:
+protected:
 
   /** Pointer to the input fiber vector */
-  std::vector<Fiber> *    _fibers;
+  std::vector<Fiber> * _fibers;
 
   /** Output file path of the scalar map */
-  FloatImageType::Pointer _nrrdDataOut ;
+  FloatImageType::Pointer _nrrdDataOut;
 
   /** Output file path of the standart deviation map */
   FloatImageType::Pointer _nrrdVarDataOut; // only allocate if Variance are required
 
   /** A temp image for the label information */
-  UIntImageType::Pointer  _Label;
-  
-  /** A large 3D Array where each point is a vector (so really 4D). Each time a fiber passes through the point its scalar field value is pushed_back to the vector at this point. */
-  Array3D< std::vector<float> > * _matField;
-  
-  /** The dimensions of the data in X direction */ 
+  UIntImageType::Pointer _Label;
+
+  /** A large 3D Array where each point is a vector (so really 4D). Each time a fiber passes through the point its
+    scalar field value is pushed_back to the vector at this point. */
+  Array3D<std::vector<float> > * _matField;
+
+  /** The dimensions of the data in X direction */
   int _nDimX;
 
   /** The dimensions of the data in Y direction */
   int _nDimY;
-  
+
   /** The dimensions of the data in Z direction */
   int _nDimZ;
-  
+
   /** Wheather to output the Standart Deviation map */
   bool _bOutputVarianceMaps;
 
-  /** Wheater a scalar field was selected from the VTK, if false a scalar map of where the fibers pass through will be generated. */
+  /** Wheater a scalar field was selected from the VTK, if false a scalar map of where the fibers pass through will be
+    generated. */
   bool _bOutputField;
 
   /** Wheater a label file was given */
@@ -142,10 +146,10 @@ class Converter {
   /** Write data to the Output NRRD */
   void WriteOutNrrd(const std::string & out_path);
 
-  /** 
-   * Fill a large 3D Matrix with the fiber scalar values at each where the 
+  /**
+   * Fill a large 3D Matrix with the fiber scalar values at each where the
    * indices of the matrix correspond to the ijk space.
-   * \param field_name Which field to process 
+   * \param field_name Which field to process
   */
   bool FillMatField(const std::string & field_name);
 
@@ -155,23 +159,23 @@ class Converter {
   /** Load the Label File */
   void LoadLabel();
 
-  /** 
-  * Extract the scalar values from the Fiber, average each point, and write the output 
+  /**
+  * Extract the scalar values from the Fiber, average each point, and write the output
   * \param field_name Which field to process
   * \param path Path of the output NRRD File.
   */
   void ProcessField(const std::string & field_name, const std::string & path);
-  
-  /** 
-   * Calculate the standart deviation of a vector 
-   * \param vec The vector 
-   * \param mean The mean of the vector 
+
+  /**
+   * Calculate the standart deviation of a vector
+   * \param vec The vector
+   * \param mean The mean of the vector
   */
   float CalcStdDev(const std::vector<float> & vec, const float & mean);
-  
+
   /** Calculate the mean of a vector */
   float CalcMean(const std::vector<float> & vec);
-   
+
 };
 
 #endif  // CONVERTER_H_

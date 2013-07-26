@@ -1,6 +1,6 @@
 /**
- * \file vtkWriter.h 
- * \brief Contains class vtkWriter for Writing a fiber vector to a vtk file 
+ * \file vtkWriter.h
+ * \brief Contains class vtkWriter for Writing a fiber vector to a vtk file
  * \author Christian Baumgartner (c.f.baumgartner@gmail.com)
 */
 
@@ -13,20 +13,23 @@
 #include "linalg.h"
 #include "fiber.h"
 
-
 /**
  * \class vtkWriter
- * \brief Contains functions to write a vector of Fibers to a *.vtk file 
+ * \brief Contains functions to write a vector of Fibers to a *.vtk file
 */
 class vtkWriter
 {
 public:
-  
+
   /** Constructor */
-  vtkWriter() { }
+  vtkWriter()
+  {
+  }
 
   /** Virtual Destructor */
-  virtual ~vtkWriter() { }
+  virtual ~vtkWriter()
+  {
+  }
 
   /** Run the writer, when all parameters are set */
   bool Run();
@@ -58,16 +61,16 @@ protected:
   std::vector<int> _fiberLengths;
 
   /** Write the top line of the vtk file */
-  void WriteHeader(std::ofstream &output);
+  void WriteHeader(std::ofstream & output);
 
   /** Write the points section */
-  void WritePoints(std::ofstream &output);
+  void WritePoints(std::ofstream & output);
 
   /** Write the lines section */
-  void WriteLines(std::ofstream &output);
+  void WriteLines(std::ofstream & output);
 
   /** Write the scalar fields */
-  void WriteFields(std::ofstream &output);
+  void WriteFields(std::ofstream & output);
 
 };
 

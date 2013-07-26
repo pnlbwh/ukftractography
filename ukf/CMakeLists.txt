@@ -28,40 +28,37 @@ endif()
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    #${Teem_INCLUDE_DIRS}
-  )
+    ${Teem_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../common
+ )
+
+include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
 
 set(MODULE_SRCS
-    tractography.cc 
-    unscented_kalman_filter.cc 
-    filter_model.cc   
-    seed.cc 
-    fiber.cc 
-    NrrdData.cc 
-    vtk_writer.cc 
-    dwi_normalize.cc 
-    utilities.cc 
-    thread.cc 
+    BRAINSThreadControl.cxx
+    tractography.cc
+    unscented_kalman_filter.cc
+    filter_model.cc
+    seed.cc
+    ukffiber.cc
+    NrrdData.cc
+    vtk_writer.cc
+    dwi_normalize.cc
+    utilities.cc
+    thread.cc
     QuadProg++_vnl.cc
     )
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
-    teem 
     ${CMAKE_THREAD_LIBS_INIT}
+    teem
   )
-
-
-#if (NOT GenerateCLP_FOUND)
-  #find_package(GenerateCLP REQUIRED)
-#endif (NOT GenerateCLP_FOUND)
-#include(${GenerateCLP_USE_FILE})
 
 #-----------------------------------------------------------------------------
 enable_testing()
 add_subdirectory(Testing)
-
-
 
 #-----------------------------------------------------------------------------
 if(UKFTractography_SuperBuild)
@@ -71,6 +68,12 @@ if(UKFTractography_SuperBuild)
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
         EXECUTABLE_ONLY
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 else()
     SEMMacroBuildCLI(
@@ -79,5 +82,11 @@ else()
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
         EXECUTABLE_ONLY
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 endif()

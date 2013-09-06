@@ -19,7 +19,8 @@
  * start_dir is only used for the simple model and the angles only for the
  * complex/full representation.
 */
-struct SeedPointInfo {
+struct SeedPointInfo
+  {
   /** The state of the state-space represenation of the model. */
   State state;
   /** The covariance matrix of the state */
@@ -36,9 +37,9 @@ struct SeedPointInfo {
   double trace;
   /** Trace of the second tensor */
   double trace2;
-} ;
+  };
 
 /** Writes debug information about seeds to stdout. */
-void PrintSeedInfo(const std::vector<SeedPointInfo>& seed_infos) ;
+void PrintSeedInfo(const std::vector<SeedPointInfo>& seed_infos);
 
 #endif

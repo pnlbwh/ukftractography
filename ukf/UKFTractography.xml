@@ -15,12 +15,12 @@
   <license></license>
   <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner</contributor>
   <acknowledgements></acknowledgements>
-  
+
   <parameters>
-    
+
     <label>IO</label>
     <description>Input/output paramters</description>
-    
+
     <image type="diffusion-weighted" fileExtensions=".nhdr,.nrrd">
       <name>dwiFile</name>
       <longflag alias="dwiData">dwiFile</longflag>
@@ -36,7 +36,7 @@
       <channel>input</channel>
       <description>Seeds for diffusion. If not specified, full brain tractography will be performed, and the algorithm will start from every voxel in the brain mask where the Generalized Anisotropy is bigger than 0.18</description>
     </image>
-    
+
     <integer-vector>
       <name>labels</name>
       <longflag>labels</longflag>
@@ -52,7 +52,7 @@
       <channel>input</channel>
       <description>Mask for diffusion tractography</description>
     </image>
-   
+
     <geometry type="fiberbundle" fileExtensions=".vtk,.vtp">
       <name>tracts</name>
       <longflag>tracts</longflag>
@@ -70,11 +70,11 @@
     </geometry>
 
   </parameters>
-  
+
   <parameters>
 	<label>Seeding Options</label>
     <description>Seeding Options</description>
-	
+
     <integer>
       <name>seedsPerVoxel</name>
       <longflag>seedsPerVoxel</longflag>
@@ -91,10 +91,10 @@
   </parameters>
 
   <parameters>
-    
+
     <label>Model options</label>
     <description>Which model should be used for tractography</description>
-    
+
     <integer-enumeration>
       <name>numTensor</name>
       <longflag>numTensor</longflag>
@@ -105,7 +105,7 @@
       <element>2</element>
       <element>3</element>
     </integer-enumeration>
-    
+
     <boolean>
       <name>simpleTensorModel</name>
       <longflag>simpleTensorModel</longflag>
@@ -113,7 +113,7 @@
       <description>Whether to use the simple tensor model. If unchecked, use the full tensor model</description>
       <default>true</default>
     </boolean>
-    
+
     <boolean>
       <name>freeWater</name>
       <longflag>freeWater</longflag>
@@ -121,7 +121,7 @@
       <description>Adds a term for free water difusion to the model. If checked, the 1T simple model is forced.</description>
       <default>false</default>
     </boolean>
-    
+
   </parameters>
 
   <parameters>
@@ -154,13 +154,13 @@
 	  	<step>0.01</step>
 	  </constraints>
     </double>
-	
+
 
   </parameters>
 
 <parameters>
 
-    <label>Fiber scalar fields</label>
+    <label>UKFFiber scalar fields</label>
     <description>Scalars to be recorded together with the traced fiber</description>
     <boolean>
       <name>recordFA</name>
@@ -221,7 +221,7 @@
   </parameters>
 
   <parameters>
-    
+
     <label>Advanced Options</label>
     <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>
 
@@ -230,7 +230,7 @@
       <longflag>numThreads</longflag>
       <label>Number of threads</label>
       <description>Number of threads used during computation. Set to the number of cores on your workstation for optimal speed. If left undefined the number of cores detected will be used. </description>
-      <default>0</default>
+      <default>-1</default>
     </integer>
 
     <boolean>
@@ -287,7 +287,7 @@
       <description>Process noise for eigenvalues</description>
       <default>0.0</default>
     </double>
-    
+
     <double>
       <name>Qw</name>
       <longflag>Qw</longflag>
@@ -303,7 +303,7 @@
       <description>Measurement noise</description>
       <default>0.0</default>
     </double>
-    
+
     <double>
       <name>maxBranchingAngle</name>
       <longflag>maxBranchingAngle</longflag>
@@ -321,12 +321,12 @@
     </double>
 
   </parameters>
-    
+
   <parameters>
-    
+
     <label>Additional output options</label>
     <description>Additional output options</description>
-     
+
     <boolean>
       <name>noTransformPosition</name>
       <longflag>noTransformPosition</longflag>
@@ -350,15 +350,15 @@
       <description>Store tensors' main directions as two-point lines in a separate file named glyphs_{tracts}. When using multiple tensors, only the major tensors' main directions are stored</description>
       <default>false</default>
     </boolean>
-  
+
     <boolean>
       <name>outputNormalizedDWIData</name>
       <longflag>outputNormalizedDWIData</longflag>
       <label>Output the normalized DWI data</label>
       <description>Whether to output the normalized DWI data</description>
       <default>false</default>
-    </boolean> 
-    
+    </boolean>
+
   </parameters>
- 
+
 </executable>

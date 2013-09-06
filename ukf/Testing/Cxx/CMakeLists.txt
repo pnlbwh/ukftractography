@@ -2,22 +2,28 @@
 #set(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/../../Data/Input)
 get_filename_component(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/../../Data/Input REALPATH)
 get_filename_component(BASELINE ${CMAKE_CURRENT_SOURCE_DIR}/../../Data/Baseline REALPATH)
-set(TEMP "${CMAKE_BINARY_DIR}/Testing/Temporary")
+set(TESTING_RESUTLS_DIRECTORY "${CMAKE_BINARY_DIR}/Testing/Temporary")
+file(MAKE_DIRECTORY ${TESTING_RESUTLS_DIRECTORY}) ## Need to generate the directory for writing the temporary test outputs to
+
 set(CLP UKFTractography)
 
-add_executable(${CLP}Test CompareFibers.cc vtkReader.cc)
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+
+add_executable( ${CLP}Test CompareFibers.cc )
+target_link_libraries( ${CLP}Test UKFCommonLib )
 add_dependencies(${CLP}Test ${CLP})
 set_target_properties(${CLP}Test PROPERTIES LABELS ${CLP})
 
 
-# 1T no free water 
+# 1T no free water
 # ----------------
 set(testname ${CLP}_1T_Test)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
     --dwiFile ${INPUT}/single_tensor.nhdr
     --maskFile ${INPUT}/mask.nhdr
-    --tracts ${TEMP}/1T_fiber.vtk
+    --tracts ${TESTING_RESUTLS_DIRECTORY}/1T_fiber.vtk
     --seedsFile ${INPUT}/seed.nhdr
     --seedsPerVoxel 1
     --numTensor 1
@@ -32,23 +38,23 @@ set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 
 
 set(testname ${CLP}_1T_Test_Compare)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${CLP}Test
-    ${TEMP}/1T_fiber.vtk
+    ${TESTING_RESUTLS_DIRECTORY}/1T_fiber.vtk
     ${BASELINE}/1T_fiber.vtk
 )
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_1T_Test)
 
 
-# 1T free water 
+# 1T free water
 # -------------
 set(testname ${CLP}_1T_fw_Test)
-add_test(NAME ${testname}  
+add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
     --dwiFile ${INPUT}/single_tensor_fw.nhdr
     --maskFile ${INPUT}/mask.nhdr
-    --tracts ${TEMP}/1T_fw_fiber.vtk
+    --tracts ${TESTING_RESUTLS_DIRECTORY}/1T_fw_fiber.vtk
     --seedsFile ${INPUT}/seed.nhdr
     --seedsPerVoxel 1
     --numTensor 1
@@ -63,23 +69,23 @@ add_test(NAME ${testname}
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 
 set(testname ${CLP}_1T_fw_Test_Compare)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${CLP}Test
-    ${TEMP}/1T_fw_fiber.vtk
+    ${TESTING_RESUTLS_DIRECTORY}/1T_fw_fiber.vtk
     ${BASELINE}/1T_fw_fiber.vtk
 )
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_1T_fw_Test)
 
 
-#2T no freewater 
+#2T no freewater
 #---------------
 set(testname ${CLP}_2T_Test)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
     --dwiFile ${INPUT}/two_tensor.nhdr
     --maskFile ${INPUT}/mask.nhdr
-    --tracts ${TEMP}/2T_fiber.vtk
+    --tracts ${TESTING_RESUTLS_DIRECTORY}/2T_fiber.vtk
  --seedsFile ${INPUT}/seed.nhdr
  --seedsPerVoxel 1
  --numTensor 2
@@ -97,23 +103,23 @@ add_test(NAME ${testname}
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 
 set(testname ${CLP}_2T_Test_Compare)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${CLP}Test
-    ${TEMP}/2T_fiber.vtk
+    ${TESTING_RESUTLS_DIRECTORY}/2T_fiber.vtk
     ${BASELINE}/2T_fiber.vtk
 )
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_Test)
 
 
-# 2T free water 
+# 2T free water
 # -------------
 set(testname ${CLP}_2T_fw_Test)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
     --dwiFile ${INPUT}/two_tensor_fw.nhdr
     --maskFile ${INPUT}/mask.nhdr
-    --tracts ${TEMP}/2T_fw_fiber.vtk
+    --tracts ${TESTING_RESUTLS_DIRECTORY}/2T_fw_fiber.vtk
     --seedsFile ${INPUT}/seed.nhdr
     --seedsPerVoxel 1
     --numTensor 2
@@ -132,9 +138,9 @@ add_test(NAME ${testname}
 )
 
 set(testname ${CLP}_2T_fw_Test_Compare)
-add_test(NAME ${testname} 
+add_test(NAME ${testname}
     COMMAND ${CLP}Test
-    ${TEMP}/2T_fw_fiber.vtk
+    ${TESTING_RESUTLS_DIRECTORY}/2T_fw_fiber.vtk
     ${BASELINE}/2T_fw_fiber.vtk
 )
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})

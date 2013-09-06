@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
+include_directories(${CMAKE_INSTALL_PREFIX}/include)
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME vtk2mask)
@@ -27,13 +29,13 @@ if (UKFTractography_SuperBuild)
 endif()
 
 set(MODULE_SRCS
-    vtk2mask.cxx 
-    vtkReader.cc 
+    vtk2mask.cxx
     Converter.cc
-    ) 
+    )
 
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
+    UKFCommonLib
   )
 
 #GENERATECLP(vtk2mask_SOURCE vtk2mask.xml)
@@ -49,6 +51,12 @@ if(UKFTractography_SuperBuild)
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
         EXECUTABLE_ONLY
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 else()
     SEMMacroBuildCLI(
@@ -56,5 +64,11 @@ else()
         TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
         INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
         ADDITIONAL_SRCS ${MODULE_SRCS}
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
+        INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+        INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+        INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         )
 endif()

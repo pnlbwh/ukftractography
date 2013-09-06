@@ -1,18 +1,18 @@
 /**
  * \mainpage
- * \brief This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. 
+ * \brief This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology.
  * \image html UKFloop.png "System overview illustrating relation between the neural fibers, scanner signals,\n and the unscented Kalman Filter as it is used to estimate the local model"
  * \authors Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner,
  *          Ipek Oguz, Yundi Shi, Christian Baumgartner
- * 
+ *
  * \section Introduction
  * \par
  * The C++ module for Unscented Kalman Filter (UKF) Tractography enables the user
  * to easily perform multi-tensor filtered tractography on diffusion weighted MR images.
- * \par 
+ * \par
  * The model is highly customizable. one-, two-, and three-tensor models are available
  * with, and without free water estimation. In addition, a 'full tensor model' representation
- * is available, where each of the eigenvalues is modeled sperately. 
+ * is available, where each of the eigenvalues is modeled sperately.
  * The UKF can be run constrained with Quadratic Programming or unconstrained.
  * \par
  * The code can be easily compiled as described below, and can be run either from command line
@@ -20,12 +20,12 @@
  *
  * \section Building
  *
- * In order to build make a new directory outside of the source tree called for 	
+ * In order to build make a new directory outside of the source tree called for
  * example ukf-build.
- * 
+ *
  * There are 3 ways to build the project
  * <ol>
- * <li> 
+ * <li>
  *  <b>Standalone:</b> From your build directory run the following commands
  *  \code
  *    cmake <path-to-source>/SuperBuild
@@ -34,7 +34,7 @@
  *  This will download all resources and build the project for you.\n
  *  Note: cmake >= 2.8.4, git, and svn are required for this
  * </li>
- * <li> 
+ * <li>
  *  <b>Build with Slicer:</b> To build against one of the slicer versions run
  *  <ol type='a'>
  *    <li> Slicer 3
@@ -66,14 +66,14 @@
  * <ol>
  *   <li> <b>As Command Line Module: </b></li>
  *   The executable will be called 'UKFTractography', and can be found in the bin directory
- *   of your build folder. 
+ *   of your build folder.
  *   <br>
  *   In order to see all options run.
  *   \code
- *     ./UKFTractography --help 
+ *     ./UKFTractography --help
  *   \endcode
  *   In the source directory of the project you will find a shell script called 'sample_run.sh'
- *   It should give you an idea of what a function call could look like. 
+ *   It should give you an idea of what a function call could look like.
  * <li> <b>As Slicer 3 or 4 module: </b></li>
  *   Open Slicer and in the settings add the '<path-to-build>/bin' directory. When you restart
  *   Slicer the module will be under Diffusion->Tractography.
@@ -144,7 +144,7 @@
  *   this value (default: 0.1)</td>
  * </tr>
  * </table></p>
- * <p><b>Fiber Scalar Fields</b></p>
+ * <p><b>UKFFiber Scalar Fields</b></p>
  * <p><table border=0>
  * <tr>
  *   <td width=33%>--recordFA</td>
@@ -186,7 +186,7 @@
  * <p><table border=0>
  * <tr>
  *   <td width=33%>--numThreads <int></td>
- *   <td width=67%>Number of threads used during compuation. Set to the number of cores on your workstation for 
+ *   <td width=67%>Number of threads used during compuation. Set to the number of cores on your workstation for
  *       optimal speed. If left undefined boost will figure out the number of cores, and hence threads, during runtime.</td>
  * </tr>
  * <tr>
@@ -227,7 +227,7 @@
  * </tr>
  * <tr>
  *   <td width=33%>--maxBranchingAngle <double></td>
- *   <td width=67%>Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions 
+ *   <td width=67%>Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions
  *   form an angle between (minBranchingAngle, maxBranchingAngle). Branching is supressed     when this maxBranchingAngle is set to 0.0</td>
  * </tr>
  * <tr>
@@ -295,16 +295,16 @@
  * Teem is a coordinated group of libraries for representing, processing, and visualising scientific raster data. We use it to read, and process
  * The input data of type NRRD.
  * \par ITK
- * Insight Segmentation and Registration Toolkit (ITK).  ITK is an open-source, cross-platform system that provides developers 
+ * Insight Segmentation and Registration Toolkit (ITK).  ITK is an open-source, cross-platform system that provides developers
  * with an extensive suite of software tools for image analysis. In this application we only use the underlying vnl libraries for most of the linear algebra processing.
  * It replaces functionality that was done with LAPACK before.
  * \par "Slicer Execution Model"
- * The Execution Model provides a simple mechanism for incorporating command line programs as Slicer modules. These command line modules 
+ * The Execution Model provides a simple mechanism for incorporating command line programs as Slicer modules. These command line modules
  * are self-describing, emitting an XML description of its command line arguments. Slicer uses this XML description to construct a GUI for the module. We use it to make our application
  * into a Command Line Module that can be run from Slicer, or from a Consolse without being dependand on Slicer.
  * \section Screenshots
  * \image html 2TFW_0.png "Tracing fibers through the anterior limb of the internal capsule"
- * \todo Doxygen can elegantly be generated by cmake as describe e.g. here http://www.cmake.org/pipermail/cmake/2006-August/010794.html. 
+ * \todo Doxygen can elegantly be generated by cmake as describe e.g. here http://www.cmake.org/pipermail/cmake/2006-August/010794.html.
 */
 
- // Defines content of the main documentation page
+// Defines content of the main documentation page

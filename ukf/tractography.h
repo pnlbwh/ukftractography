@@ -100,6 +100,7 @@ public:
   */
   void Follow1T(const int thread_id, const SeedPointInfo& seed, UKFFiber& fiber);
 
+  void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
 private:
   /**
    * Calculate six tensor coefficients by solving B * d = log(s), where d are
@@ -209,6 +210,8 @@ private:
   const bool             _free_water;
   const double           _stepLength;
   const std::vector<int> _labels;
+
+  bool _writeBinary;
 
   // Threading control
   const int _num_threads;

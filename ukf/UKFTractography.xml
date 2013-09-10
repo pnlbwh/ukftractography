@@ -69,6 +69,14 @@
       <description>Tracts generated, with second tensor output (if there is one)</description>
     </geometry>
 
+    <boolean>
+      <name>writeBinaryTracts</name>
+      <flag>b</flag>
+      <longflag>writeBinaryTracts</longflag>
+      <label>Write Binary Tracts File</label>
+      <description>Write tract file as a VTK binary data file</description>
+      <default>false</default>
+    </boolean>
   </parameters>
 
   <parameters>

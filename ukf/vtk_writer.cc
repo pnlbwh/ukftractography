@@ -25,7 +25,8 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   _filter_model_type(filter_model_type),
   _scale_glyphs(0.01),
   _write_tensors(write_tensors),
-  _eigenScaleFactor(1)
+  _eigenScaleFactor(1),
+  _writeBinary(false)
 {
 
   if( filter_model_type == Tractography::_1T || filter_model_type == Tractography::_1T_FW )
@@ -44,7 +45,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
     {
     _full = true;
     _p_l1 = 3,
-    _p_l2 = 4;
+      _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 1;
     _tensor_space = 6;
@@ -95,12 +96,13 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   vec_t              voxel = _signal_data->voxel();
   // Factor out the effect of voxel size
   _sizeFreeI2R = make_mat(
-      i2r(0, 0) / voxel._[2], i2r(0, 1) / voxel._[1], i2r(0, 2) / voxel._[0],
-      i2r(1, 0) / voxel._[2], i2r(1, 1) / voxel._[1], i2r(1, 2) / voxel._[0],
-      i2r(2, 0) / voxel._[2], i2r(2, 1) / voxel._[1], i2r(2, 2) / voxel._[0]
-      );
+    i2r(0, 0) / voxel._[2], i2r(0, 1) / voxel._[1], i2r(0, 2) / voxel._[0],
+    i2r(1, 0) / voxel._[2], i2r(1, 1) / voxel._[1], i2r(1, 2) / voxel._[0],
+    i2r(2, 0) / voxel._[2], i2r(2, 1) / voxel._[1], i2r(2, 2) / voxel._[0]
+    );
 
 }
+
 
 void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber)
 {
@@ -111,7 +113,14 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   output << "Tracts generated with tensor " << tensorNumber << std::endl;
 
   // File format
-  output << "ASCII" << std::endl;
+  if(this->_writeBinary)
+    {
+    output << "BINARY" << std::endl;
+    }
+  else
+    {
+    output << "ASCII" << std::endl;
+    }
 
   int num_fibers = fibers.size();
   int num_points = 0;
@@ -123,7 +132,7 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   // Write the points.
   output << "DATASET POLYDATA" << std::endl;
 
-  output << "POINTS " << num_points << " float";
+  output << "POINTS " << num_points << " float" << std::endl;
 
   // The points are written so that 3 points fits in one line
   int counter = 0;
@@ -144,12 +153,23 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   for( int i = 0; i < num_fibers; ++i )
     {
     int fiber_size = fibers[i].position.size();
-    output << fiber_size;
-    for( int j = 0; j < fiber_size; ++j )
+    if(!this->_writeBinary)
       {
-      output << " " << counter++;
+      output << fiber_size;
+      for( int j = 0; j < fiber_size; ++j )
+        {
+        output << " " << counter++;
+        }
+      output << std::endl;
       }
-    output << std::endl;
+    else
+      {
+      this->WriteX<int,int>(output,fiber_size);
+      for(int j = 0; j < fiber_size; ++j)
+        {
+        this->WriteX<int,int>(output,counter);
+        }
+      }
     }
   output << std::endl;
 
@@ -177,13 +197,30 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
           const State & state = fibers[i].state[j];
           mat_t         D;
           State2Tensor(state, D, local_tensorNumber);
-          output << D._[0] * _eigenScaleFactor << " " << D._[1] * _eigenScaleFactor << " " << D._[2] * _eigenScaleFactor << std::endl;
-          output << D._[3] * _eigenScaleFactor << " " << D._[4] * _eigenScaleFactor << " " << D._[5] * _eigenScaleFactor << std::endl;
-          output << D._[6] * _eigenScaleFactor << " " << D._[7] * _eigenScaleFactor << " " << D._[8] * _eigenScaleFactor << std::endl;
+          if(!this->_writeBinary)
+            {
+            output << D._[0] * _eigenScaleFactor << " "
+                   << D._[1] * _eigenScaleFactor << " "
+                   << D._[2] * _eigenScaleFactor << std::endl
+                   << D._[3] * _eigenScaleFactor << " "
+                   << D._[4] * _eigenScaleFactor << " "
+                   << D._[5] * _eigenScaleFactor << std::endl
+                   << D._[6] * _eigenScaleFactor << " "
+                   << D._[7] * _eigenScaleFactor << " "
+                   << D._[8] * _eigenScaleFactor << std::endl;
+            }
+          else
+            {
+            for(unsigned k = 0; k < 9; ++k)
+              {
+              this->WriteX<double,float>(output,D._[k]);
+              }
+            }
           }
         }
       }
     }
+  output << std::endl;
 }
 
 bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWithSecondTensor,
@@ -196,8 +233,13 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
     return true;
     }
 
+  std::ios_base::openmode openMode = std::ios_base::out;
+  if(this->_writeBinary)
+    {
+    openMode |= std::ios_base::binary;
+    }
   // Open file for writing.
-  std::ofstream output(file_name.c_str() );
+  std::ofstream output(file_name.c_str(), openMode);
   if( !output.is_open() )
     {
     std::cout << "Failed to open " << file_name << "." << std::endl;
@@ -294,19 +336,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
     int fiber_size = fibers[i].position.size();
     for( int j = 0; j < fiber_size; ++j )
       {
-      output << fibers[i].norm[j];
-      ++counter;
-      if( !(counter % 9) )
+      if(!this->_writeBinary)
         {
-        output << std::endl;
+        output << fibers[i].norm[j];
+        ++counter;
+        if( !(counter % 9) )
+          {
+          output << std::endl;
+          }
+        else if( counter < num_points )
+          {
+          output << " ";
+          }
         }
-      else if( counter < num_points )
+      else
         {
-        output << " ";
+        this->WriteX<double,float>(output,fibers[i].norm[j]);
         }
       }
     }
-  if( counter % 9 )
+  if(this->_writeBinary || counter % 9 )
     {
     output << std::endl;
     }
@@ -321,19 +370,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].fa[j];
-        ++counter;
-        if( !(counter % 9) )
+        if(!this->_writeBinary)
           {
-          output << std::endl;
+          output << fibers[i].fa[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
           }
-        else if( counter < num_points )
+        else
           {
-          output << " ";
+          this->WriteX<double,float>(output, fibers[i].fa[j]);
           }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -348,19 +404,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].fa2[j];
-        ++counter;
-        if( !(counter % 9) )
+        if(!this->_writeBinary)
           {
-          output << std::endl;
+          output << fibers[i].fa2[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
           }
-        else if( counter < num_points )
+        else
           {
-          output << " ";
+          this->WriteX<double,float>(output, fibers[i].fa2[j]);
           }
         }
       }
-    if( counter % 9 )
+    if(!this->_writeBinary &&  counter % 9 )
       {
       output << std::endl;
       }
@@ -376,19 +439,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].trace[j];
-        ++counter;
-        if( !(counter % 9) )
+        if(!this->_writeBinary)
           {
-          output << std::endl;
+          output << fibers[i].trace[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
           }
-        else if( counter < num_points )
+        else
           {
-          output << " ";
+          this->WriteX<double,float>(output,fibers[i].trace[j]);
           }
         }
       }
-    if( counter % 9 )
+    if(!this->_writeBinary &&  counter % 9 )
       {
       output << std::endl;
       }
@@ -404,19 +474,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].trace2[j];
-        ++counter;
-        if( !(counter % 9) )
+        if(!this->_writeBinary)
           {
-          output << std::endl;
+          output << fibers[i].trace2[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
           }
-        else if( counter < num_points )
+        else
           {
-          output << " ";
+          this->WriteX<double,float>(output,fibers[i].trace2[j]);
           }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -432,19 +509,26 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].free_water[j];
-        ++counter;
-        if( !(counter % 9) )
+        if(!this->_writeBinary)
           {
-          output << std::endl;
+          output << fibers[i].free_water[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
           }
-        else if( counter < num_points )
+        else
           {
-          output << " ";
+          this->WriteX<double,float>(output,fibers[i].free_water[j]);
           }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -461,20 +545,27 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].normMSE[j];
+        if(!this->_writeBinary)
+          {
+          output << fibers[i].normMSE[j];
+          ++counter;
+          if( !(counter % 9) )
+            {
+            output << std::endl;
+            }
+          else if( counter < num_points )
+            {
+            output << " ";
+            }
+          }
+        else
+          {
+          this->WriteX<double,float>(output,fibers[i].normMSE[j]);
+          }
         nmse_sum += fibers[i].normMSE[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -496,20 +587,27 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
         {
         for( int k = 0; k < state_dim; ++k )
           {
-          output << fibers[i].state[j][k];
-          ++counter;
-          if( !(counter % 9) )
+          if(!this->_writeBinary)
             {
-            output << std::endl;
+            output << fibers[i].state[j][k];
+            ++counter;
+            if( !(counter % 9) )
+              {
+              output << std::endl;
+              }
+            else if( counter < num_points * state_dim )
+              {
+              output << " ";
+              }
             }
-          else if( counter < num_points * state_dim )
+          else
             {
-            output << " ";
+            this->WriteX<double,float>(output,fibers[i].state[j][k]);
             }
           }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -531,21 +629,28 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
           {
           for( int b = a; b < state_dim; ++b )
             {
-            output << fibers[i].covariance[j] (a, b);
-            ++counter;
-            if( !(counter % 9) )
+            if(!this->_writeBinary)
               {
-              output << std::endl;
+              output << fibers[i].covariance[j] (a, b);
+              ++counter;
+              if( !(counter % 9) )
+                {
+                output << std::endl;
+                }
+              else if( counter < num_points * state_dim * (state_dim + 1) / 2 )
+                {
+                output << " ";
+                }
               }
-            else if( counter < num_points * state_dim * (state_dim + 1) / 2 )
+            else
               {
-              output << " ";
+              this->WriteX<double,float>(output,fibers[i].covariance[j] (a, b));
               }
             }
           }
         }
       }
-    if( counter % 9 )
+    if(this->_writeBinary || counter % 9 )
       {
       output << std::endl;
       }
@@ -706,7 +811,10 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
         }
       }
     }
-  output << std::endl;
+  if(!this->_writeBinary)
+    {
+    output << std::endl;
+    }
 
   // Write the lines.
   output << std::endl << "LINES " << num_points * num_tensors << " "
@@ -724,16 +832,18 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
 void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
                            int& counter)
 {
-  // Always write nine floats onto one line.
-  if( !(counter % 3) )
+  if(!this->_writeBinary)
     {
-    output << std::endl;
+    // Always write nine floats onto one line.
+    if( !(counter % 3) )
+      {
+      output << std::endl;
+      }
+    else
+      {
+      output << " ";
+      }
     }
-  else
-    {
-    output << " ";
-    }
-
   // Transform the point into the correct coordinate system.
   vnl_vector<double> p(4);
   p[0] = point._[2];    // NOTICE the change of order here. Flips back to the original axis order
@@ -745,12 +855,21 @@ void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
     p[3] = 1.0;
     vnl_vector<double> p_new(4);
     p_new = _signal_data->i2r() * p;    // ijk->RAS transform
-
-    output << p_new[0] << " " << p_new[1] << " " << p_new[2];
+    // reverse order again, so that only one output statement is needed.
+    p[2] = p_new[0];
+    p[1] = p_new[1];
+    p[0] = p_new[2];
+    // output << p_new[0] << " " << p_new[1] << " " << p_new[2];
+    }
+  if(!this->_writeBinary)
+    {
+    output << p[2] << " " << p[1] << " " << p[0];
     }
   else
     {
-    output << p[2] << " " << p[1] << " " << p[0];
+    this->WriteX<double,float>(output,p[2]);
+    this->WriteX<double,float>(output,p[1]);
+    this->WriteX<double,float>(output,p[0]);
     }
   ++counter;
 }
@@ -783,13 +902,13 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
     // Extract eigenvectors
     eigenVec1 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+                state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec2 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+                state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec3 =
       make_vec(-state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+               state[5 * (tensorNumber - 1) + _p_m3]);
     }
 
   // Perform ijk->RAS transform on eigen vectors
@@ -811,8 +930,8 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
     eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
     eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
     eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]
-  );
+    );
   D = Q
     * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
-      state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
+           state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
 }

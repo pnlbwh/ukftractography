@@ -28,13 +28,14 @@ else()
   include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
 endif()
 
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
 #-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
 add_subdirectory(vtk2mask)
 add_subdirectory(vtkFilter)
-
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   include(${Slicer_EXTENSION_CPACK})

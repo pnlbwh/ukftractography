@@ -93,6 +93,7 @@ protected:
         }
     }
 
+  void WritePolyData(const vtkPolyData *pd, const char *filename) const;
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */

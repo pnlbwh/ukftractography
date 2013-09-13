@@ -11,7 +11,7 @@
 #include "ISignalData.h"
 #include "utilities.h"
 #include "ukffiber.h"
-
+#include "itksys/SystemTools.hxx"
 #include "vtkPoints.h"
 #include "vtkPolyData.h"
 #include "vtkLine.h"
@@ -21,6 +21,7 @@
 #include "vtkPointData.h"
 #include "vtkXMLPolyDataWriter.h"
 #include "vtkPolyDataWriter.h"
+#include "vtkDataObject.h"
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_vector.h>
 
@@ -314,6 +315,38 @@ void VtkWriter
     }
 }
 
+void
+VtkWriter
+::WritePolyData(const vtkPolyData *pd, const char *filename) const
+{
+  const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
+  // all the casting is because vtk SetInput isn't const-correct.
+  vtkDataObject *dataObject =
+    const_cast<vtkDataObject *>(static_cast<const vtkDataObject *>(pd));
+  if(ext == ".vtp")
+    {
+    vtkSmartPointer<vtkXMLPolyDataWriter> writer =
+      vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+    writer->SetDataModeToBinary();
+    writer->SetCompressorTypeToZLib();
+    writer->SetInput(dataObject);
+    writer->SetFileName(filename);
+    writer->Write();
+    }
+  else
+    {
+    vtkSmartPointer<vtkPolyDataWriter> writer =
+      vtkSmartPointer<vtkPolyDataWriter>::New();
+    if(this->_writeBinary)
+      {
+      writer->SetFileTypeToBinary();
+      }
+    writer->SetInput(dataObject);
+    writer->SetFileName(filename);
+    writer->Write();
+    }
+}
+
 bool
 VtkWriter::
 Write(const std::string& file_name,
@@ -328,7 +361,6 @@ Write(const std::string& file_name,
     return true;
     }
 
-#if 1
   //
   // Handle glyps
   if(store_glyphs)
@@ -351,22 +383,7 @@ Write(const std::string& file_name,
     {
     vtkSmartPointer<vtkPolyData> polyData2;
     this->PopulateFibersAndTensors(polyData,fibers);
-#if 0
-    vtkSmartPointer<vtkXMLPolyDataWriter> writer2 =
-      vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-    writer2->SetDataModeToBinary();
-    writer2->SetCompressorTypeToZLib();
-#else
-    vtkSmartPointer<vtkPolyDataWriter> writer2 =
-      vtkSmartPointer<vtkPolyDataWriter>::New();
-  if(this->_writeBinary)
-    {
-    writer2->SetFileTypeToBinary();
-    }
-#endif
-    writer2->SetInput(polyData2);
-    writer2->SetFileName(tractsWithSecondTensor.c_str());
-    writer2->Write();
+    WritePolyData(polyData2, tractsWithSecondTensor.c_str());
     }
 
   // norm, fa etc hung as arrays on the point data for the polyData
@@ -418,7 +435,7 @@ Write(const std::string& file_name,
     }
 
   // fa2
-  if(fibers[0].fa.size() > 0)
+  if(fibers[0].fa2.size() > 0)
     {
     vtkSmartPointer<vtkFloatArray> fa2 = vtkSmartPointer<vtkFloatArray>::New();
     fa2->SetName("FA2");
@@ -582,450 +599,7 @@ Write(const std::string& file_name,
     delete [] tmpArray;
     }
 
-#if 0
-  vtkSmartPointer<vtkXMLPolyDataWriter> writer =
-    vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-  writer->SetDataModeToBinary();
-  writer->SetCompressorTypeToZLib();
-#else
-  vtkSmartPointer<vtkPolyDataWriter> writer =
-    vtkSmartPointer<vtkPolyDataWriter>::New();
-  if(this->_writeBinary)
-    {
-    writer->SetFileTypeToBinary();
-    }
-#endif
-  writer->SetInput(polyData);
-  writer->SetFileName(file_name.c_str());
-  writer->Write();
-
-#else
-
-  std::ios_base::openmode openMode = std::ios_base::out;
-  if(this->_writeBinary)
-    {
-    openMode |= std::ios_base::binary;
-    }
-  // Open file for writing.
-  std::ofstream output(file_name.c_str(), openMode);
-  if( !output.is_open() )
-    {
-    std::cout << "Failed to open " << file_name << "." << std::endl;
-    return true;
-    }
-  std::cout << "Writing to " << file_name << "." << std::endl;
-  writeFibersAndTensors(output, fibers, 1);
-
-  if( !tractsWithSecondTensor.empty() )
-    {
-    std::ofstream output_withSecondTensor(tractsWithSecondTensor.c_str() );
-    if( !output_withSecondTensor.is_open() )
-      {
-      std::cout << "Failed to open " << tractsWithSecondTensor << "." << std::endl;
-      return true;
-      }
-    std::cout << "Writing to " << tractsWithSecondTensor << "." << std::endl;
-    writeFibersAndTensors(output_withSecondTensor, fibers, 2);
-    }
-
-  // Glyph output
-  if( store_glyphs )
-    {
-    assert(fibers[0].state.size() );
-    std::stringstream ss;
-    ss << file_name.substr(0, file_name.find_last_of(".") ) << "_glyphs"
-       << ".vtk";
-    if( WriteGlyphs(ss.str(), fibers) )
-      {
-      return true;
-      }
-    }
-
-  int num_fibers = fibers.size();
-  int num_points = 0;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    num_points += fibers[i].position.size();
-    }
-
-  /////
-  // Here starts a field data that may contain norm, FA, state and covariance
-  /////
-  int  fields = 1; // 1 for the norm.
-  bool write_fa = fibers[0].fa.size();
-  bool write_fa2 = fibers[0].fa2.size();
-  bool write_cov = fibers[0].covariance.size();
-  bool write_fw = fibers[0].free_water.size();
-  bool write_nmse = fibers[0].normMSE.size();
-  bool write_trace = fibers[0].trace.size();
-  bool write_trace2 = fibers[0].trace2.size();
-
-  if( write_fa )
-    {
-    ++fields;
-    }
-  if( write_fa2 )
-    {
-    ++fields;
-    }
-  if( write_state )
-    {
-    ++fields;
-    }
-  if( write_cov )
-    {
-    ++fields;
-    }
-  if( write_fw )
-    {
-    ++fields;
-    }
-  if( write_nmse )
-    {
-    ++fields;
-    }
-  if( write_trace )
-    {
-    ++fields;
-    }
-  if( write_trace2 )
-    {
-    ++fields;
-    }
-  output << "FIELD FieldData " << fields << std::endl;
-
-  // TODO: write a function for writing the scalar fields
-
-  // Write norm.
-  int counter = 0;
-  output << "norm 1 " << num_points << " float" << std::endl;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j )
-      {
-      if(!this->_writeBinary)
-        {
-        output << fibers[i].norm[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
-        }
-      else
-        {
-        this->WriteX<double,float>(output,fibers[i].norm[j]);
-        }
-      }
-    }
-  if(this->_writeBinary || counter % 9 )
-    {
-    output << std::endl;
-    }
-
-  // Fractional anisotropy
-  if( write_fa )
-    {
-    output << "FA 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].fa[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output, fibers[i].fa[j]);
-          }
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  if( write_fa2 )
-    {
-    output << "FA2 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].fa2[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output, fibers[i].fa2[j]);
-          }
-        }
-      }
-    if(!this->_writeBinary &&  counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  // trace
-  if( write_trace )
-    {
-    output << "Trace 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].trace[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output,fibers[i].trace[j]);
-          }
-        }
-      }
-    if(!this->_writeBinary &&  counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  // trace
-  if( write_trace2 )
-    {
-    output << "Trace2 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].trace2[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output,fibers[i].trace2[j]);
-          }
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  // Free water
-  if( write_fw )
-    {
-    output << "FreeWater 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].free_water[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output,fibers[i].free_water[j]);
-          }
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  // Normalized Mean Squared Error of the estimated signal to the real signal
-  double nmse_sum = 0.0;
-  if( write_nmse )
-    {
-    output << "NMSE 1 " << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        if(!this->_writeBinary)
-          {
-          output << fibers[i].normMSE[j];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points )
-            {
-            output << " ";
-            }
-          }
-        else
-          {
-          this->WriteX<double,float>(output,fibers[i].normMSE[j]);
-          }
-        nmse_sum += fibers[i].normMSE[j];
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  std::cout << "nmse_avg=" << nmse_sum / counter << std::endl;
-
-  // State output
-  if( write_state )
-    {
-    int state_dim = fibers[0].state[0].size();
-    output << "state " << state_dim << " " << num_points << " float"
-           << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        for( int k = 0; k < state_dim; ++k )
-          {
-          if(!this->_writeBinary)
-            {
-            output << fibers[i].state[j][k];
-            ++counter;
-            if( !(counter % 9) )
-              {
-              output << std::endl;
-              }
-            else if( counter < num_points * state_dim )
-              {
-              output << " ";
-              }
-            }
-          else
-            {
-            this->WriteX<double,float>(output,fibers[i].state[j][k]);
-            }
-          }
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  // Covariance info
-  if( write_cov )
-    {
-    int state_dim = fibers[0].state[0].size();
-    output << "covariance " << state_dim * (state_dim + 1) / 2 << " "
-           << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
-      {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        for( int a = 0; a < state_dim; ++a )
-          {
-          for( int b = a; b < state_dim; ++b )
-            {
-            if(!this->_writeBinary)
-              {
-              output << fibers[i].covariance[j] (a, b);
-              ++counter;
-              if( !(counter % 9) )
-                {
-                output << std::endl;
-                }
-              else if( counter < num_points * state_dim * (state_dim + 1) / 2 )
-                {
-                output << " ";
-                }
-              }
-            else
-              {
-              this->WriteX<double,float>(output,fibers[i].covariance[j] (a, b));
-              }
-            }
-          }
-        }
-      }
-    if(this->_writeBinary || counter % 9 )
-      {
-      output << std::endl;
-      }
-    }
-
-  output.close();
-#endif
+  WritePolyData(polyData,file_name.c_str());
   return false;
 
 }
@@ -1038,7 +612,6 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
     std::cout << "No fibers existing." << std::endl;
     return true;
     }
-#if 1
   // polyData object to fill in
   vtkSmartPointer<vtkPolyData> polyData;
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
@@ -1180,171 +753,7 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
     lines->InsertNextCell(line);
     }
   polyData->SetLines(lines);
-  vtkSmartPointer<vtkPolyDataWriter> writer = vtkSmartPointer<vtkPolyDataWriter>::New();
-  if(this->_writeBinary)
-    {
-    writer->SetFileTypeToBinary();
-    }
-  writer->SetFileName(file_name.c_str());
-  writer->SetInput(polyData);
-  writer->Write();
-#else
-  // Open file for writing.
-  std::ofstream output(file_name.c_str() );
-  if( !output.is_open() )
-    {
-    std::cout << "Failed to open " << file_name << "." << std::endl;
-    return true;
-    }
-
-  std::cout << "Writing glyphs to " << file_name << "." << std::endl;
-
-  // Write header information
-  output << VTK_LEGACY_FORMAT_HEADER << std::endl;
-  output << "TractographyGlyphs" << std::endl;
-  output << "ASCII" << std::endl;
-
-  int num_fibers = fibers.size();
-  int num_points = 0;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    num_points += fibers[i].position.size();
-    }
-
-  int num_tensors = fibers[0].state[0].size() / 5;
-
-  const double scale = 0.5 * _scale_glyphs;
-
-  // Write the points.
-  output << "DATASET POLYDATA" << std::endl;
-  output << "POINTS " << num_points * 2 * num_tensors << " float";
-  int counter = 0;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j )
-      {
-      vec_t        point = fibers[i].position[j];
-      const State& state = fibers[i].state[j];
-
-      // Get the directions.
-      vec_t m1, m2, m3;
-      if( state.size() == 5 )
-        {
-        m1 = make_vec(state[2], state[1], state[0]);
-        m1 = state[3] / 100.0 * m1;
-        }
-      else if( state.size() == 6 )
-        {
-        m1 = rotation_main_dir(state[0], state[1], state[2]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
-        m1 = state[3] / 100.0 * m1;
-        }
-      else if( state.size() == 10 )
-        {
-        m1 = make_vec(state[2], state[1], state[0]);
-        m2 = make_vec(state[7], state[6], state[5]);
-        m1 = state[3] / 100.0 * m1;
-        m2 = state[8] / 100.0 * m2;
-        }
-      else if( state.size() == 12 )
-        {
-        m1 = rotation_main_dir(state[0], state[1], state[2]);
-        m2 = rotation_main_dir(state[6], state[7], state[8]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
-        tmp = m2._[0];
-        m2._[0] = m2._[2];
-        m2._[2] = tmp;
-        m1 = state[3] / 100.0 * m1;
-        m2 = state[9] / 100.0 * m2;
-        }
-      else if( state.size() == 15 )
-        {
-        m1 = make_vec(state[2], state[1], state[0]);
-        m2 = make_vec(state[7], state[6], state[5]);
-        m3 = make_vec(state[12], state[11], state[10]);
-        m1 = state[3] / 100.0 * m1;
-        m2 = state[8] / 100.0 * m2;
-        m3 = state[13] / 100.0 * m3;
-        }
-      else if( state.size() == 18 )
-        {
-        m1 = rotation_main_dir(state[0], state[1], state[2]);
-        m2 = rotation_main_dir(state[6], state[7], state[8]);
-        m3 = rotation_main_dir(state[12], state[13], state[14]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
-        tmp = m2._[0];
-        m2._[0] = m2._[2];
-        m2._[2] = tmp;
-        tmp = m3._[0];
-        m3._[0] = m3._[2];
-        m3._[2] = tmp;
-        m1 = state[3] / 100.0 * m1;
-        m2 = state[9] / 100.0 * m2;
-        m3 = state[15] / 100.0 * m3;
-        }
-
-      // Calculate the points. The glyphs are represented as two-point lines.
-      vec_t pos1, pos2;
-      if( num_tensors == 1 )
-        {
-        pos1 = point - scale * m1;
-        pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-        }
-      else if( num_tensors == 2 )
-        {
-        pos1 = point - scale * m1;
-        pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-
-        pos1 = point - scale * m2;
-        pos2 = point + scale * m2;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-        }
-      else if( num_tensors == 3 )
-        {
-        pos1 = point - scale * m1;
-        pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-
-        pos1 = point - scale * m2;
-        pos2 = point + scale * m2;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-
-        pos1 = point - scale * m3;
-        pos2 = point + scale * m3;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
-        }
-      }
-    }
-  if(!this->_writeBinary)
-    {
-    output << std::endl;
-    }
-
-  // Write the lines.
-  output << std::endl << "LINES " << num_points * num_tensors << " "
-         << num_points * num_tensors * 3 << std::endl;
-  for( int i = 0; i < num_points * num_tensors; ++i )
-    {
-    output << "2 " << i * 2 << " " << i * 2 + 1 << std::endl;
-    }
-
-  output.close();
-#endif
+  WritePolyData(polyData,file_name.c_str());
   return false;
 }
 

@@ -214,3 +214,88 @@ add_test(NAME ${testname}
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinary)
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+
+#
+# convert from legacy vtk ASCII to legacy vtk binary
+set(testname ConvertVTK_LegacyText_ToLegacyBinary)
+add_test(NAME ${testname}
+  COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -b
+  -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
+)
+# depends on last of chain of 2T_fw_fiber tests; will depend on all of them
+set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+
+add_test(NAME ${testname}Compare
+  COMMAND ${CLP}Test
+  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
+)
+
+set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
+set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
+
+#
+# convert from legacy vtk ASCII to XML ASCII
+set(testname ConvertVTK_LegacyText_ToXML)
+add_test(NAME ${testname}
+  COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
+)
+# depends on last of chain of 2T_fw_fiber tests; will depend on all of them
+set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+
+add_test(NAME ${testname}Compare
+  COMMAND ${CLP}Test
+  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
+)
+
+set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
+set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
+
+#
+# convert from legacy vtk ASCII to XML compressed binary
+set(testname ConvertVTK_LegacyText_ToXMLBinaryCompressed)
+add_test(NAME ${testname}
+  COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -b -z
+  -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
+)
+# depends on last of chain of 2T_fw_fiber tests; will depend on all of them
+set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+
+add_test(NAME ${testname}Compare
+  COMMAND ${CLP}Test
+  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
+)
+
+set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
+set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
+
+set(XMLBinaryCompressed ${testname})
+
+#
+# convert from legacy vtk ASCII to XML compressed binary
+set(testname ConvertVTK_XMLBinaryCompressed_To_LegacyText)
+add_test(NAME ${testname}
+  COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -i ${TESTING_RESULTS_DIRECTORY}/${XMLBinaryCompressed}.vtp
+  -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
+)
+# depends on last of chain of 2T_fw_fiber tests; will depend on all of them
+set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+set_tests_properties(${testname} PROPERTIES DEPENDS ${XMLBinaryCompressed})
+
+add_test(NAME ${testname}Compare
+  COMMAND ${CLP}Test
+  ${TESTING_RESULTS_DIRECTORY}/${XMLBinaryCompressed}.vtp
+  ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
+)
+
+set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
+set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})

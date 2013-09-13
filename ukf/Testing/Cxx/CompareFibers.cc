@@ -1,16 +1,14 @@
-#if 0
-#include "vtkReader.h"
-#else
 #include "vtkPolyData.h"
 #include "vtkPolyDataReader.h"
+#include "vtkXMLPolyDataReader.h"
 #include "vtkCellArray.h"
 #include "vtkSmartPointer.h"
 #include "vtkPointData.h"
 #include "vtkFloatArray.h"
 #include "math.h"
-#endif
 #include "fiber.h"
 #include <iostream>
+#include "itksys/SystemTools.hxx"
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
@@ -20,7 +18,27 @@
 #define EXIT_SUCCESS 0
 #endif
 
-
+vtkSmartPointer<vtkPolyData>
+ReadPolyData(const char *filename)
+{
+  const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
+  if(ext == ".vtp")
+    {
+    vtkSmartPointer<vtkXMLPolyDataReader> reader =
+      vtkSmartPointer<vtkXMLPolyDataReader>::New();
+    reader->SetFileName(filename);
+    reader->Update();
+    return vtkSmartPointer<vtkPolyData>(reader->GetOutput());
+    }
+  else
+    {
+    vtkSmartPointer<vtkPolyDataReader> reader =
+      vtkSmartPointer<vtkPolyDataReader>::New();
+    reader->SetFileName(filename);
+    reader->Update();
+    return vtkSmartPointer<vtkPolyData>(reader->GetOutput());
+    }
+}
 int main(int argc, char *argv[])
 {
   int rval = EXIT_SUCCESS;
@@ -31,16 +49,8 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
     }
 
-  vtkSmartPointer<vtkPolyDataReader> reader1 =
-    vtkSmartPointer<vtkPolyDataReader>::New();
-  vtkSmartPointer<vtkPolyDataReader> reader2 =
-    vtkSmartPointer<vtkPolyDataReader>::New();
-  reader1->SetFileName(argv[1]);
-  reader2->SetFileName(argv[2]);
-  reader1->Update();
-  reader2->Update();
-  vtkSmartPointer<vtkPolyData> input1 = reader1->GetOutput();
-  vtkSmartPointer<vtkPolyData> input2 = reader2->GetOutput();
+  vtkSmartPointer<vtkPolyData> input1 = ReadPolyData(argv[1]);
+  vtkSmartPointer<vtkPolyData> input2 = ReadPolyData(argv[2]);
   std::cerr << "Input 1" << std::endl
             << "Verts " << input1->GetNumberOfVerts()
             << " Lines " << input1->GetNumberOfLines()

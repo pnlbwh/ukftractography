@@ -16,9 +16,11 @@
 #include "ukffiber.h"
 #include "vtkByteSwap.h"
 #include <fstream>
+#include "vtkPolyData.h"
+#include "vtkSmartPointer.h"
 
 class ISignalData;
-
+class vtkPointData;
 /**
  * \class VtkWriter
  * \brief Class that allows to write a bunch of fibers to a .vtk file
@@ -62,7 +64,7 @@ protected:
    * Also this function makes sure that the output VTK file is well formatted.
   */
   void WritePoint(const vec_t& point, std::ofstream& output, int& counter);
-
+  vec_t PointConvert(const vec_t &point);
   /**
    * Write a single scalar value out in binary.
    */
@@ -91,11 +93,13 @@ protected:
         }
     }
 
+  void WritePolyData(const vtkPolyData *pd, const char *filename) const;
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */
   void writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber);
-
+  void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
+                                const std::vector<UKFFiber>& fibers);
   /**
    * \brief Reconstructs the tensor from the state for each case
    * \param[out] D The calculated diffusion tensor

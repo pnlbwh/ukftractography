@@ -13,7 +13,7 @@
   <version>1.0</version>
   <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
   <license></license>
-  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner</contributor>
+  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams</contributor>
   <acknowledgements></acknowledgements>
 
   <parameters>
@@ -69,6 +69,14 @@
       <description>Tracts generated, with second tensor output (if there is one)</description>
     </geometry>
 
+    <boolean>
+      <name>writeBinaryTracts</name>
+      <flag>b</flag>
+      <longflag>writeBinaryTracts</longflag>
+      <label>Write Binary Tracts File</label>
+      <description>Write tract file as a VTK binary data file</description>
+      <default>false</default>
+    </boolean>
   </parameters>
 
   <parameters>

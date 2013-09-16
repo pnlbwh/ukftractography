@@ -11,7 +11,17 @@
 #include "ISignalData.h"
 #include "utilities.h"
 #include "ukffiber.h"
-
+#include "itksys/SystemTools.hxx"
+#include "vtkPoints.h"
+#include "vtkPolyData.h"
+#include "vtkLine.h"
+#include "vtkCellArray.h"
+#include "vtkSmartPointer.h"
+#include "vtkFloatArray.h"
+#include "vtkPointData.h"
+#include "vtkXMLPolyDataWriter.h"
+#include "vtkPolyDataWriter.h"
+#include "vtkDataObject.h"
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_vector.h>
 
@@ -25,7 +35,8 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   _filter_model_type(filter_model_type),
   _scale_glyphs(0.01),
   _write_tensors(write_tensors),
-  _eigenScaleFactor(1)
+  _eigenScaleFactor(1),
+  _writeBinary(false)
 {
 
   if( filter_model_type == Tractography::_1T || filter_model_type == Tractography::_1T_FW )
@@ -44,7 +55,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
     {
     _full = true;
     _p_l1 = 3,
-    _p_l2 = 4;
+      _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 1;
     _tensor_space = 6;
@@ -95,12 +106,13 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   vec_t              voxel = _signal_data->voxel();
   // Factor out the effect of voxel size
   _sizeFreeI2R = make_mat(
-      i2r(0, 0) / voxel._[2], i2r(0, 1) / voxel._[1], i2r(0, 2) / voxel._[0],
-      i2r(1, 0) / voxel._[2], i2r(1, 1) / voxel._[1], i2r(1, 2) / voxel._[0],
-      i2r(2, 0) / voxel._[2], i2r(2, 1) / voxel._[1], i2r(2, 2) / voxel._[0]
-      );
+    i2r(0, 0) / voxel._[2], i2r(0, 1) / voxel._[1], i2r(0, 2) / voxel._[0],
+    i2r(1, 0) / voxel._[2], i2r(1, 1) / voxel._[1], i2r(1, 2) / voxel._[0],
+    i2r(2, 0) / voxel._[2], i2r(2, 1) / voxel._[1], i2r(2, 2) / voxel._[0]
+    );
 
 }
+
 
 void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber)
 {
@@ -111,7 +123,14 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   output << "Tracts generated with tensor " << tensorNumber << std::endl;
 
   // File format
-  output << "ASCII" << std::endl;
+  if(this->_writeBinary)
+    {
+    output << "BINARY" << std::endl;
+    }
+  else
+    {
+    output << "ASCII" << std::endl;
+    }
 
   int num_fibers = fibers.size();
   int num_points = 0;
@@ -123,8 +142,7 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   // Write the points.
   output << "DATASET POLYDATA" << std::endl;
 
-  output << "POINTS " << num_points << " float";
-
+  output << "POINTS " << num_points << " float" << std::endl;
   // The points are written so that 3 points fits in one line
   int counter = 0;
   for( int i = 0; i < num_fibers; ++i )
@@ -144,12 +162,23 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   for( int i = 0; i < num_fibers; ++i )
     {
     int fiber_size = fibers[i].position.size();
-    output << fiber_size;
-    for( int j = 0; j < fiber_size; ++j )
+    if(!this->_writeBinary)
       {
-      output << " " << counter++;
+      output << fiber_size;
+      for( int j = 0; j < fiber_size; ++j )
+        {
+        output << " " << counter++;
+        }
+      output << std::endl;
       }
-    output << std::endl;
+    else
+      {
+      this->WriteX<int,int>(output,fiber_size);
+      for(int j = 0; j < fiber_size; ++j)
+        {
+        this->WriteX<int,int>(output,counter);
+        }
+      }
     }
   output << std::endl;
 
@@ -158,6 +187,7 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
   /////
 
   output << "POINT_DATA " << num_points << std::endl;
+
 
   /////
   // Tensor output
@@ -177,59 +207,38 @@ void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<
           const State & state = fibers[i].state[j];
           mat_t         D;
           State2Tensor(state, D, local_tensorNumber);
-          output << D._[0] * _eigenScaleFactor << " " << D._[1] * _eigenScaleFactor << " " << D._[2] * _eigenScaleFactor << std::endl;
-          output << D._[3] * _eigenScaleFactor << " " << D._[4] * _eigenScaleFactor << " " << D._[5] * _eigenScaleFactor << std::endl;
-          output << D._[6] * _eigenScaleFactor << " " << D._[7] * _eigenScaleFactor << " " << D._[8] * _eigenScaleFactor << std::endl;
+          if(!this->_writeBinary)
+            {
+            output << D._[0] * _eigenScaleFactor << " "
+                   << D._[1] * _eigenScaleFactor << " "
+                   << D._[2] * _eigenScaleFactor << std::endl
+                   << D._[3] * _eigenScaleFactor << " "
+                   << D._[4] * _eigenScaleFactor << " "
+                   << D._[5] * _eigenScaleFactor << std::endl
+                   << D._[6] * _eigenScaleFactor << " "
+                   << D._[7] * _eigenScaleFactor << " "
+                   << D._[8] * _eigenScaleFactor << std::endl;
+            }
+          else
+            {
+            for(unsigned k = 0; k < 9; ++k)
+              {
+              this->WriteX<double,float>(output,D._[k] * _eigenScaleFactor);
+              }
+            }
           }
         }
       }
     }
+  output << std::endl;
 }
 
-bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWithSecondTensor,
-                      const std::vector<UKFFiber>& fibers,
-                      bool write_state, bool store_glyphs)
+void VtkWriter
+::PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
+                           const std::vector<UKFFiber>& fibers)
 {
-  if( fibers.size() == 0 )
-    {
-    std::cout << "No fiber exists." << std::endl;
-    return true;
-    }
-
-  // Open file for writing.
-  std::ofstream output(file_name.c_str() );
-  if( !output.is_open() )
-    {
-    std::cout << "Failed to open " << file_name << "." << std::endl;
-    return true;
-    }
-  std::cout << "Writing to " << file_name << "." << std::endl;
-  writeFibersAndTensors(output, fibers, 1);
-
-  if( !tractsWithSecondTensor.empty() )
-    {
-    std::ofstream output_withSecondTensor(tractsWithSecondTensor.c_str() );
-    if( !output_withSecondTensor.is_open() )
-      {
-      std::cout << "Failed to open " << tractsWithSecondTensor << "." << std::endl;
-      return true;
-      }
-    std::cout << "Writing to " << tractsWithSecondTensor << "." << std::endl;
-    writeFibersAndTensors(output_withSecondTensor, fibers, 2);
-    }
-
-  // Glyph output
-  if( store_glyphs )
-    {
-    assert(fibers[0].state.size() );
-    std::stringstream ss;
-    ss << file_name.substr(0, file_name.find_last_of(".") ) << "_glyphs"
-       << ".vtk";
-    if( WriteGlyphs(ss.str(), fibers) )
-      {
-      return true;
-      }
-    }
+  polyData = vtkSmartPointer<vtkPolyData>::New();
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   int num_fibers = fibers.size();
   int num_points = 0;
@@ -238,322 +247,361 @@ bool VtkWriter::Write(const std::string& file_name, const std::string & tractsWi
     num_points += fibers[i].position.size();
     }
 
-  /////
-  // Here starts a field data that may contain norm, FA, state and covariance
-  /////
-  int  fields = 1; // 1 for the norm.
-  bool write_fa = fibers[0].fa.size();
-  bool write_fa2 = fibers[0].fa2.size();
-  bool write_cov = fibers[0].covariance.size();
-  bool write_fw = fibers[0].free_water.size();
-  bool write_nmse = fibers[0].normMSE.size();
-  bool write_trace = fibers[0].trace.size();
-  bool write_trace2 = fibers[0].trace2.size();
-
-  if( write_fa )
-    {
-    ++fields;
-    }
-  if( write_fa2 )
-    {
-    ++fields;
-    }
-  if( write_state )
-    {
-    ++fields;
-    }
-  if( write_cov )
-    {
-    ++fields;
-    }
-  if( write_fw )
-    {
-    ++fields;
-    }
-  if( write_nmse )
-    {
-    ++fields;
-    }
-  if( write_trace )
-    {
-    ++fields;
-    }
-  if( write_trace2 )
-    {
-    ++fields;
-    }
-  output << "FIELD FieldData " << fields << std::endl;
-
-  // TODO: write a function for writing the scalar fields
-
-  // Write norm.
-  int counter = 0;
-  output << "norm 1 " << num_points << " float" << std::endl;
   for( int i = 0; i < num_fibers; ++i )
     {
     int fiber_size = fibers[i].position.size();
     for( int j = 0; j < fiber_size; ++j )
       {
-      output << fibers[i].norm[j];
-      ++counter;
-      if( !(counter % 9) )
-        {
-        output << std::endl;
-        }
-      else if( counter < num_points )
-        {
-        output << " ";
-        }
+      vec_t current = PointConvert(fibers[i].position[j]);
+      points->InsertNextPoint(current._);
       }
     }
-  if( counter % 9 )
+  polyData->SetPoints(points);
+
+  // do the lines
+  vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+
+  vtkIdType counter = 0;
+  for(int i = 0; i < num_fibers; ++i)
     {
-    output << std::endl;
+    int fiber_size = fibers[i].position.size();
+    vtkIdType *ids = new vtkIdType[fiber_size];
+    for(int j = 0; j < fiber_size; ++j)
+      {
+      ids[j] = counter;
+      counter++;
+      }
+    vtkSmartPointer<vtkLine> curLine = vtkSmartPointer<vtkLine>::New();
+    curLine->Initialize(fiber_size,ids,points);
+    lines->InsertNextCell(curLine);
+    delete [] ids;
+    }
+  polyData->SetLines(lines);
+
+  /////
+  // Dataset attribute part starts
+  /////
+
+
+  if( _write_tensors )
+    {
+    typedef std::vector<double> State;
+    counter = 0;
+    vtkPointData *pointData = polyData->GetPointData();
+
+    for( int local_tensorNumber = 1; local_tensorNumber <= _num_tensors; ++local_tensorNumber )
+      {
+      vtkSmartPointer<vtkFloatArray> curTensor = vtkSmartPointer<vtkFloatArray>::New();
+      curTensor->SetNumberOfComponents(9);
+      curTensor->Allocate(num_points * 9);
+      std::stringstream ss;
+      ss << local_tensorNumber;
+      curTensor->SetName(ss.str().c_str());
+      // output << "TENSORS Tensor" << local_tensorNumber << " float" << std::endl;
+      for( int i = 0; i < num_fibers; i++ )
+        {
+        const int fiber_size = static_cast<int>(fibers[i].position.size() );
+        for( int j = 0; j < fiber_size; ++j )
+          {
+          const State & state = fibers[i].state[j];
+          mat_t         D;
+          State2Tensor(state, D, local_tensorNumber);
+          curTensor->InsertNextTuple(D._);
+          }
+        }
+      int idx = pointData->AddArray(curTensor);
+      pointData->SetActiveAttribute(idx,vtkDataSetAttributes::TENSORS);
+      }
+    }
+}
+
+void
+VtkWriter
+::WritePolyData(const vtkPolyData *pd, const char *filename) const
+{
+  const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
+  // all the casting is because vtk SetInput isn't const-correct.
+  vtkDataObject *dataObject =
+    const_cast<vtkDataObject *>(static_cast<const vtkDataObject *>(pd));
+  if(ext == ".vtp")
+    {
+    vtkSmartPointer<vtkXMLPolyDataWriter> writer =
+      vtkSmartPointer<vtkXMLPolyDataWriter>::New();
+    writer->SetDataModeToBinary();
+    writer->SetCompressorTypeToZLib();
+    writer->SetInput(dataObject);
+    writer->SetFileName(filename);
+    writer->Write();
+    }
+  else
+    {
+    vtkSmartPointer<vtkPolyDataWriter> writer =
+      vtkSmartPointer<vtkPolyDataWriter>::New();
+    if(this->_writeBinary)
+      {
+      writer->SetFileTypeToBinary();
+      }
+    writer->SetInput(dataObject);
+    writer->SetFileName(filename);
+    writer->Write();
+    }
+}
+
+bool
+VtkWriter::
+Write(const std::string& file_name,
+      const std::string & tractsWithSecondTensor,
+      const std::vector<UKFFiber>& fibers,
+      bool write_state,
+      bool store_glyphs)
+{
+  if( fibers.size() == 0 )
+    {
+    std::cout << "No fiber exists." << std::endl;
+    return true;
     }
 
-  // Fractional anisotropy
-  if( write_fa )
+  //
+  // Handle glyps
+  if(store_glyphs)
     {
-    output << "FA 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    std::stringstream ss;
+    ss << file_name.substr(0, file_name.find_last_of(".") ) << "_glyphs"
+       << ".vtk";
+    if( WriteGlyphs(ss.str(), fibers) )
+      {
+      return true;
+      }
+    }
+  // polyData object to fill in
+  vtkSmartPointer<vtkPolyData> polyData;
+  // handle fibers and tensors
+  this->PopulateFibersAndTensors(polyData,fibers);
+
+  // no idea if this below is ever called.
+  if( !tractsWithSecondTensor.empty() )
+    {
+    vtkSmartPointer<vtkPolyData> polyData2;
+    this->PopulateFibersAndTensors(polyData,fibers);
+    WritePolyData(polyData2, tractsWithSecondTensor.c_str());
+    }
+
+  // norm, fa etc hung as arrays on the point data for the polyData
+  // object.
+  vtkPointData *pointData = polyData->GetPointData();
+
+  int num_fibers = fibers.size();
+  int num_points = 0;
+  for( int i = 0; i < num_fibers; ++i )
+    {
+    num_points += fibers[i].position.size();
+    }
+
+  // write norm
+  {
+  vtkSmartPointer<vtkFloatArray> norms = vtkSmartPointer<vtkFloatArray>::New();
+  norms->SetNumberOfComponents(1);
+  norms->Allocate(num_points);
+  norms->SetName("norm");
+  for( int i = 0; i < num_fibers; ++i )
+    {
+    int fiber_size = fibers[i].position.size();
+    for( int j = 0; j < fiber_size; ++j)
+      {
+      norms->InsertNextValue(fibers[i].norm[j]);
+      }
+    }
+  int idx = pointData->AddArray(norms);
+  pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
+  }
+
+  // write fa
+  if(fibers[0].fa.size() > 0)
+    {
+    vtkSmartPointer<vtkFloatArray> fa = vtkSmartPointer<vtkFloatArray>::New();
+    fa->SetNumberOfComponents(1);
+    fa->Allocate(num_points);
+    fa->SetName("FA");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].fa[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
+        fa->InsertNextValue(fibers[i].fa[j]);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(fa);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     }
 
-  if( write_fa2 )
+  // fa2
+  if(fibers[0].fa2.size() > 0)
     {
-    output << "FA2 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    vtkSmartPointer<vtkFloatArray> fa2 = vtkSmartPointer<vtkFloatArray>::New();
+    fa2->SetName("FA2");
+    fa2->SetNumberOfComponents(1);
+    fa2->Allocate(num_points);
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].fa2[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
+        fa2->InsertNextValue(fibers[i].fa2[j]);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(fa2);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     }
 
   // trace
-  if( write_trace )
+  if(fibers[0].trace.size() > 0)
     {
-    output << "Trace 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    vtkSmartPointer<vtkFloatArray> trace = vtkSmartPointer<vtkFloatArray>::New();
+    trace->SetNumberOfComponents(1);
+    trace->Allocate(num_points);
+    trace->SetName("Trace");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].trace[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
+        trace->InsertNextValue(fibers[i].trace[j]);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(trace);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     }
 
-  // trace
-  if( write_trace2 )
+  // trace2
+  if(fibers[0].trace2.size() > 0)
     {
-    output << "Trace2 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    vtkSmartPointer<vtkFloatArray> trace2 = vtkSmartPointer<vtkFloatArray>::New();
+    trace2->SetNumberOfComponents(1);
+    trace2->Allocate(num_points);
+    trace2->SetName("Trace2");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].trace2[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
+        trace2->InsertNextValue(fibers[i].trace2[j]);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(trace2);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     }
 
-  // Free water
-  if( write_fw )
+  if(fibers[0].free_water.size() > 0)
     {
-    output << "FreeWater 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    vtkSmartPointer<vtkFloatArray> free_water = vtkSmartPointer<vtkFloatArray>::New();
+    free_water->SetNumberOfComponents(1);
+    free_water->Allocate(num_points);
+    free_water->SetName("FreeWater");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].free_water[j];
-        ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
+        free_water->InsertNextValue(fibers[i].free_water[j]);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(free_water);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     }
 
-  // Normalized Mean Squared Error of the estimated signal to the real signal
-  double nmse_sum = 0.0;
-  if( write_nmse )
+  if(fibers[0].normMSE.size() > 0)
     {
-    output << "NMSE 1 " << num_points << " float" << std::endl;
-    counter = 0;
+    double nmse_sum(0);
+    unsigned counter(0);
+    vtkSmartPointer<vtkFloatArray> normMSE = vtkSmartPointer<vtkFloatArray>::New();
+    normMSE->SetNumberOfComponents(1);
+    normMSE->Allocate(num_points);
+    normMSE->SetName("NMSE");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
       for( int j = 0; j < fiber_size; ++j )
         {
-        output << fibers[i].normMSE[j];
+        normMSE->InsertNextValue(fibers[i].normMSE[j]);
         nmse_sum += fibers[i].normMSE[j];
         ++counter;
-        if( !(counter % 9) )
-          {
-          output << std::endl;
-          }
-        else if( counter < num_points )
-          {
-          output << " ";
-          }
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(normMSE);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
+    std::cout << "nmse_avg=" << nmse_sum / counter << std::endl;
+    }
+  else
+    {
+    std::cout << "nmse_avg=0" << std::endl;
     }
 
-  std::cout << "nmse_avg=" << nmse_sum / counter << std::endl;
-
-  // State output
-  if( write_state )
+  if(write_state)
     {
     int state_dim = fibers[0].state[0].size();
-    output << "state " << state_dim << " " << num_points << " float"
-           << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
+    vtkSmartPointer<vtkFloatArray> stateArray = vtkSmartPointer<vtkFloatArray>::New();
+    stateArray->SetNumberOfComponents(state_dim);
+    stateArray->Allocate(num_points * state_dim);
+    stateArray->SetName("state");
+
+    float *tmpArray = new float[state_dim];
+
+    for( int i = 0; i < num_fibers; i++ )
       {
-      int fiber_size = fibers[i].position.size();
+      const int fiber_size = static_cast<int>(fibers[i].position.size() );
       for( int j = 0; j < fiber_size; ++j )
         {
-        for( int k = 0; k < state_dim; ++k )
+        const State & state = fibers[i].state[j];
+        for(int k = 0; k < state_dim; ++k)
           {
-          output << fibers[i].state[j][k];
-          ++counter;
-          if( !(counter % 9) )
-            {
-            output << std::endl;
-            }
-          else if( counter < num_points * state_dim )
-            {
-            output << " ";
-            }
+          tmpArray[k] = state[i];
           }
+        stateArray->InsertNextTuple(tmpArray);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(stateArray);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::VECTORS);
+    delete [] tmpArray;
     }
 
-  // Covariance info
-  if( write_cov )
+  if(fibers[0].covariance.size() > 0)
     {
     int state_dim = fibers[0].state[0].size();
-    output << "covariance " << state_dim * (state_dim + 1) / 2 << " "
-           << num_points << " float" << std::endl;
-    counter = 0;
-    for( int i = 0; i < num_fibers; ++i )
+
+    int cov_dim = state_dim * (state_dim + 1) / 2;
+
+    vtkSmartPointer<vtkFloatArray> covarianceArray = vtkSmartPointer<vtkFloatArray>::New();
+    covarianceArray->SetNumberOfComponents(cov_dim);
+    covarianceArray->Allocate(num_points * cov_dim);
+    covarianceArray->SetName("covariance");
+
+    float *tmpArray = new float[cov_dim];
+
+    for( int i = 0; i < num_fibers; i++ )
       {
-      int fiber_size = fibers[i].position.size();
+      const int fiber_size = static_cast<int>(fibers[i].position.size() );
       for( int j = 0; j < fiber_size; ++j )
         {
-        for( int a = 0; a < state_dim; ++a )
+        int covIndex = 0;
+        for(int a = 0; a < state_dim; ++a)
           {
-          for( int b = a; b < state_dim; ++b )
+          for(int b = a; b < state_dim; ++b)
             {
-            output << fibers[i].covariance[j] (a, b);
-            ++counter;
-            if( !(counter % 9) )
-              {
-              output << std::endl;
-              }
-            else if( counter < num_points * state_dim * (state_dim + 1) / 2 )
-              {
-              output << " ";
-              }
+            tmpArray[covIndex] = fibers[i].covariance[j](a,b);
+            ++covIndex;
             }
           }
+        covarianceArray->InsertNextTuple(tmpArray);
         }
       }
-    if( counter % 9 )
-      {
-      output << std::endl;
-      }
+    int idx = pointData->AddArray(covarianceArray);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::VECTORS);
+    delete [] tmpArray;
     }
 
-  output.close();
-
+  WritePolyData(polyData,file_name.c_str());
   return false;
+
 }
 
 bool VtkWriter::WriteGlyphs(const std::string& file_name,
@@ -564,21 +612,9 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
     std::cout << "No fibers existing." << std::endl;
     return true;
     }
-
-  // Open file for writing.
-  std::ofstream output(file_name.c_str() );
-  if( !output.is_open() )
-    {
-    std::cout << "Failed to open " << file_name << "." << std::endl;
-    return true;
-    }
-
-  std::cout << "Writing glyphs to " << file_name << "." << std::endl;
-
-  // Write header information
-  output << VTK_LEGACY_FORMAT_HEADER << std::endl;
-  output << "TractographyGlyphs" << std::endl;
-  output << "ASCII" << std::endl;
+  // polyData object to fill in
+  vtkSmartPointer<vtkPolyData> polyData;
+  vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   int num_fibers = fibers.size();
   int num_points = 0;
@@ -591,10 +627,7 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
 
   const double scale = 0.5 * _scale_glyphs;
 
-  // Write the points.
-  output << "DATASET POLYDATA" << std::endl;
-  output << "POINTS " << num_points * 2 * num_tensors << " float";
-  int counter = 0;
+
   for( int i = 0; i < num_fibers; ++i )
     {
     int fiber_size = fibers[i].position.size();
@@ -672,68 +705,101 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
         }
       else if( num_tensors == 2 )
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
 
         pos1 = point - scale * m2;
         pos2 = point + scale * m2;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
         }
       else if( num_tensors == 3 )
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
 
         pos1 = point - scale * m2;
         pos2 = point + scale * m2;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
 
         pos1 = point - scale * m3;
         pos2 = point + scale * m3;
-        WritePoint(pos1, output, counter);
-        WritePoint(pos2, output, counter);
+        points->InsertNextPoint(pos1._);
+        points->InsertNextPoint(pos2._);
         }
       }
     }
-  output << std::endl;
+  // do the lines
+  vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
 
-  // Write the lines.
-  output << std::endl << "LINES " << num_points * num_tensors << " "
-         << num_points * num_tensors * 3 << std::endl;
   for( int i = 0; i < num_points * num_tensors; ++i )
     {
-    output << "2 " << i * 2 << " " << i * 2 + 1 << std::endl;
+    // output << "2 " << i * 2 << " " << i * 2 + 1 << std::endl;
+    vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
+    vtkIdType ids[2];
+    ids[0] = i * 2;
+    ids[1] = ids[0] + 1;
+    line->Initialize(2,ids,points);
+    lines->InsertNextCell(line);
     }
-
-  output.close();
-
+  polyData->SetLines(lines);
+  WritePolyData(polyData,file_name.c_str());
   return false;
+}
+
+vec_t
+VtkWriter::
+PointConvert(const vec_t& point)
+{
+  vec_t rval;
+  vnl_vector<double> p(4);
+  p[0] = point._[2];    // NOTICE the change of order here. Flips back to the original axis order
+  p[1] = point._[1];
+  p[2] = point._[0];
+
+  if( _transform_position )
+    {
+    p[3] = 1.0;
+    vnl_vector<double> p_new(4);
+    p_new = _signal_data->i2r() * p;    // ijk->RAS transform
+    rval._[0] = p_new[0];
+    rval._[1] = p_new[1];
+    rval._[2] = p_new[2];
+    }
+  else
+    {
+    rval._[0] = p[2];
+    rval._[1] = p[1];
+    rval._[2] = p[0];
+    }
+  return rval;
 }
 
 void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
                            int& counter)
 {
-  // Always write nine floats onto one line.
-  if( !(counter % 3) )
+  if(!this->_writeBinary)
     {
-    output << std::endl;
+    // Always write nine floats onto one line.
+    if( !(counter % 3) )
+      {
+      output << std::endl;
+      }
+    else
+      {
+      output << " ";
+      }
     }
-  else
-    {
-    output << " ";
-    }
-
   // Transform the point into the correct coordinate system.
   vnl_vector<double> p(4);
   p[0] = point._[2];    // NOTICE the change of order here. Flips back to the original axis order
@@ -745,12 +811,21 @@ void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
     p[3] = 1.0;
     vnl_vector<double> p_new(4);
     p_new = _signal_data->i2r() * p;    // ijk->RAS transform
-
-    output << p_new[0] << " " << p_new[1] << " " << p_new[2];
+    // reverse order again, so that only one output statement is needed.
+    p[2] = p_new[0];
+    p[1] = p_new[1];
+    p[0] = p_new[2];
+    // output << p_new[0] << " " << p_new[1] << " " << p_new[2];
+    }
+  if(!this->_writeBinary)
+    {
+    output << p[2] << " " << p[1] << " " << p[0];
     }
   else
     {
-    output << p[2] << " " << p[1] << " " << p[0];
+    this->WriteX<double,float>(output,p[2]);
+    this->WriteX<double,float>(output,p[1]);
+    this->WriteX<double,float>(output,p[0]);
     }
   ++counter;
 }
@@ -783,13 +858,13 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
     // Extract eigenvectors
     eigenVec1 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+                state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec2 =
       make_vec( state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+                state[5 * (tensorNumber - 1) + _p_m3]);
     eigenVec3 =
       make_vec(-state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-        state[5 * (tensorNumber - 1) + _p_m3]);
+               state[5 * (tensorNumber - 1) + _p_m3]);
     }
 
   // Perform ijk->RAS transform on eigen vectors
@@ -811,8 +886,8 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
     eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
     eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
     eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]
-  );
+    );
   D = Q
     * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
-      state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
+           state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
 }

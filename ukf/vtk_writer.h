@@ -14,10 +14,13 @@
 #include "linalg.h"
 #include "tractography.h"
 #include "ukffiber.h"
-
+#include "vtkByteSwap.h"
+#include <fstream>
+#include "vtkPolyData.h"
+#include "vtkSmartPointer.h"
 
 class ISignalData;
-
+class vtkPointData;
 /**
  * \class VtkWriter
  * \brief Class that allows to write a bunch of fibers to a .vtk file
@@ -32,8 +35,8 @@ public:
 
   /** Destructor */
   virtual ~VtkWriter()
-  {
-  }
+    {
+    }
 
   /**
    * \brief Writes the fibers to the VTK file and attaches the selected values to the fiber
@@ -50,22 +53,53 @@ public:
 
   /** Sets the variable that toggles the transform from ijk to RAS before writing the fiber to VTK. */
   void set_transform_position(bool transform_position)
-  {
-    _transform_position = transform_position;
-  }
-
+    {
+      _transform_position = transform_position;
+    }
+  /** set the WriteBinary flag */
+  void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
 protected:
   /**
    * Writes a point to the output stream, and performs the ijk-RAS transform if set to do so.
    * Also this function makes sure that the output VTK file is well formatted.
   */
   void WritePoint(const vec_t& point, std::ofstream& output, int& counter);
+  vec_t PointConvert(const vec_t &point);
+  /**
+   * Write a single scalar value out in binary.
+   */
+  template <typename TInput, typename TOutput>
+  void WriteX(std::ofstream &output, const TInput toWrite)
+    {
+      TOutput tmp = toWrite;
+      switch(sizeof(TOutput))
+        {
+        case 1:
+          break;
+        case 2:
+          vtkByteSwap::Swap2BE(&tmp);
+          break;
+        case 4:
+          vtkByteSwap::Swap4BE(&tmp);
+          break;
+        case 8:
+          vtkByteSwap::Swap8BE(&tmp);
+          break;
+        }
+      output.write(reinterpret_cast<const char *>(&tmp), sizeof(TOutput));
+      if(output.fail())
+        {
+        throw;
+        }
+    }
 
+  void WritePolyData(const vtkPolyData *pd, const char *filename) const;
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */
   void writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber);
-
+  void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
+                                const std::vector<UKFFiber>& fibers);
   /**
    * \brief Reconstructs the tensor from the state for each case
    * \param[out] D The calculated diffusion tensor
@@ -106,6 +140,9 @@ protected:
 
   /** Transformation matrix from ijk-RAS with voxel size normalized out */
   mat_t _sizeFreeI2R;
+
+  /** is the file to be written binary? */
+  bool _writeBinary;
 };
 
 #endif  // VTK_WRITER_H_

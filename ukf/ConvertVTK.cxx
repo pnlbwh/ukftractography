@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     }
   try
     {
-    WritePolyData(pd, outputFile.c_str(), writeBinary, writeCompressed);
+    WritePolyData(pd, outputFile.c_str(), !writeAscii, !writeUnCompressed);
     }
   catch(...)
     {

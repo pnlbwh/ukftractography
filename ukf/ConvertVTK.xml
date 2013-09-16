@@ -34,19 +34,19 @@
       <default></default>
     </file>
     <boolean>
-      <name>writeBinary</name>
-      <flag>b</flag>
-      <longflag>writeBinary</longflag>
-      <label>Write Binary VTK or VTP files</label>
-      <description>Write a VTK binary data file</description>
+      <name>writeAscii</name>
+      <flag>a</flag>
+      <longflag>writeAscii</longflag>
+      <label>Write Ascii VTK or VTP files</label>
+      <description>Write a VTK Ascii  data file</description>
       <default>false</default>
     </boolean>
     <boolean>
-      <name>writeCompressed</name>
-      <flag>z</flag>
-      <longflag>writeCompressed</longflag>
-      <label>Write compressed VTP files</label>
-      <description>Write a compressed VTP data file</description>
+      <name>writeUnCompressed</name>
+      <flag>u</flag>
+      <longflag>writeUnCompressed</longflag>
+      <label>Write uncompressed VTP files</label>
+      <description>Write an uncompressed VTP data file</description>
       <default>false</default>
     </boolean>
   </parameters>

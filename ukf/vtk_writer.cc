@@ -36,7 +36,8 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   _scale_glyphs(0.01),
   _write_tensors(write_tensors),
   _eigenScaleFactor(1),
-  _writeBinary(false)
+  _writeBinary(true),
+  _writeCompressed(true)
 {
 
   if( filter_model_type == Tractography::_1T || filter_model_type == Tractography::_1T_FW )
@@ -114,124 +115,6 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 }
 
 
-void VtkWriter::writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber)
-{
-  // Write file version and identifier
-  output << VTK_LEGACY_FORMAT_HEADER << std::endl;
-
-  // Write header
-  output << "Tracts generated with tensor " << tensorNumber << std::endl;
-
-  // File format
-  if(this->_writeBinary)
-    {
-    output << "BINARY" << std::endl;
-    }
-  else
-    {
-    output << "ASCII" << std::endl;
-    }
-
-  int num_fibers = fibers.size();
-  int num_points = 0;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    num_points += fibers[i].position.size();
-    }
-
-  // Write the points.
-  output << "DATASET POLYDATA" << std::endl;
-
-  output << "POINTS " << num_points << " float" << std::endl;
-  // The points are written so that 3 points fits in one line
-  int counter = 0;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j )
-      {
-      WritePoint(fibers[i].position[j], output, counter);
-      }
-    }
-  output << std::endl;
-
-  // Write the lines.
-  counter = 0;
-  output << std::endl << "LINES " << num_fibers << " "
-         << num_fibers + num_points << std::endl;
-  for( int i = 0; i < num_fibers; ++i )
-    {
-    int fiber_size = fibers[i].position.size();
-    if(!this->_writeBinary)
-      {
-      output << fiber_size;
-      for( int j = 0; j < fiber_size; ++j )
-        {
-        output << " " << counter++;
-        }
-      output << std::endl;
-      }
-    else
-      {
-      this->WriteX<int,int>(output,fiber_size);
-      for(int j = 0; j < fiber_size; ++j)
-        {
-        this->WriteX<int,int>(output,counter);
-        }
-      }
-    }
-  output << std::endl;
-
-  /////
-  // Dataset attribute part starts
-  /////
-
-  output << "POINT_DATA " << num_points << std::endl;
-
-
-  /////
-  // Tensor output
-  /////
-  typedef std::vector<double> State;
-
-  if( _write_tensors )
-    {
-    for( int local_tensorNumber = 1; local_tensorNumber <= _num_tensors; ++local_tensorNumber )
-      {
-      output << "TENSORS Tensor" << local_tensorNumber << " float" << std::endl;
-      for( int i = 0; i < num_fibers; i++ )
-        {
-        const int fiber_size = static_cast<int>(fibers[i].position.size() );
-        for( int j = 0; j < fiber_size; ++j )
-          {
-          const State & state = fibers[i].state[j];
-          mat_t         D;
-          State2Tensor(state, D, local_tensorNumber);
-          if(!this->_writeBinary)
-            {
-            output << D._[0] * _eigenScaleFactor << " "
-                   << D._[1] * _eigenScaleFactor << " "
-                   << D._[2] * _eigenScaleFactor << std::endl
-                   << D._[3] * _eigenScaleFactor << " "
-                   << D._[4] * _eigenScaleFactor << " "
-                   << D._[5] * _eigenScaleFactor << std::endl
-                   << D._[6] * _eigenScaleFactor << " "
-                   << D._[7] * _eigenScaleFactor << " "
-                   << D._[8] * _eigenScaleFactor << std::endl;
-            }
-          else
-            {
-            for(unsigned k = 0; k < 9; ++k)
-              {
-              this->WriteX<double,float>(output,D._[k] * _eigenScaleFactor);
-              }
-            }
-          }
-        }
-      }
-    }
-  output << std::endl;
-}
 
 void VtkWriter
 ::PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
@@ -297,7 +180,6 @@ void VtkWriter
       std::stringstream ss;
       ss << local_tensorNumber;
       curTensor->SetName(ss.str().c_str());
-      // output << "TENSORS Tensor" << local_tensorNumber << " float" << std::endl;
       for( int i = 0; i < num_fibers; i++ )
         {
         const int fiber_size = static_cast<int>(fibers[i].position.size() );
@@ -327,8 +209,22 @@ VtkWriter
     {
     vtkSmartPointer<vtkXMLPolyDataWriter> writer =
       vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-    writer->SetDataModeToBinary();
-    writer->SetCompressorTypeToZLib();
+    if(this->_writeBinary)
+      {
+      writer->SetDataModeToBinary();
+      }
+    else
+      {
+      writer->SetDataModeToAscii();
+      }
+    if(this->_writeCompressed)
+      {
+      writer->SetCompressorTypeToZLib();
+      }
+    else
+      {
+      writer->SetCompressorTypeToNone();
+      }
     writer->SetInput(dataObject);
     writer->SetFileName(filename);
     writer->Write();
@@ -744,7 +640,6 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
 
   for( int i = 0; i < num_points * num_tensors; ++i )
     {
-    // output << "2 " << i * 2 << " " << i * 2 + 1 << std::endl;
     vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
     vtkIdType ids[2];
     ids[0] = i * 2;
@@ -783,51 +678,6 @@ PointConvert(const vec_t& point)
     rval._[2] = p[0];
     }
   return rval;
-}
-
-void VtkWriter::WritePoint(const vec_t& point, std::ofstream& output,
-                           int& counter)
-{
-  if(!this->_writeBinary)
-    {
-    // Always write nine floats onto one line.
-    if( !(counter % 3) )
-      {
-      output << std::endl;
-      }
-    else
-      {
-      output << " ";
-      }
-    }
-  // Transform the point into the correct coordinate system.
-  vnl_vector<double> p(4);
-  p[0] = point._[2];    // NOTICE the change of order here. Flips back to the original axis order
-  p[1] = point._[1];
-  p[2] = point._[0];
-
-  if( _transform_position )
-    {
-    p[3] = 1.0;
-    vnl_vector<double> p_new(4);
-    p_new = _signal_data->i2r() * p;    // ijk->RAS transform
-    // reverse order again, so that only one output statement is needed.
-    p[2] = p_new[0];
-    p[1] = p_new[1];
-    p[0] = p_new[2];
-    // output << p_new[0] << " " << p_new[1] << " " << p_new[2];
-    }
-  if(!this->_writeBinary)
-    {
-    output << p[2] << " " << p[1] << " " << p[0];
-    }
-  else
-    {
-    this->WriteX<double,float>(output,p[2]);
-    this->WriteX<double,float>(output,p[1]);
-    this->WriteX<double,float>(output,p[0]);
-    }
-  ++counter;
 }
 
 void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNumber) const

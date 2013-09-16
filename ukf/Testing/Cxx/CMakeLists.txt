@@ -117,6 +117,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_Test)
 set(testname ${CLP}_2T_fw_Test)
 add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
+    -a
     --dwiFile ${INPUT}/two_tensor_fw.nhdr
     --maskFile ${INPUT}/mask.nhdr
     --tracts ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
@@ -148,7 +149,6 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_Test)
 set(testname ${CLP}_2T_fw_TestBinary)
 add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
-    -b
     --dwiFile ${INPUT}/two_tensor_fw.nhdr
     --maskFile ${INPUT}/mask.nhdr
     --tracts ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtk
@@ -183,7 +183,6 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinary)
 set(testname ${CLP}_2T_fw_TestBinaryVTP)
 add_test(NAME ${testname}
     COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:${CLP}>
-    -b
     --dwiFile ${INPUT}/two_tensor_fw.nhdr
     --maskFile ${INPUT}/mask.nhdr
     --tracts ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtp
@@ -220,7 +219,6 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
 set(testname ConvertVTK_LegacyText_ToLegacyBinary)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
-  -b
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
 )
@@ -241,6 +239,7 @@ set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 set(testname ConvertVTK_LegacyText_ToXML)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -a -u
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
 )
@@ -261,7 +260,6 @@ set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 set(testname ConvertVTK_LegacyText_ToXMLBinaryCompressed)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
-  -b -z
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
 )
@@ -280,10 +278,11 @@ set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 set(XMLBinaryCompressed ${testname})
 
 #
-# convert from legacy vtk ASCII to XML compressed binary
+# convert from XML compressed binary to legacy vtk ASCII 
 set(testname ConvertVTK_XMLBinaryCompressed_To_LegacyText)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
+  -a
   -i ${TESTING_RESULTS_DIRECTORY}/${XMLBinaryCompressed}.vtp
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
 )

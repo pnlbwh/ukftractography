@@ -312,7 +312,8 @@ int main(int argc, char **argv)
                                         ) ;
 
   // if specified on command line, write out binary tract file
-  tract->SetWriteBinary(writeBinaryTracts);
+  tract->SetWriteBinary(!writeAsciiTracts);
+  tract->SetWriteCompressed(!writeUncompressedTracts);
 
   if (tract->LoadFiles(dwiFile, seedsFile, maskFile, normalizedDWIData, outputNormalizedDWIData)) {
     delete tract;

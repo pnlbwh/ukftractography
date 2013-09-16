@@ -58,12 +58,11 @@ public:
     }
   /** set the WriteBinary flag */
   void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
+  void SetWriteCompressed(bool wc) { this->_writeCompressed = wc; }
 protected:
   /**
-   * Writes a point to the output stream, and performs the ijk-RAS transform if set to do so.
-   * Also this function makes sure that the output VTK file is well formatted.
+   * Convert a point from the internal representation into what VTK expects
   */
-  void WritePoint(const vec_t& point, std::ofstream& output, int& counter);
   vec_t PointConvert(const vec_t &point);
   /**
    * Write a single scalar value out in binary.
@@ -97,7 +96,6 @@ protected:
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */
-  void writeFibersAndTensors(std::ofstream & output, const std::vector<UKFFiber>& fibers, const int tensorNumber);
   void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
                                 const std::vector<UKFFiber>& fibers);
   /**
@@ -143,6 +141,8 @@ protected:
 
   /** is the file to be written binary? */
   bool _writeBinary;
+  /** is the file to be written compressed? */
+  bool _writeCompressed;
 };
 
 #endif  // VTK_WRITER_H_

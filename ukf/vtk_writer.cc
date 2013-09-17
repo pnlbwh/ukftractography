@@ -25,10 +25,6 @@
 #include <vnl/vnl_matrix.h>
 #include <vnl/vnl_vector.h>
 
-/** Historical VTK File formats are VERY sensitive to their format **/
-/** http://www.vtk.org/VTK/img/file-formats.pdf **/
-static const char * const VTK_LEGACY_FORMAT_HEADER = "# vtk DataFile Version 3.0";
-
 VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type, bool write_tensors) :
   _signal_data(signal_data),
   _transform_position(true),

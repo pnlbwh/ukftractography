@@ -179,14 +179,10 @@ int LUdecmpCrout(double * const A, const int n, int * const indx)
       {
       for( int k = 0; k < n; ++k )
         {
-        const double dum = *(A + imax * n + k);
-        *(A + imax * n + k) = *(A + j * n + k);
-        *(A + j * n + k) = dum;
+        std::swap((*(A + imax * n + k)),*(A + j * n + k));
         }
 
-      const double temp = *(indx + j);
-      *(indx + j) = *(indx + imax);
-      *(indx + imax) = temp;
+      std::swap((*(indx + j)),(*(indx + imax)));
 
       vv[imax] = vv[j];
       }

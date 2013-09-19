@@ -29,12 +29,31 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
+# Set up some default paths
+#-----------------------------------------------------------------------------
+if(NOT COMMAND SETIFEMPTY)
+  macro(SETIFEMPTY)
+    set(KEY ${ARGV0})
+    set(VALUE ${ARGV1})
+    if(NOT ${KEY})
+      set(${ARGV})
+    endif()
+  endmacro()
+endif()
+
+#-----------------------------------------------------------------------------
+SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+SETIFEMPTY(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+SETIFEMPTY(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+#-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
 add_subdirectory(vtk2mask)
 add_subdirectory(vtkFilter)
-
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   include(${Slicer_EXTENSION_CPACK})

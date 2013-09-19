@@ -311,6 +311,10 @@ int main(int argc, char **argv)
                                          actuallNumThreadsUsed
                                         ) ;
 
+  // if specified on command line, write out binary tract file
+  tract->SetWriteBinary(!writeAsciiTracts);
+  tract->SetWriteCompressed(!writeUncompressedTracts);
+
   if (tract->LoadFiles(dwiFile, seedsFile, maskFile, normalizedDWIData, outputNormalizedDWIData)) {
     delete tract;
     delete filter_model;

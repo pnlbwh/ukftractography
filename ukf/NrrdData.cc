@@ -37,9 +37,9 @@ NrrdData::~NrrdData()
 void NrrdData::Interp3Signal(const vec_t& pos,
                              std::vector<double>& signal) const
 {
-  const int nx = _dim._[0];
-  const int ny = _dim._[1];
-  const int nz = _dim._[2];
+  const int nx = static_cast<const int>(_dim._[0]);
+  const int ny = static_cast<const int>(_dim._[1]);
+  const int nz = static_cast<const int>(_dim._[2]);
 
   double w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
@@ -56,7 +56,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
   // for each location
   for( int xx = -1; xx <= 1; ++xx )
     {
-    int x = round(pos._[0]) + xx;
+    const int x = static_cast<const int>(round(pos._[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
@@ -65,7 +65,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
     double dxx = dx * dx;
     for( int yy = -1; yy <= 1; ++yy )
       {
-      int y = round(pos._[1]) + yy;
+      const int y = static_cast<const int>(round(pos._[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
@@ -75,7 +75,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
       double dyy = dy * dy;
       for( int zz = -1; zz <= 1; ++zz )
         {
-        int z = round(pos._[2]) + zz;
+        const int z = static_cast<const int>(round(pos._[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;
@@ -114,9 +114,9 @@ void NrrdData::Interp3Signal(const vec_t& pos,
 
 double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 {
-  const int nx = _dim._[0];
-  const int ny = _dim._[1];
-  const int nz = _dim._[2];
+  const int nx = static_cast<const int>(_dim._[0]);
+  const int ny = static_cast<const int>(_dim._[1]);
+  const int nz = static_cast<const int>(_dim._[2]);
 
   unsigned int index;
   double       value;
@@ -126,7 +126,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 
   for( int xx = -1; xx <= 1; xx++ )
     {
-    int x = round(pos._[0]) + xx;
+    const int x = static_cast<const int>(round(pos._[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
@@ -135,7 +135,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
     double dxx = dx * dx;
     for( int yy = -1; yy <= 1; yy++ )
       {
-      int y = round(pos._[1]) + yy;
+      const int y = static_cast<const int>(round(pos._[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
@@ -144,7 +144,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
       double dyy = dy * dy;
       for( int zz = -1; zz <= 1; zz++ )
         {
-        int z = round(pos._[2]) + zz;
+        const int z = static_cast<const int>(round(pos._[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;

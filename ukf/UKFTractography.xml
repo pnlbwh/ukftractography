@@ -13,7 +13,7 @@
   <version>1.0</version>
   <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
   <license></license>
-  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner</contributor>
+  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams</contributor>
   <acknowledgements></acknowledgements>
 
   <parameters>
@@ -53,7 +53,7 @@
       <description>Mask for diffusion tractography</description>
     </image>
 
-    <geometry type="fiberbundle" fileExtensions=".vtk,.vtp">
+    <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
       <name>tracts</name>
       <longflag>tracts</longflag>
       <label>Output Fibers (first tensor)</label>
@@ -61,7 +61,7 @@
       <description>Tracts generated, with first tensor output</description>
     </geometry>
 
-    <geometry type="fiberbundle" fileExtensions=".vtk,.vtp">
+    <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
       <name>tractsWithSecondTensor</name>
       <longflag>tractsWithSecondTensor</longflag>
       <label>Output Fibers (second tensor, optional)</label>
@@ -69,6 +69,22 @@
       <description>Tracts generated, with second tensor output (if there is one)</description>
     </geometry>
 
+    <boolean>
+      <name>writeAsciiTracts</name>
+      <flag>a</flag>
+      <longflag>writeAsciiTracts</longflag>
+      <label>Write Binary Tracts File</label>
+      <description>Write tract file as a VTK binary data file</description>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>writeUncompressedTracts</name>
+      <flag>u</flag>
+      <longflag>writeUncompressedTracts</longflag>
+      <label>Write uncompressed Tracts File</label>
+      <description>Write tract file as a VTK uncompressed data file</description>
+      <default>false</default>
+    </boolean>
   </parameters>
 
   <parameters>

@@ -62,7 +62,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _is_full_model(is_full_model), _free_water(free_water),
   _stepLength(stepLength),
   _labels(labels),
-
+  _writeBinary(true),
+  _writeCompressed(true),
   _num_threads(num_threads)
 {
   if( _cos_theta_max != 0.0 && _cos_theta_max <= _cos_theta_min )
@@ -533,6 +534,10 @@ void Tractography::Run()
 
   // Write the fiber data to the output vtk file.
   VtkWriter writer(_signal_data, _filter_model_type, _record_tensors);
+  // possibly write binary VTK file.
+  writer.SetWriteBinary(this->_writeBinary);
+  writer.SetWriteCompressed(this->_writeCompressed);
+
   writer.set_transform_position(_transform_position);
   writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs);
   // Clear up the kalman filters

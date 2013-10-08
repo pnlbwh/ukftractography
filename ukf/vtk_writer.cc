@@ -102,11 +102,10 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   vnl_matrix<double> i2r = _signal_data->i2r();
   vec_t              voxel = _signal_data->voxel();
   // Factor out the effect of voxel size
-  _sizeFreeI2R = make_mat(
-    i2r(0, 0) / voxel._[2], i2r(0, 1) / voxel._[1], i2r(0, 2) / voxel._[0],
-    i2r(1, 0) / voxel._[2], i2r(1, 1) / voxel._[1], i2r(1, 2) / voxel._[0],
-    i2r(2, 0) / voxel._[2], i2r(2, 1) / voxel._[1], i2r(2, 2) / voxel._[0]
-    );
+  _sizeFreeI2R <<
+    i2r(0, 0) / voxel[2], i2r(0, 1) / voxel[1], i2r(0, 2) / voxel[0],
+    i2r(1, 0) / voxel[2], i2r(1, 1) / voxel[1], i2r(1, 2) / voxel[0],
+    i2r(2, 0) / voxel[2], i2r(2, 1) / voxel[1], i2r(2, 2) / voxel[0];
 
 }
 
@@ -132,7 +131,7 @@ void VtkWriter
     for( int j = 0; j < fiber_size; ++j )
       {
       vec_t current = PointConvert(fibers[i].position[j]);
-      points->InsertNextPoint(current._);
+      points->InsertNextPoint(current[0],current[1],current[2]);
       }
     }
   polyData->SetPoints(points);
@@ -184,7 +183,15 @@ void VtkWriter
           const State & state = fibers[i].state[j];
           mat_t         D;
           State2Tensor(state, D, local_tensorNumber);
-          curTensor->InsertNextTuple(D._);
+          double tmp[9];
+          for(unsigned ii = 0, v = 0; ii < 3; ++ii)
+            {
+            for(unsigned jj = 0; jj < 3; ++jj, ++v)
+              {
+              tmp[v] = D(ii,jj);
+              }
+            }
+          curTensor->InsertNextTuple(tmp);
           }
         }
       int idx = pointData->AddArray(curTensor);
@@ -532,21 +539,21 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
       vec_t m1, m2, m3;
       if( state.size() == 5 )
         {
-        m1 = make_vec(state[2], state[1], state[0]);
+        m1 << state[2], state[1], state[0];
         m1 = state[3] / 100.0 * m1;
         }
       else if( state.size() == 6 )
         {
         m1 = rotation_main_dir(state[0], state[1], state[2]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
+        double tmp = m1[0];
+        m1[0] = m1[2];
+        m1[2] = tmp;
         m1 = state[3] / 100.0 * m1;
         }
       else if( state.size() == 10 )
         {
-        m1 = make_vec(state[2], state[1], state[0]);
-        m2 = make_vec(state[7], state[6], state[5]);
+        m1 << state[2], state[1], state[0];
+        m2 << state[7], state[6], state[5];
         m1 = state[3] / 100.0 * m1;
         m2 = state[8] / 100.0 * m2;
         }
@@ -554,20 +561,20 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
         {
         m1 = rotation_main_dir(state[0], state[1], state[2]);
         m2 = rotation_main_dir(state[6], state[7], state[8]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
-        tmp = m2._[0];
-        m2._[0] = m2._[2];
-        m2._[2] = tmp;
+        double tmp = m1[0];
+        m1[0] = m1[2];
+        m1[2] = tmp;
+        tmp = m2[0];
+        m2[0] = m2[2];
+        m2[2] = tmp;
         m1 = state[3] / 100.0 * m1;
         m2 = state[9] / 100.0 * m2;
         }
       else if( state.size() == 15 )
         {
-        m1 = make_vec(state[2], state[1], state[0]);
-        m2 = make_vec(state[7], state[6], state[5]);
-        m3 = make_vec(state[12], state[11], state[10]);
+        m1 << state[2], state[1], state[0];
+        m2 << state[7], state[6], state[5];
+        m3 <<  state[12], state[11], state[10];
         m1 = state[3] / 100.0 * m1;
         m2 = state[8] / 100.0 * m2;
         m3 = state[13] / 100.0 * m3;
@@ -577,15 +584,15 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
         m1 = rotation_main_dir(state[0], state[1], state[2]);
         m2 = rotation_main_dir(state[6], state[7], state[8]);
         m3 = rotation_main_dir(state[12], state[13], state[14]);
-        double tmp = m1._[0];
-        m1._[0] = m1._[2];
-        m1._[2] = tmp;
-        tmp = m2._[0];
-        m2._[0] = m2._[2];
-        m2._[2] = tmp;
-        tmp = m3._[0];
-        m3._[0] = m3._[2];
-        m3._[2] = tmp;
+        double tmp = m1[0];
+        m1[0] = m1[2];
+        m1[2] = tmp;
+        tmp = m2[0];
+        m2[0] = m2[2];
+        m2[2] = tmp;
+        tmp = m3[0];
+        m3[0] = m3[2];
+        m3[2] = tmp;
         m1 = state[3] / 100.0 * m1;
         m2 = state[9] / 100.0 * m2;
         m3 = state[15] / 100.0 * m3;
@@ -597,37 +604,37 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
         }
       else if( num_tensors == 2 )
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
 
         pos1 = point - scale * m2;
         pos2 = point + scale * m2;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
         }
       else if( num_tensors == 3 )
         {
         pos1 = point - scale * m1;
         pos2 = point + scale * m1;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
 
         pos1 = point - scale * m2;
         pos2 = point + scale * m2;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
 
         pos1 = point - scale * m3;
         pos2 = point + scale * m3;
-        points->InsertNextPoint(pos1._);
-        points->InsertNextPoint(pos2._);
+        points->InsertNextPoint(pos1[0],pos1[1],pos1[2]);
+        points->InsertNextPoint(pos2[0],pos2[1],pos2[2]);
         }
       }
     }
@@ -654,24 +661,24 @@ PointConvert(const vec_t& point)
 {
   vec_t rval;
   vnl_vector<double> p(4);
-  p[0] = point._[2];    // NOTICE the change of order here. Flips back to the original axis order
-  p[1] = point._[1];
-  p[2] = point._[0];
+  p[0] = point[2];    // NOTICE the change of order here. Flips back to the original axis order
+  p[1] = point[1];
+  p[2] = point[0];
 
   if( _transform_position )
     {
     p[3] = 1.0;
     vnl_vector<double> p_new(4);
     p_new = _signal_data->i2r() * p;    // ijk->RAS transform
-    rval._[0] = p_new[0];
-    rval._[1] = p_new[1];
-    rval._[2] = p_new[2];
+    rval[0] = p_new[0];
+    rval[1] = p_new[1];
+    rval[2] = p_new[2];
     }
   else
     {
-    rval._[0] = p[2];
-    rval._[1] = p[1];
-    rval._[2] = p[0];
+    rval[0] = p[2];
+    rval[1] = p[1];
+    rval[2] = p[0];
     }
   return rval;
 }
@@ -694,23 +701,23 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
         state[local_start_index + local_psi_index]);
 
     // Extract eigenvectors
-    eigenVec1 = make_vec(R._[0], R._[3], R._[6]);
-    eigenVec2 = make_vec(R._[1], R._[4], R._[7]);
-    eigenVec3 = make_vec(R._[2], R._[5], R._[8]);
+    eigenVec1 << R(0,0), R(1,0), R(2,0);
+    eigenVec2 << R(0,1), R(1,1), R(2,1);
+    eigenVec3 << R(0,2), R(1,2), R(2,2);
 
     }
   else
     {
     // Extract eigenvectors
-    eigenVec1 =
-      make_vec( state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-                state[5 * (tensorNumber - 1) + _p_m3]);
-    eigenVec2 =
-      make_vec( state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
-                state[5 * (tensorNumber - 1) + _p_m3]);
-    eigenVec3 =
-      make_vec(-state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-               state[5 * (tensorNumber - 1) + _p_m3]);
+    eigenVec1 <<
+      state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
+      state[5 * (tensorNumber - 1) + _p_m3];
+    eigenVec2 <<
+      state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
+      state[5 * (tensorNumber - 1) + _p_m3];
+    eigenVec3 <<
+      -state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
+      state[5 * (tensorNumber - 1) + _p_m3];
     }
 
   // Perform ijk->RAS transform on eigen vectors
@@ -719,21 +726,18 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
   eigenVec3 = _sizeFreeI2R * eigenVec3;
 
   // Renormalize eigenvectors
-  const double vecnorm1 = norm(eigenVec1);
-  eigenVec1 = make_vec(eigenVec1._[0] / vecnorm1, eigenVec1._[1] / vecnorm1, eigenVec1._[2] / vecnorm1);
-  const double vecnorm2 = norm(eigenVec2);
-  eigenVec2 = make_vec(eigenVec2._[0] / vecnorm2, eigenVec2._[1] / vecnorm2, eigenVec2._[2] / vecnorm2);
-  const double vecnorm3 = norm(eigenVec3);
-  eigenVec3 = make_vec(eigenVec3._[0] / vecnorm3, eigenVec3._[1] / vecnorm3, eigenVec3._[2] / vecnorm3);
+  eigenVec1.normalize();
+  eigenVec1.normalize();
+  eigenVec3.normalize();
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-  const mat_t & Q = make_mat(
-    eigenVec1._[0], eigenVec2._[0], eigenVec3._[0],
-    eigenVec1._[1], eigenVec2._[1], eigenVec3._[1],
-    eigenVec1._[2], eigenVec2._[2], eigenVec3._[2]
-    );
-  D = Q
-    * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
-           state[5 * (tensorNumber - 1) + _p_l2]) * t(Q) * 1e-6;
+  mat_t Q;
+  Q <<
+    eigenVec1[0], eigenVec2[0], eigenVec3[0],
+    eigenVec1[1], eigenVec2[1], eigenVec3[1],
+    eigenVec1[2], eigenVec2[2], eigenVec3[2];
+
+  D = Q * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
+               state[5 * (tensorNumber - 1) + _p_l2]) * Q.transpose() * 1e-6;
 }

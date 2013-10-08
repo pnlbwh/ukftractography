@@ -60,12 +60,14 @@ double curve_radius(const std::vector<vec_t>& fiber)
   vec_t v2 = fiber[length - 1] - fiber[length - 2];
 
   // Normalize
-  double n1 = norm(v1);
-  double n2 = norm(v2);
+  v1.normalize();
+  v2.normalize();
+  double n1 = v1.norm();
+  double n2 = v2.norm();
   v1 /= n1;
   v2 /= n2;
 
-  double curv = norm( (v2 - v1) / (n2 + n1) );
+  double curv = ( (v2 - v1) / (n2 + n1) ).norm();
   if( isnan(curv) )
     {
     return 0.0;

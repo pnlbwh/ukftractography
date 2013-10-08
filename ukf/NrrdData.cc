@@ -37,9 +37,9 @@ NrrdData::~NrrdData()
 void NrrdData::Interp3Signal(const vec_t& pos,
                              std::vector<double>& signal) const
 {
-  const int nx = static_cast<const int>(_dim._[0]);
-  const int ny = static_cast<const int>(_dim._[1]);
-  const int nz = static_cast<const int>(_dim._[2]);
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
 
   double w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
@@ -56,31 +56,31 @@ void NrrdData::Interp3Signal(const vec_t& pos,
   // for each location
   for( int xx = -1; xx <= 1; ++xx )
     {
-    const int x = static_cast<const int>(round(pos._[0]) + xx);
+    const int x = static_cast<const int>(round(pos[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
       }
-    double dx = (x - pos._[0]) * _voxel._[0];
+    double dx = (x - pos[0]) * _voxel[0];
     double dxx = dx * dx;
     for( int yy = -1; yy <= 1; ++yy )
       {
-      const int y = static_cast<const int>(round(pos._[1]) + yy);
+      const int y = static_cast<const int>(round(pos[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
         }
 
-      double dy = (y - pos._[1]) * _voxel._[1];
+      double dy = (y - pos[1]) * _voxel[1];
       double dyy = dy * dy;
       for( int zz = -1; zz <= 1; ++zz )
         {
-        const int z = static_cast<const int>(round(pos._[2]) + zz);
+        const int z = static_cast<const int>(round(pos[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;
           }
-        double dz = (z - pos._[2]) * _voxel._[2];
+        double dz = (z - pos[2]) * _voxel[2];
         double dzz = dz * dz;
 
         // gaussian smoothing
@@ -114,9 +114,9 @@ void NrrdData::Interp3Signal(const vec_t& pos,
 
 double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 {
-  const int nx = static_cast<const int>(_dim._[0]);
-  const int ny = static_cast<const int>(_dim._[1]);
-  const int nz = static_cast<const int>(_dim._[2]);
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
 
   unsigned int index;
   double       value;
@@ -126,30 +126,30 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 
   for( int xx = -1; xx <= 1; xx++ )
     {
-    const int x = static_cast<const int>(round(pos._[0]) + xx);
+    const int x = static_cast<const int>(round(pos[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
       }
-    double dx = (x - pos._[0]) * _voxel._[0];
+    double dx = (x - pos[0]) * _voxel[0];
     double dxx = dx * dx;
     for( int yy = -1; yy <= 1; yy++ )
       {
-      const int y = static_cast<const int>(round(pos._[1]) + yy);
+      const int y = static_cast<const int>(round(pos[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
         }
-      double dy = (y - pos._[1]) * _voxel._[1];
+      double dy = (y - pos[1]) * _voxel[1];
       double dyy = dy * dy;
       for( int zz = -1; zz <= 1; zz++ )
         {
-        const int z = static_cast<const int>(round(pos._[2]) + zz);
+        const int z = static_cast<const int>(round(pos[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;
           }
-        double dz = (z - pos._[2]) * _voxel._[2];
+        double dz = (z - pos[2]) * _voxel[2];
         double dzz = dz * dz;
 
         index = nz * ny * x + nz * y + z;
@@ -199,7 +199,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     int ny = _seed_nrrd->axis[1].size;
     int nz = _seed_nrrd->axis[0].size;
     assert(_seed_data);
-    assert(nx == _dim._[0] && ny == _dim._[1] && nz == _dim._[2]);
+    assert(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]);
     for( int i = 0; i < nx; ++i )
       {
       for( int j = 0; j < ny; ++j )
@@ -234,7 +234,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
               }
             if( *cit == value )
               {
-              seeds.push_back(make_vec(i, j, k) );
+              seeds.push_back(vec_t(i, j, k) );
               }
             }
           }
@@ -411,7 +411,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
       gy /= norm;
       gz /= norm;
 
-      _gradients.push_back(make_vec(gx, gy, gz) );
+      _gradients.push_back(vec_t(gx, gy, gz) );
 
       }
     else if( !key.compare("modality") )
@@ -453,7 +453,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   nrrdSpacingCalculate(this->_data_nrrd, 1, &spacing1, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 2, &spacing2, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 3, &spacing3, space_dir);
-  _voxel = make_vec(spacing3, spacing2, spacing1);  // NOTE that the _voxel here is in reverse axis order!
+  _voxel << spacing3, spacing2, spacing1;  // NOTE that the _voxel here is in reverse axis order!
 
   // make sure something computable is in spacing.
   for(unsigned int i = 0; i < this->_data_nrrd->dim; ++i)
@@ -469,14 +469,14 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
 
   // DEBUGING
-  // std::cout << "Voxel: " << _voxel._[0] << " " << _voxel._[1] << " " << _voxel._[2] << std::endl;
+  // std::cout << "Voxel: " << _voxel[0] << " " << _voxel[1] << " " << _voxel[2] << std::endl;
 
   // Dimensions
   // NOTICE that the _dim is in reverse axis order!
-  _dim = make_vec(_data_nrrd->axis[3].size, _data_nrrd->axis[2].size,
-                  _data_nrrd->axis[1].size);
+  _dim << _data_nrrd->axis[3].size, _data_nrrd->axis[2].size,
+    _data_nrrd->axis[1].size;
 
-  // std::cout << "dim: " << _dim._[0] << " " << _dim._[1] << " " << _dim._[2] << std::endl;
+  // std::cout << "dim: " << _dim[0] << " " << _dim[1] << " " << _dim[2] << std::endl;
 
   _num_gradients = _data_nrrd->axis[0].size;
   assert(_num_gradients == static_cast<int>(_gradients.size() ) );
@@ -520,9 +520,9 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
   // The gradient should not be affected by voxel size, so factor out the voxel sizes
   // This is equivalent to normalizing the space directions
-  double vox_x_inv = 1.0 / _voxel._[2];
-  double vox_y_inv = 1.0 / _voxel._[1];
-  double vox_z_inv = 1.0 / _voxel._[0];
+  double vox_x_inv = 1.0 / _voxel[2];
+  double vox_y_inv = 1.0 / _voxel[1];
+  double vox_z_inv = 1.0 / _voxel[0];
 
   R(0, 0) *=  vox_x_inv;
   R(1, 0) *=  vox_x_inv;
@@ -542,17 +542,17 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   for( int i = 0; i < count; ++i )
     {
     // Transform and normalize.
-    u[0] = _gradients[i]._[0];
-    u[1] = _gradients[i]._[1];
-    u[2] = _gradients[i]._[2];
+    u[0] = _gradients[i][0];
+    u[1] = _gradients[i][1];
+    u[2] = _gradients[i][2];
 
     u_new = tmp_mat * u;
     double dNorm_inv = 1.0 / u_new.magnitude();
 
     // No need to worry about the divison by zero here, since the normalized dwi data has no zero gradient
-    _gradients[i]._[0] = u_new[0] * dNorm_inv;
-    _gradients[i]._[1] = u_new[1] * dNorm_inv;
-    _gradients[i]._[2] = u_new[2] * dNorm_inv;
+    _gradients[i][0] = u_new[0] * dNorm_inv;
+    _gradients[i][1] = u_new[1] * dNorm_inv;
+    _gradients[i][2] = u_new[2] * dNorm_inv;
 
     }
   // Add reversed gradients

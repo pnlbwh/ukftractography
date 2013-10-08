@@ -90,9 +90,9 @@ void vtkWriter::WritePoints(std::ofstream & output)
         {
         output << " ";
         }
-      output << (*_fibers)[i].Points[j]._[0] << " "
-             << (*_fibers)[i].Points[j]._[1] << " "
-             << (*_fibers)[i].Points[j]._[2];
+      output << (*_fibers)[i].Points[j][0] << " "
+             << (*_fibers)[i].Points[j][1] << " "
+             << (*_fibers)[i].Points[j][2];
       nCounter++;
       }
     }

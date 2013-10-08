@@ -169,13 +169,13 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     {
     // Iterate through all brain voxels and take those as seeds voxels.
     const vec_t dim = _signal_data->dim();
-    for( int x = 0; x < dim._[0]; ++x )
+    for( int x = 0; x < dim[0]; ++x )
       {
-      for( int y = 0; y < dim._[1]; ++y )
+      for( int y = 0; y < dim[1]; ++y )
         {
-        for( int z = 0; z < dim._[2]; ++z )
+        for( int z = 0; z < dim[2]; ++z )
           {
-          vec_t pos = make_vec(x, y, z);
+          vec_t pos(x,y,z); //  = make_vec(x, y, z);
           if( _signal_data->Interp3ScalarMask(pos) > 0.1 )
             {
             seeds.push_back(pos);
@@ -196,22 +196,22 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   if( seeds.size() == 1 && _seeds_per_voxel == 1 )   // if there is only one seed don't use offset so fibers can be
                                                      // compared
     {
-    rand_dirs.push_back(make_vec(0, 0, 0) );   // in the test cases.
+    rand_dirs.push_back(vec_t(0,0,0) /* make_vec(0, 0, 0) */);   // in the test cases.
     }
   else
     {
     for( int i = 0; i < _seeds_per_voxel; ++i )
       {
-      vec_t dir = make_vec(static_cast<double>( (rand() % 10001) - 5000),
-                           static_cast<double>( (rand() % 10001) - 5000),
-                           static_cast<double>( (rand() % 10001) - 5000) );
+      vec_t dir(static_cast<double>( (rand() % 10001) - 5000),
+                static_cast<double>( (rand() % 10001) - 5000),
+                static_cast<double>( (rand() % 10001) - 5000) );
 
       // CB: those directions are to compare against the matlab output
       // dir._[2] = 0.439598093988175;
       // dir._[1] = 0.236539281163321;
       // dir._[0] = 0.028331682419209;
 
-      dir /= norm(dir);
+      dir = dir.normalized();
       dir *= 0.5;
 
       rand_dirs.push_back(dir);
@@ -332,13 +332,13 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     SeedPointInfo info_inv;
 
     info.point = starting_points[i];
-    info.start_dir = make_vec(param[0], param[1], param[2]);
+    info.start_dir << param[0], param[1], param[2];
     info.fa = fa;
     info.fa2 = fa2;
     info.trace = trace;
     info.trace2 = trace2;
     info_inv.point = starting_points[i];
-    info_inv.start_dir = make_vec(-param[0], -param[1], -param[2]);
+    info_inv.start_dir << -param[0], -param[1], -param[2];
     info_inv.fa = fa;
     info_inv.fa2 = fa2;
     info_inv.trace = trace;
@@ -364,12 +364,12 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       { // Starting direction.
       info.state.resize(5);
       info_inv.state.resize(5);
-      info.state[0] = info.start_dir._[0];
-      info.state[1] = info.start_dir._[1];
-      info.state[2] = info.start_dir._[2];
-      info_inv.state[0] = info_inv.start_dir._[0];
-      info_inv.state[1] = info_inv.start_dir._[1];
-      info_inv.state[2] = info_inv.start_dir._[2];
+      info.state[0] = info.start_dir[0];
+      info.state[1] = info.start_dir[1];
+      info.state[2] = info.start_dir[2];
+      info_inv.state[0] = info_inv.start_dir[0];
+      info_inv.state[1] = info_inv.start_dir[1];
+      info_inv.state[2] = info_inv.start_dir[2];
       }
 
     info.state[3] = param[6];     // l1
@@ -572,12 +572,12 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
   for( int i = 0; i < signal_dim * 2; ++i )
     {
     const vec_t& g = u[i];
-    B(i, 0) = (-b[i]) * (g._[0] * g._[0]);
-    B(i, 1) = (-b[i]) * (2.0 * g._[0] * g._[1]);
-    B(i, 2) = (-b[i]) * (2.0 * g._[0] * g._[2]);
-    B(i, 3) = (-b[i]) * (g._[1] * g._[1]);
-    B(i, 4) = (-b[i]) * (2.0 * g._[1] * g._[2]);
-    B(i, 5) = (-b[i]) * (g._[2] * g._[2]);
+    B(i, 0) = (-b[i]) * (g[0] * g[0]);
+    B(i, 1) = (-b[i]) * (2.0 * g[0] * g[1]);
+    B(i, 2) = (-b[i]) * (2.0 * g[0] * g[2]);
+    B(i, 3) = (-b[i]) * (g[1] * g[1]);
+    B(i, 4) = (-b[i]) * (2.0 * g[1] * g[2]);
+    B(i, 5) = (-b[i]) * (g[2] * g[2]);
 
     }
 
@@ -745,24 +745,27 @@ void Tractography::Follow3T(const int thread_id,
     // Record branch if necessary.
     if( is_branching )
       {
-      bool is_one = l1._[0] > l1._[1] && l1._[0] > l1._[2];
-      is_one = is_one && l2fa(l1._[0], l1._[1], l1._[2]) > _fa_min;
+      bool is_one = l1[0] > l1[1] && l1[0] > l1[2];
+      is_one = is_one && l2fa(l1[0], l1[1], l1[2]) > _fa_min;
       if( is_one )
         {
         bool add_m2 = false;
         bool add_m3 = false;
 
-        bool is_two = l2._[0] > l2._[1] && l2._[0] > l2._[2];
-        bool is_three = l3._[0] > l3._[1] && l3._[0] > l3._[2];
-        is_two = is_two && l2fa(l2._[0], l2._[1], l2._[2]) > _fa_min;
-        is_three = is_three && l2fa(l3._[0], l3._[1], l3._[2]) > _fa_min;
+        bool is_two = l2[0] > l2[1] && l2[0] > l2[2];
+        bool is_three = l3[0] > l3[1] && l3[0] > l3[2];
+        is_two = is_two && l2fa(l2[0], l2[1], l2[2]) > _fa_min;
+        is_three = is_three && l2fa(l3[0], l3[1], l3[2]) > _fa_min;
 
+        double dotval = m1.dot(m2);
         bool is_branch1 =
-          dot(m1, m2) < _cos_theta_min && dot(m1, m2) > _cos_theta_max;
+          dotval < _cos_theta_min && dotval > _cos_theta_max;
+        dotval = m1.dot(m3);
         bool is_branch2 =
-          dot(m1, m3) < _cos_theta_min && dot(m1, m3) > _cos_theta_max;
+          dotval < _cos_theta_min && dotval > _cos_theta_max;
+        dotval = m2.dot(m3);
         bool is_branch3 =
-          dot(m2, m3) < _cos_theta_min;
+          dotval < _cos_theta_min;
 
         int state_dim = _model->state_dim();
         // If there is a branch between m1 and m2.
@@ -783,8 +786,8 @@ void Tractography::Follow3T(const int thread_id,
               {
               // Otherwise we only follow m2 or m3, and we follow the one
               // tensor where the FA is bigger.
-              if( l2fa(l2._[0], l2._[1], l2._[2]) >
-                  l2fa(l3._[0], l3._[1], l3._[2]) )
+              if( l2fa(l2[0], l2[1], l2[2]) >
+                  l2fa(l3[0], l3[1], l3[2]) )
                 {
                 add_m2 = true;
                 }
@@ -829,7 +832,7 @@ void Tractography::Follow3T(const int thread_id,
           SwapState3T(local_seed.state, local_seed.covariance, 2);
           local_seed.point = x;
           local_seed.start_dir = m2;
-          local_seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
+          local_seed.fa = l2fa(l2[0], l2[1], l2[2]);
           }
         // Same for the third tensor.
         if( add_m3 )
@@ -849,7 +852,7 @@ void Tractography::Follow3T(const int thread_id,
           SwapState3T(local_seed.state, local_seed.covariance, 3);
           local_seed.point = x;
           local_seed.start_dir = m3;
-          local_seed.fa = l2fa(l3._[0], l3._[1], l3._[2]);
+          local_seed.fa = l2fa(l3[0], l3[1], l3[2]);
           }
         }
       }
@@ -933,11 +936,11 @@ void Tractography::Follow2T(const int thread_id,
     // Record branch if necessary.
     if( is_branching )
       {
-      bool is_two = l1._[0] > l1._[1] && l1._[0] > l1._[2] &&
-        l2._[0] > l2._[1] && l2._[0] > l2._[2];
-      is_two = is_two && l2fa(l1._[0], l1._[1], l1._[2]) > _fa_min &&
-        l2fa(l2._[0], l2._[1], l2._[2]) > _fa_min;
-      double theta = dot(m1, m2);
+      bool is_two = l1[0] > l1[1] && l1[0] > l1[2] &&
+        l2[0] > l2[1] && l2[0] > l2[2];
+      is_two = is_two && l2fa(l1[0], l1[1], l1[2]) > _fa_min &&
+        l2fa(l2[0], l2[1], l2[2]) > _fa_min;
+      double theta = m1.dot(m2);
       bool   is_branch = theta<_cos_theta_min && theta> _cos_theta_max;
 
       // If we have two tensors and the angle between them is large enough we
@@ -961,7 +964,7 @@ void Tractography::Follow2T(const int thread_id,
         SwapState2T(local_seed.state, local_seed.covariance);
         local_seed.point = x;
         local_seed.start_dir = m2;
-        local_seed.fa = l2fa(l2._[0], l2._[1], l2._[2]);
+        local_seed.fa = l2fa(l2[0], l2[1], l2[2]);
         }
       }
     }
@@ -1076,12 +1079,12 @@ void Tractography::Step3T(const int thread_id,
   vec_t old_dir = m1;
 
   _model->State2Tensor3T(state, old_dir, m1, l1, m2, l2, m3, l3);
-  trace = l1._[0] + l1._[1] + l1._[2];
-  trace2 = l2._[0] + l2._[1] + l2._[2];
+  trace = l1[0] + l1[1] + l1[2];
+  trace2 = l2[0] + l2[1] + l2[2];
 
-  double dot1 = dot(m1, old_dir);
-  double dot2 = dot(m2, old_dir);
-  double dot3 = dot(m3, old_dir);
+  double dot1 = m1.dot(old_dir);
+  double dot2 = m2.dot(old_dir);
+  double dot3 = m3.dot(old_dir);
   if( dot1 < dot2 && dot3 < dot2 )
     {
     // Switch dirs and lambdas.
@@ -1113,22 +1116,23 @@ void Tractography::Step3T(const int thread_id,
 
   // Update FA. If the first lamba is not the largest anymore the FA is set to
   // 0 what will lead to abortion in the tractography loop.
-  if( l1._[0] < l1._[1] || l1._[0] < l1._[2] )
+  if( l1[0] < l1[1] || l1[0] < l1[2] )
     {
     fa = 0.0;
     }
   else
     {
-    fa = l2fa(l1._[0], l1._[1], l1._[2]);
-    fa2 = l2fa(l2._[0], l2._[1], l2._[2]);
+    fa = l2fa(l1[0], l1[1], l1[2]);
+    fa2 = l2fa(l2[0], l2[1], l2[2]);
     }
 
   vec_t voxel = _signal_data->voxel();
 
-  // CB: Bug corrected, dir._[i] should be divided by voxel._[i]
-  vec_t dx = make_vec(m1._[2] / voxel._[0],
-                      m1._[1] / voxel._[1],
-                      m1._[0] / voxel._[2]);
+  // CB: Bug corrected, dir[i] should be divided by voxel[i]
+  vec_t dx;
+  dx << m1[2] / voxel[0],
+    m1[1] / voxel[1],
+    m1[0] / voxel[2];
   x = x + dx * _stepLength;
 
 }
@@ -1169,15 +1173,15 @@ void Tractography::Step2T(const int thread_id,
   const vec_t old_dir = m1;   // Direction in last step
 
   _model->State2Tensor2T(state, old_dir, m1, l1, m2, l2);   // The returned m1 and m2 are unit vector here
-  trace = l1._[0] + l1._[1] + l1._[2];
-  trace2 = l2._[0] + l2._[1] + l2._[2];
+  trace = l1[0] + l1[1] + l1[2];
+  trace2 = l2[0] + l2[1] + l2[2];
 
-  const double fa_tensor_1 = l2fa(l1._[0], l1._[1], l1._[2]);
-  const double fa_tensor_2 = l2fa(l2._[0], l2._[1], l2._[2]);
+  const double fa_tensor_1 = l2fa(l1[0], l1[1], l1[2]);
+  const double fa_tensor_2 = l2fa(l2[0], l2[1], l2[2]);
 
-  const double tensor_angle = std::acos(dot(m1, m2) ) * (180 / M_PI);
+  const double tensor_angle = std::acos(m1.dot(m2) ) * (180 / M_PI);
 
-  if( dot(m1, old_dir) < dot(m2, old_dir) )
+  if( m1.dot(old_dir) < m2.dot(old_dir) )
     {
     // Switch dirs and lambdas.
     vec_t tmp = m1;
@@ -1224,27 +1228,28 @@ void Tractography::Step2T(const int thread_id,
 
   // Update FA. If the first lamba is not the largest anymore the FA is set to
   // 0 what will lead to abortion in the tractography loop.
-  if( l1._[0] < l1._[1] || l1._[0] < l1._[2] )
+  if( l1[0] < l1[1] || l1[0] < l1[2] )
     {
     fa = 0.0;
     fa2 = 0.0;
     }
   else
     {
-    fa = l2fa(l1._[0], l1._[1], l1._[2]);
-    fa2 = l2fa(l2._[0], l2._[1], l2._[2]);
+    fa = l2fa(l1[0], l1[1], l1[2]);
+    fa2 = l2fa(l2[0], l2[1], l2[2]);
     }
 
   vec_t dir = m1;     // The dir is a unit vector in ijk coordinate system indicating the direction of step
 
   vec_t voxel = _signal_data->voxel();
 
-  vec_t dx = make_vec(dir._[2] / voxel._[0],  // By dividing by the voxel size, it's guaranteed that the step
-                                              // represented by dx is 1mm in RAS coordinate system, no matter whether
-                                              // the voxel is isotropic or not
-                      dir._[1] / voxel._[1],  // The value is scaled back during the ijk->RAS transformation when
-                                              // outputted
-                      dir._[0] / voxel._[2]);
+  vec_t dx;
+  dx << dir[2] / voxel[0], // By dividing by the voxel size, it's guaranteed that the step
+                                // represented by dx is 1mm in RAS coordinate system, no matter whether
+                                // the voxel is isotropic or not
+    dir[1] / voxel[1], // The value is scaled back during the ijk->RAS transformation when
+                                // outputted
+    dir[0] / voxel[2];
 
   x = x + dx * _stepLength; // The x here is in ijk coordinate system.
   // NOTICE that the coordinate order of x is in reverse order with respect to the axis order in the original signal
@@ -1282,24 +1287,25 @@ void Tractography::Step1T(const int thread_id,
   vec_t dir, l;
   _model->State2Tensor1T(state, dir, l);
 
-  trace = l._[0] + l._[1] + l._[2];
+  trace = l[0] + l[1] + l[2];
 
   // Update FA. If the first lamba is not the largest anymore the FA is set to
   // 0 what will lead to abortion in the tractography loop.
-  if( l._[0] < l._[1] || l._[0] < l._[2] )
+  if( l[0] < l[1] || l[0] < l[2] )
     {
     fa = 0.0;
     }
   else
     {
-    fa = l2fa(l._[0], l._[1], l._[2]);
+    fa = l2fa(l[0], l[1], l[2]);
     }
 
   vec_t voxel = _signal_data->voxel();
 
-  vec_t dx = make_vec(dir._[2] / voxel._[0],
-                      dir._[1] / voxel._[1],
-                      dir._[0] / voxel._[2]);
+  vec_t dx;
+  dx << dir[2] / voxel[0],
+    dir[1] / voxel[1],
+    dir[0] / voxel[2];
   x = x + dx * _stepLength;
 
 }
@@ -1398,7 +1404,7 @@ void Tractography::Record(const vec_t& x, double fa, double fa2, const State& st
   assert(p.rows() == static_cast<unsigned int>(state.size() ) &&
          p.cols() == static_cast<unsigned int>(state.size() ) );
 
-  // std::cout << "x: " << x._[0] << " " << x._[1] << " " << x._[2] << std::endl;
+  // std::cout << "x: " << x[0] << " " << x[1] << " " << x[2] << std::endl;
 
   fiber.position.push_back(x);
   fiber.norm.push_back(p.array_two_norm() );
@@ -1451,27 +1457,25 @@ void Tractography::Record(const vec_t& x, double fa, double fa2, const State& st
   if( state.size() == 5 || state.size() == 10 || state.size() == 15 )   // i.e. simple model
     { // Normalize direction before storing it;
     State store_state(state);
-    vec_t dir = make_vec(store_state[0], store_state[1], store_state[2]);
-    dir /= norm(dir);
-    store_state[0] = dir._[0];
-    store_state[1] = dir._[1];
-    store_state[2] = dir._[2];
+    vec_t dir;
+    initNormalized(dir, store_state[0], store_state[1], store_state[2]);
+    store_state[0] = dir[0];
+    store_state[1] = dir[1];
+    store_state[2] = dir[2];
 
     if( state.size() == 10 )
       {
-      dir = make_vec(store_state[5], store_state[6], store_state[7]);
-      dir /= norm(dir);
-      store_state[5] = dir._[0];
-      store_state[6] = dir._[1];
-      store_state[7] = dir._[2];
+      initNormalized(dir,store_state[5], store_state[6], store_state[7]);
+      store_state[5] = dir[0];
+      store_state[6] = dir[1];
+      store_state[7] = dir[2];
       }
     if( state.size() == 15 )
       {
-      dir = make_vec(store_state[10], store_state[11], store_state[12]);
-      dir /= norm(dir);
-      store_state[10] = dir._[0];
-      store_state[11] = dir._[1];
-      store_state[12] = dir._[2];
+      initNormalized(dir,store_state[10], store_state[11], store_state[12]);
+      store_state[10] = dir[0];
+      store_state[11] = dir[1];
+      store_state[12] = dir[2];
       }
     fiber.state.push_back(store_state);
 

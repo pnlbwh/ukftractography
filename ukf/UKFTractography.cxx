@@ -43,7 +43,6 @@ int main(int argc, char **argv)
   std::cout << std::endl;
 
   // CONSTANTS
-  bool FULL_BRAIN                 = false;
   const double SIGMA_SIGNAL       = 1.66;
   const double SIGMA_MASK 	      = 0.5;
   const double P0 			          = 0.01;
@@ -117,7 +116,6 @@ int main(int argc, char **argv)
   std::cout << "\"-\": default setting\n";
 
   if (seedsFile.empty()) {
-    FULL_BRAIN = true;
     maxBranchingAngle = 0.0;
   }
 

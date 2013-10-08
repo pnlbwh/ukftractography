@@ -65,7 +65,7 @@ void Full1T::H(const  vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, local_D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
@@ -76,9 +76,9 @@ void Full1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
   m = rotation_main_dir(x[0], x[1], x[2]);
 
   // Clamp lambdas.
-  l._[0] = std::max(x[3], _lambda_min);
-  l._[1] = std::max(x[4], _lambda_min);
-  l._[2] = std::max(x[5], _lambda_min);
+  l[0] = std::max(x[3], _lambda_min);
+  l[1] = std::max(x[4], _lambda_min);
+  l[2] = std::max(x[5], _lambda_min);
 }
 
 // Functions for 2-tensor full model.
@@ -132,7 +132,7 @@ void Full2T::H(const  vnl_matrix<double>& X,
       const vec_t& u = gradients[j];
       Y(j,
         i) =
-        exp(-b[j] * dot(u, D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1];
+        exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
       }
     }
 }
@@ -145,29 +145,29 @@ void Full2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 
   // Flip orientation if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
 
   // Clamp lambdas.
-  l1._[0] = std::max(x[3], _lambda_min);
-  l1._[1] = std::max(x[4], _lambda_min);
-  l1._[2] = std::max(x[5], _lambda_min);
+  l1[0] = std::max(x[3], _lambda_min);
+  l1[1] = std::max(x[4], _lambda_min);
+  l1[2] = std::max(x[5], _lambda_min);
 
   // Second orientation.
   m2 = rotation_main_dir(x[6], x[7], x[8]);
 
   // Flip orientation if necessary.
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
 
   // Clamp lambdas.
-  l2._[0] = std::max(x[9], _lambda_min);
-  l2._[1] = std::max(x[10], _lambda_min);
-  l2._[2] = std::max(x[11], _lambda_min);
+  l2[0] = std::max(x[9], _lambda_min);
+  l2[1] = std::max(x[10], _lambda_min);
+  l2[2] = std::max(x[11], _lambda_min);
 }
 
 // Functions for 3-tensor full model.
@@ -226,9 +226,9 @@ void Full3T::H(const  vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =  exp(-b[j] * dot(u, D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1]
-        + exp(-b[j] * dot(u, D3 * u) ) * weights_on_tensors_[2];
+      Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
+        + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
       }
     }
 }
@@ -242,43 +242,43 @@ void Full3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
 
   // Flip orientation if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
 
   // Clamp lambdas.
-  l1._[0] = std::max(x[3], _lambda_min);
-  l1._[1] = std::max(x[4], _lambda_min);
-  l1._[2] = std::max(x[5], _lambda_min);
+  l1[0] = std::max(x[3], _lambda_min);
+  l1[1] = std::max(x[4], _lambda_min);
+  l1[2] = std::max(x[5], _lambda_min);
 
   // Second orientation.
   m2 = rotation_main_dir(x[6], x[7], x[8]);
 
   // Flip orientation if necessary.
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
 
   // Clamp lambdas.
-  l2._[0] = std::max(x[9], _lambda_min);
-  l2._[1] = std::max(x[10], _lambda_min);
-  l2._[2] = std::max(x[11], _lambda_min);
+  l2[0] = std::max(x[9], _lambda_min);
+  l2[1] = std::max(x[10], _lambda_min);
+  l2[2] = std::max(x[11], _lambda_min);
 
   // Third orientation.
   m3 = rotation_main_dir(x[12], x[13], x[14]);
 
   // Flip orientation if necessary.
-  if( m3._[0] * old_m._[0] + m3._[1] * old_m._[1] + m3._[2] * old_m._[2] < 0 )
+  if( m3[0] * old_m[0] + m3[1] * old_m[1] + m3[2] * old_m[2] < 0 )
     {
     m3 = -m3;
     }
 
   // Clamp lambdas.
-  l3._[0] = std::max(x[15], _lambda_min);
-  l3._[1] = std::max(x[16], _lambda_min);
-  l3._[2] = std::max(x[17], _lambda_min);
+  l3[0] = std::max(x[15], _lambda_min);
+  l3[1] = std::max(x[16], _lambda_min);
+  l3[2] = std::max(x[17], _lambda_min);
 }
 
 // Functions for 1-tensor simple model.
@@ -323,8 +323,8 @@ void Simple1T::H(const  vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
-    vec_t m = make_vec(X(0, i), X(1, i), X(2, i) );
-    m /= norm(m);
+    vec_t m;
+    initNormalized(m, X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
     double l1 = std::max(X(3, i), _lambda_min);
@@ -332,7 +332,7 @@ void Simple1T::H(const  vnl_matrix<double>& X,
 
     // Flip if necessary.
     // Why is that???
-    if( m._[0] < 0 )
+    if( m[0] < 0 )
       {
       m = -m;
       }
@@ -343,7 +343,7 @@ void Simple1T::H(const  vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, local_D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
@@ -351,15 +351,15 @@ void Simple1T::H(const  vnl_matrix<double>& X,
 void Simple1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
-  m = make_vec(x[0], x[1], x[2]);
+  m << x[0], x[1], x[2];
 
-  double n = norm(m);
+  double n = m.norm();
   m /= n;
 
   // Clamp lambdas.
-  l._[0] = std::max(x[3], _lambda_min);
-  l._[1] = std::max(x[4], _lambda_min);
-  l._[2] = l._[1];
+  l[0] = std::max(x[3], _lambda_min);
+  l[1] = std::max(x[4], _lambda_min);
+  l[2] = l[1];
 }
 
 // Functions for 2-tensor simple model.
@@ -418,10 +418,10 @@ void Simple2T::H(const  vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1 = make_vec(X(0, i), X(1, i), X(2, i) );
-    vec_t m2 = make_vec(X(5, i), X(6, i), X(7, i) );
-    m1 /= norm(m1);
-    m2 /= norm(m2);
+    vec_t m1;
+    initNormalized(m1, X(0, i), X(1, i), X(2, i));
+    vec_t m2;
+    initNormalized(m2, X(5, i), X(6, i), X(7, i));
 
     // Clamp lambdas.
     double l11 = std::max(X(3, i), _lambda_min);
@@ -431,11 +431,11 @@ void Simple2T::H(const  vnl_matrix<double>& X,
     double l22 = std::max(X(9, i), _lambda_min);
 
     // Flip if necessary.
-    if( m1._[0] < 0 )
+    if( m1[0] < 0 )
       {
       m1 = -m1;
       }
-    if( m2._[0] < 0 )
+    if( m2[0] < 0 )
       {
       m2 = -m2;
       }
@@ -447,8 +447,8 @@ void Simple2T::H(const  vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * dot(u, D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1];
+      Y(j, i) = exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
       }
     }
 }
@@ -457,26 +457,24 @@ void Simple2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                             vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // Orientations;
-  m1 = make_vec(x[0], x[1], x[2]);
-  m2 = make_vec(x[5], x[6], x[7]);
-  m1 /= norm(m1);
-  m2 /= norm(m2);
+  initNormalized(m1,x[0], x[1], x[2]);
+  initNormalized(m2,x[5], x[6], x[7]);
 
   // Clamp lambdas.
-  l1._[0] = std::max(x[3], _lambda_min);
-  l1._[1] = std::max(x[4], _lambda_min);
-  l1._[2] = l1._[1];
-  l2._[0] = std::max(x[8], _lambda_min);
-  l2._[1] = std::max(x[9], _lambda_min);
-  l2._[2] = l2._[1];
+  l1[0] = std::max(x[3], _lambda_min);
+  l1[1] = std::max(x[4], _lambda_min);
+  l1[2] = l1[1];
+  l2[0] = std::max(x[8], _lambda_min);
+  l2[1] = std::max(x[9], _lambda_min);
+  l2[2] = l2[1];
 
   // Flip orientations if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
@@ -551,12 +549,12 @@ void Simple3T::H(const  vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1 = make_vec(X(0, i), X(1, i), X(2, i) );
-    vec_t m2 = make_vec(X(5, i), X(6, i), X(7, i) );
-    vec_t m3 = make_vec(X(10, i), X(11, i), X(12, i) );
-    m1 /= norm(m1);
-    m2 /= norm(m2);
-    m3 /= norm(m3);
+    vec_t m1;
+    initNormalized(m1,X(0, i), X(1, i), X(2, i));
+    vec_t m2;
+    initNormalized(m2,X(5, i), X(6, i), X(7, i));
+    vec_t m3;
+    initNormalized(m3,X(10, i), X(11, i), X(12, i));
 
     // Clamp lambdas.
     double l11 = std::max(X(3, i), _lambda_min);
@@ -569,15 +567,15 @@ void Simple3T::H(const  vnl_matrix<double>& X,
     double l32 = std::max(X(14, i), _lambda_min);
 
     // flip if necessary
-    if( m1._[0] < 0 )
+    if( m1[0] < 0 )
       {
       m1 = -m1;
       }
-    if( m2._[0] < 0 )
+    if( m2[0] < 0 )
       {
       m2 = -m2;
       }
-    if( m3._[0] < 0 )
+    if( m3[0] < 0 )
       {
       m3 = -m3;
       }
@@ -590,9 +588,9 @@ void Simple3T::H(const  vnl_matrix<double>& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =  exp(-b[j] * dot(u, D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1]
-        + exp(-b[j] * dot(u, D3 * u) ) * weights_on_tensors_[2];
+      Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
+        + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
       }
     }
 }
@@ -602,35 +600,32 @@ void Simple3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
                             vec_t& l3)
 {
   // Orientations;
-  m1 = make_vec(x[0], x[1], x[2]);
-  m2 = make_vec(x[5], x[6], x[7]);
-  m3 = make_vec(x[10], x[11], x[12]);
-  m1 /= norm(m1);
-  m2 /= norm(m2);
-  m3 /= norm(m3);
+  initNormalized(m1,x[0], x[1], x[2]);
+  initNormalized(m2,x[5], x[6], x[7]);
+  initNormalized(m3,x[10], x[11], x[12]);
 
   // Clamp lambdas.
-  l1._[0] = std::max(x[3], _lambda_min);
-  l1._[1] = std::max(x[4], _lambda_min);
-  l1._[2] = l1._[1];
-  l2._[0] = std::max(x[8], _lambda_min);
-  l2._[1] = std::max(x[9], _lambda_min);
-  l2._[2] = l2._[1];
-  l3._[0] = std::max(x[13], _lambda_min);
-  l3._[1] = std::max(x[14], _lambda_min);
-  l3._[2] = l3._[1];
+  l1[0] = std::max(x[3], _lambda_min);
+  l1[1] = std::max(x[4], _lambda_min);
+  l1[2] = l1[1];
+  l2[0] = std::max(x[8], _lambda_min);
+  l2[1] = std::max(x[9], _lambda_min);
+  l2[2] = l2[1];
+  l3[0] = std::max(x[13], _lambda_min);
+  l3[1] = std::max(x[14], _lambda_min);
+  l3[2] = l3[1];
 
   // Flip orientations if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
-  if( m3._[0] * old_m._[0] + m3._[1] * old_m._[1] + m3._[2] * old_m._[2] < 0 )
+  if( m3[0] * old_m[0] + m3[1] * old_m[1] + m3[2] * old_m[2] < 0 )
     {
     m3 = -m3;
     }
@@ -693,8 +688,8 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
-    vec_t m = make_vec(X(0, i), X(1, i), X(2, i) );
-    m /= norm(m);
+    vec_t m;
+    initNormalized(m,X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
 //     double l1 = std::max(X(3, i), 0.0);
@@ -725,22 +720,23 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
 
     // Flip if necessary.
     // Why is that???
-    if( m._[0] < 0 )
+    if( m[0] < 0 )
       {
       m = -m;
       }
 
     // Calculate diffusion matrix.
     mat_t local_D = diffusion(m, l1, l2); // l3 == l2
-    mat_t D_iso = make_mat(_d_iso, 0, 0,
-                           0, _d_iso, 0,
-                           0, 0, _d_iso);
+    mat_t D_iso;
+    D_iso << _d_iso, 0, 0,
+      0, _d_iso, 0,
+      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, local_D * u) )
-        + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
+      Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
+        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
       }
     }
 }
@@ -748,20 +744,17 @@ void Simple1T_FW::H(const vnl_matrix<double>& X,
 void Simple1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 {
   // Orientation.
-  m = make_vec(x[0], x[1], x[2]);
+  initNormalized(m,x[0], x[1], x[2]);
 
-  double n = norm(m);
-  m /= n;
+  l[1] = std::max(x[4], 0.0);
 
-  l._[1] = std::max(x[4], 0.0);
-
-  l._[0] = CheckZero(x[3]);
-  l._[1] = CheckZero(x[4]);
-  if( l._[0] < 0 || l._[1] < 0 )
+  l[0] = CheckZero(x[3]);
+  l[1] = CheckZero(x[4]);
+  if( l[0] < 0 || l[1] < 0 )
     {
     std::cout << "Warning: eigenvalues became negative" << std::endl;
     }
-  l._[2] = l._[1];
+  l[2] = l[1];
 }
 
 ///////  1T FULL MODEL ///
@@ -818,15 +811,16 @@ void Full1T_FW::H(const vnl_matrix<double>& X,
 
     // Calculate diffusion matrix.
     mat_t local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
-    mat_t D_iso = make_mat(_d_iso, 0, 0,
-                           0, _d_iso, 0,
-                           0, 0, _d_iso);
+    mat_t D_iso;
+    D_iso << _d_iso, 0, 0,
+      0, _d_iso, 0,
+      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * dot(u, local_D * u) )
-        + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
+      Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
+        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
       }
     }
 }
@@ -836,10 +830,10 @@ void Full1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
   // Orientation.
   m = rotation_main_dir(x[0], x[1], x[2]);
 
-  l._[0] = CheckZero(x[3]);
-  l._[1] = CheckZero(x[4]);
-  l._[2] = CheckZero(x[5]);
-  if( l._[0] < 0 || l._[1] < 0 || l._[2] < 0 )
+  l[0] = CheckZero(x[3]);
+  l[1] = CheckZero(x[4]);
+  l[2] = CheckZero(x[5]);
+  if( l[0] < 0 || l[1] < 0 || l[2] < 0 )
     {
     std::cout << "Warning: eigenvalues became negative" << std::endl;
     }
@@ -908,10 +902,10 @@ void Simple2T_FW::H(const   vnl_matrix<double>& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1 = make_vec(X(0, i), X(1, i), X(2, i) );
-    vec_t m2 = make_vec(X(5, i), X(6, i), X(7, i) );
-    m1 /= norm(m1);
-    m2 /= norm(m2);
+    vec_t m1;
+    initNormalized(m1,X(0, i), X(1, i), X(2, i) );
+    vec_t m2;
+    initNormalized(m2,X(5, i), X(6, i), X(7, i) );
 
     double l11 = CheckZero(X(3, i) );
     double l12 = CheckZero(X(4, i) );
@@ -926,11 +920,11 @@ void Simple2T_FW::H(const   vnl_matrix<double>& X,
       }
 
     // Flip if necessary.
-    if( m1._[0] < 0 )
+    if( m1[0] < 0 )
       {
       m1 = -m1;
       }
-    if( m2._[0] < 0 )
+    if( m2[0] < 0 )
       {
       m2 = -m2;
       }
@@ -941,9 +935,10 @@ void Simple2T_FW::H(const   vnl_matrix<double>& X,
     // Calculate diffusion matrix.
     mat_t D1 = diffusion(m1, l11, l12);
     mat_t D2 = diffusion(m2, l21, l22);
-    mat_t D_iso = make_mat(_d_iso, 0, 0,
-                           0, _d_iso, 0,
-                           0, 0, _d_iso);
+    mat_t D_iso;
+    D_iso << _d_iso, 0, 0,
+      0, _d_iso, 0,
+      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -951,8 +946,8 @@ void Simple2T_FW::H(const   vnl_matrix<double>& X,
       Y(j,
         i) = w
         * (exp(-b[j]
-               * dot(u, D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
+               * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1])
+        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
       }
     }
 
@@ -962,33 +957,31 @@ void Simple2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
                                vec_t& l1, vec_t& m2, vec_t& l2)
 {
   // Orientations;
-  m1 = make_vec(x[0], x[1], x[2]);
-  m2 = make_vec(x[5], x[6], x[7]);
-  m1 /= norm(m1);
-  m2 /= norm(m2);
+  initNormalized(m1, x[0], x[1], x[2]);
+  initNormalized(m2, x[5], x[6], x[7]);
 
-  l1._[0] = CheckZero(x[3]);
-  l1._[1] = CheckZero(x[4]);
-  l1._[2] = l1._[1];
+  l1[0] = CheckZero(x[3]);
+  l1[1] = CheckZero(x[4]);
+  l1[2] = l1[1];
 
   CheckZero(x[9]);
-  l2._[0] = CheckZero(x[8]);
-  l2._[1] = CheckZero(x[9]);
-  l2._[2] = l2._[1];
+  l2[0] = CheckZero(x[8]);
+  l2[1] = CheckZero(x[9]);
+  l2[2] = l2[1];
 
-  if( l1._[0] < 0 || l1._[1] < 0 || l2._[0] < 0 || l2._[1] < 0 )
+  if( l1[0] < 0 || l1[1] < 0 || l2[0] < 0 || l2[1] < 0 )
     {
-    std::cout << "Warning: eigenvalues became negative 3: " << l1._[0] << " " << l1._[1] << " " << l2._[0] << " "
-              << l2._[1] << std::endl;
+    std::cout << "Warning: eigenvalues became negative 3: " << l1[0] << " " << l1[1] << " " << l2[0] << " "
+              << l2[1] << std::endl;
     }
 
   // Flip orientations if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
@@ -1054,18 +1047,19 @@ void Full2T_FW::H(const   vnl_matrix<double>& X,
     // Calculate diffusion matrix.
     mat_t D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
     mat_t D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
-    mat_t D_iso = make_mat(_d_iso, 0, 0,
-                           0, _d_iso, 0,
-                           0, 0, _d_iso);
+    mat_t D_iso;
+    D_iso << _d_iso, 0, 0,
+      0, _d_iso, 0,
+      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
-      Y(j,
-        i) = (w)
-        * (exp(-b[j]
-               * dot(u, D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * dot(u, D2 * u) ) * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * dot(u, D_iso * u) );
+      Y(j, i) = (w)
+        * (exp(-b[j] * u.dot(D1 * u) )
+           * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) )
+           * weights_on_tensors_[1])
+        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
       }
     }
 }
@@ -1078,29 +1072,29 @@ void Full2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 
   // Flip orientation if necessary. (For m1 it should not happen, maybe for
   // m2.)
-  if( m1._[0] * old_m._[0] + m1._[1] * old_m._[1] + m1._[2] * old_m._[2] < 0 )
+  if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
     }
 
-  l1._[0] = CheckZero(x[3]);
-  l1._[1] = CheckZero(x[4]);
-  l1._[2] = CheckZero(x[5]);
+  l1[0] = CheckZero(x[3]);
+  l1[1] = CheckZero(x[4]);
+  l1[2] = CheckZero(x[5]);
 
   // Second orientation.
   m2 = rotation_main_dir(x[6], x[7], x[8]);
 
   // Flip orientation if necessary.
-  if( m2._[0] * old_m._[0] + m2._[1] * old_m._[1] + m2._[2] * old_m._[2] < 0 )
+  if( m2[0] * old_m[0] + m2[1] * old_m[1] + m2[2] * old_m[2] < 0 )
     {
     m2 = -m2;
     }
 
-  l2._[0] = CheckZero(x[9]);
-  l2._[1] = CheckZero(x[10]);
-  l2._[2] = CheckZero(x[11]);
+  l2[0] = CheckZero(x[9]);
+  l2[1] = CheckZero(x[10]);
+  l2[2] = CheckZero(x[11]);
 
-  if( l1._[0] < 0 || l1._[1] < 0 ||  l1._[2] < 0 || l2._[0] < 0 || l2._[1] < 0 ||  l2._[2] < 0 )
+  if( l1[0] < 0 || l1[1] < 0 ||  l1[2] < 0 || l2[0] < 0 || l2[1] < 0 ||  l2[2] < 0 )
     {
     std::cout << "Warning: eigenvalues became negative" << std::endl;
     }

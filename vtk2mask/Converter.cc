@@ -135,9 +135,9 @@ bool Converter::FillMatField(const std::string & field_name)
 
       // ITK uses a different measurement frame than VTK. The flipping of x and y
       // might have something todo with that. Not sure yet, though.
-      point[0] = -(*_fibers)[i].Points[j]._[0];
-      point[1] = -(*_fibers)[i].Points[j]._[1];
-      point[2] =  (*_fibers)[i].Points[j]._[2];
+      point[0] = -(*_fibers)[i].Points[j][0];
+      point[1] = -(*_fibers)[i].Points[j][1];
+      point[2] =  (*_fibers)[i].Points[j][2];
 
       FloatImageType::IndexType pixelIndex;
       _nrrdDataOut->TransformPhysicalPointToIndex(point, pixelIndex);

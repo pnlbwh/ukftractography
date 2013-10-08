@@ -205,7 +205,7 @@ private:
             input >> x;
             input >> y;
             input >> z;
-            (*_fibers)[i].Points[j] = make_vec(x, y, z);
+            (*_fibers)[i].Points[j] << x, y, z;
             }
           }
 
@@ -272,9 +272,10 @@ private:
             input >> t21; input >> t22; input >> t23;
             input >> t31; input >> t32; input >> t33;
 
-            (*_fibers)[i].Tensors[name][j] = make_mat(t11, t12, t13,
-                                                      t21, t22, t23,
-                                                      t31, t31, t33);
+            (*_fibers)[i].Tensors[name][j] <<
+              t11, t12, t13,
+              t21, t22, t23,
+              t31, t31, t33;
 
             }
 

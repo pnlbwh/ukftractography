@@ -16,15 +16,15 @@
   <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams</contributor>
   <acknowledgements></acknowledgements>
 
-  <parameters>
 
+  <parameters>
     <label>IO</label>
-    <description>Input/output paramters</description>
+    <description>Input/output paramaters</description>
 
     <image type="diffusion-weighted" fileExtensions=".nhdr,.nrrd">
       <name>dwiFile</name>
       <longflag alias="dwiData">dwiFile</longflag>
-      <label>Input DTI volume</label>
+      <label>Input DWI volume</label>
       <channel>input</channel>
       <description>Input DWI volume</description>
     </image>
@@ -56,17 +56,9 @@
     <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
       <name>tracts</name>
       <longflag>tracts</longflag>
-      <label>Output Fibers (first tensor)</label>
+      <label>Output Fibers</label>
       <channel>output</channel>
       <description>Tracts generated, with first tensor output</description>
-    </geometry>
-
-    <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
-      <name>tractsWithSecondTensor</name>
-      <longflag>tractsWithSecondTensor</longflag>
-      <label>Output Fibers (second tensor, optional)</label>
-      <channel>output</channel>
-      <description>Tracts generated, with second tensor output (if there is one)</description>
     </geometry>
 
     <boolean>
@@ -88,14 +80,15 @@
   </parameters>
 
   <parameters>
-	<label>Seeding Options</label>
-    <description>Seeding Options</description>
+	<label>Basic Options</label>
+    <description>Basic Parameters</description>
 
     <integer>
       <name>seedsPerVoxel</name>
       <longflag>seedsPerVoxel</longflag>
       <label>Number of seeds per voxel</label>
-      <description>Number of seeds per voxel</description>
+      <description> Each seed generates a fiber, thus using more seeds generates more fibers. In general use 1 or 2 seeds, and for a more thorough result use 5 or 10 (depending on your machine this may take up to 2 days to run).
+      </description>
       <default>1</default>
       <constraints>
         <minimum>0</minimum>
@@ -103,13 +96,6 @@
 	    <step>1</step>
 	  </constraints>
     </integer>
-
-  </parameters>
-
-  <parameters>
-
-    <label>Model options</label>
-    <description>Which model should be used for tractography</description>
 
     <integer-enumeration>
       <name>numTensor</name>
@@ -119,78 +105,35 @@
       <default>2</default>
       <element>1</element>
       <element>2</element>
-      <element>3</element>
     </integer-enumeration>
-
-    <boolean>
-      <name>simpleTensorModel</name>
-      <longflag>simpleTensorModel</longflag>
-      <label>Use simple tensor model</label>
-      <description>Whether to use the simple tensor model. If unchecked, use the full tensor model</description>
-      <default>true</default>
-    </boolean>
 
     <boolean>
       <name>freeWater</name>
       <longflag>freeWater</longflag>
       <label>Estimate term for free water</label>
-      <description>Adds a term for free water difusion to the model. If checked, the 1T simple model is forced.</description>
+      <description>Adds a term for free water difusion to the model. (Note for experts: if checked, the 1T simple model is forced) </description>
       <default>false</default>
     </boolean>
 
   </parameters>
 
-  <parameters>
-
-  	<label>Stopping Criteria</label>
-    <description>if one or more of the criteria are fulfilled the fiber stops</description>
-
-	<double>
-      <name>minFA</name>
-      <longflag>minFA</longflag>
-      <label>Terminating FA (defaults set runtime)</label>
-      <description>Abort the tractography when the Fractional Anisotropy is less than this value</description>
-      <default>0.15</default>
-      <constraints>
-        <minimum>0</minimum>
-	    <maximum>1</maximum>
-	    <step>0.01</step>
-	  </constraints>
-    </double>
-
-    <double>
-      <name>minGA</name>
-      <longflag>minGA</longflag>
-      <label>Terminating minimum Generalized Anisotropy</label>
-      <description>Abort the tractography when the Generalized Anisotropy is less than this value</description>
-      <default>0.1</default>
-      <constraints>
-		<minimum>0</minimum>
-	  	<maximum>1</maximum>
-	  	<step>0.01</step>
-	  </constraints>
-    </double>
-
-
-  </parameters>
-
 <parameters>
+    <label>Advanced Options</label>
+    <description></description>
 
-    <label>UKFFiber scalar fields</label>
-    <description>Scalars to be recorded together with the traced fiber</description>
     <boolean>
       <name>recordFA</name>
       <longflag>recordFA</longflag>
       <label>Record FA</label>
       <description>Whether to store FA. Attaches field 'FA', and 'FA2' for 2-tensor case to fiber. </description>
-      <default>false</default>
+      <default>true</default>
     </boolean>
 
     <boolean>
-      <name>recordNMSE</name>
-      <longflag>recordNMSE</longflag>
-      <label>Record normalized MSE</label>
-      <description>Whether to store NMSE. Attaches field 'NMSE' to fiber. </description>
+      <name>recordFreeWater</name>
+      <longflag>recordFreeWater</longflag>
+      <label>Record Free Water</label>
+      <description>Whether to store the fraction of free water. Attaches field 'FreeWater' to fiber.</description>
       <default>false</default>
     </boolean>
 
@@ -203,10 +146,18 @@
     </boolean>
 
     <boolean>
-      <name>recordFreeWater</name>
-      <longflag>recordFreeWater</longflag>
-      <label>Record Free Water</label>
-      <description>Whether to store the fraction of free water. Attaches field 'FreeWater' to fiber.</description>
+      <name>recordTensors</name>
+      <longflag>recordTensors</longflag>
+      <label>Record the tensors</label>
+      <description>Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. The fields will be called 'TensorN', where N is the tensor number. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordNMSE</name>
+      <longflag>recordNMSE</longflag>
+      <label>Record normalized MSE</label>
+      <description>Whether to store NMSE. Attaches field 'NMSE' to fiber. </description>
       <default>false</default>
     </boolean>
 
@@ -226,20 +177,48 @@
       <default>false</default>
     </boolean>
 
-    <boolean>
-      <name>recordTensors</name>
-      <longflag>recordTensors</longflag>
-      <label>Record the tensors</label>
-      <description>Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. The fields will be called 'TensorN', where N is the tensor number. </description>
-      <default>false</default>
-    </boolean>
+	<double>
+      <name>minFA</name>
+      <longflag>minFA</longflag>
+      <label>Stopping Criterion: Terminating FA (defaults set runtime)</label>
+      <description>Abort the tractography when the Fractional Anisotropy is less than this value</description>
+      <default>0.15</default>
+      <constraints>
+        <minimum>0</minimum>
+	    <maximum>1</maximum>
+	    <step>0.01</step>
+	  </constraints>
+    </double>
+
+    <double>
+      <name>minGA</name>
+      <longflag>minGA</longflag>
+      <label>Stopping Criterion: Terminating minimum Generalized Anisotropy</label>
+      <description>Abort the tractography when the Generalized Anisotropy is less than this value</description>
+      <default>0.1</default>
+      <constraints>
+		<minimum>0</minimum>
+	  	<maximum>1</maximum>
+	  	<step>0.01</step>
+	  </constraints>
+    </double>
+
 
   </parameters>
 
+
   <parameters>
 
-    <label>Advanced Options</label>
+    <label>Expert Settings</label>
     <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>
+
+    <boolean>
+      <name>simpleTensorModel</name>
+      <longflag>simpleTensorModel</longflag>
+      <label>Use simple tensor model</label>
+      <description>Whether to use the simple tensor model. If unchecked, use the full tensor model</description>
+      <default>true</default>
+    </boolean>
 
     <integer>
       <name>numThreads</name>
@@ -249,33 +228,18 @@
       <default>-1</default>
     </integer>
 
-    <boolean>
-      <name>normalizedDWIData</name>
-      <longflag>normalizedDWIData</longflag>
-      <label>The DWI data is normalized</label>
-      <description>Whether the DWI input data is already normalized</description>
-      <default>false</default>
-    </boolean>
-
     <double>
       <name>stepLength</name>
       <longflag>stepLength</longflag>
-      <label>Step length of tractography(in mm)</label>
+      <label>Step length of tractography (in mm)</label>
       <description>Step length of tractography, in millimeters</description>
       <default>0.0</default>
     </double>
 
-    <double-vector>
-      <name>weightsOnTensors</name>
-      <longflag>weightsOnTensors</longflag>
-      <label>Weights on tensors</label>
-      <description>Weights on different tensors when using multiple tensors. There must be one weight for each tensor, and the weights must sum up to 1. Default to equally weighted</description>
-    </double-vector>
-
     <double>
       <name>maxHalfFiberLength</name>
       <longflag>maxHalfFiberLength</longflag>
-      <label>Maximum half-fiber length limit(in mm)</label>
+      <label>Maximum tract length (in mm)</label>
       <description>The max length limit of the half fibers generated during tractography. Here the fiber is "half" because the tractography goes in only one direction from one seed point at a time</description>
       <default>10000.0</default>
     </double>
@@ -283,7 +247,7 @@
     <double>
       <name>seedFALimit</name>
       <longflag>seedFALimit</longflag>
-      <label>The FA limit for seed potins to be valid</label>
+      <label>Minimum seed FA</label>
       <description>Seed points whose FA are below this value are excluded</description>
       <default>0.0</default>
     </double>
@@ -291,7 +255,7 @@
     <double>
       <name>Qm</name>
       <longflag>Qm</longflag>
-      <label>Process noise for angles/direction</label>
+      <label>Rate of change of tensor direction</label>
       <description>Process noise for angles/direction</description>
       <default>0.0</default>
     </double>
@@ -299,7 +263,7 @@
     <double>
       <name>Ql</name>
       <longflag>Ql</longflag>
-      <label>Process noise for eigenvalues</label>
+      <label>Rate of change of eigenvalues</label>
       <description>Process noise for eigenvalues</description>
       <default>0.0</default>
     </double>
@@ -307,7 +271,7 @@
     <double>
       <name>Qw</name>
       <longflag>Qw</longflag>
-      <label>Process noise for free water weights</label>
+      <label>Rate of change of freewater weight</label>
       <description>Process noise for free water weights, ignored if no free water estimation</description>
       <default>0.0</default>
     </double>
@@ -315,7 +279,7 @@
     <double>
       <name>Rs</name>
       <longflag>Rs</longflag>
-      <label>Measurement noise</label>
+      <label>Expected noise in signal</label>
       <description>Measurement noise</description>
       <default>0.0</default>
     </double>
@@ -336,28 +300,13 @@
       <default>0.0</default>
     </double>
 
-  </parameters>
-
-  <parameters>
-
-    <label>Additional output options</label>
-    <description>Additional output options</description>
-
-    <boolean>
-      <name>noTransformPosition</name>
-      <longflag>noTransformPosition</longflag>
-      <label>Don't transform fibers ijk->RAS</label>
-      <description>Don't transform Points back from ijk->RAS when writing the output fiber</description>
-      <default>false</default>
-    </boolean>
-
-    <boolean>
-      <name>branchesOnly</name>
-      <longflag>branchesOnly</longflag>
-      <label>Only write branches out</label>
-      <description>Only output branches, ignore the primary tracts</description>
-      <default>false</default>
-    </boolean>
+    <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
+      <name>tractsWithSecondTensor</name>
+      <longflag>tractsWithSecondTensor</longflag>
+      <label>Output Fibers (second tensor, optional)</label>
+      <channel>output</channel>
+      <description>Tracts generated, with second tensor output (if there is one)</description>
+    </geometry>
 
     <boolean>
       <name>storeGlyphs</name>
@@ -367,14 +316,6 @@
       <default>false</default>
     </boolean>
 
-    <boolean>
-      <name>outputNormalizedDWIData</name>
-      <longflag>outputNormalizedDWIData</longflag>
-      <label>Output the normalized DWI data</label>
-      <description>Whether to output the normalized DWI data</description>
-      <default>false</default>
-    </boolean>
-
-  </parameters>
+</parameters>
 
 </executable>

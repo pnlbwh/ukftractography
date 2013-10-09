@@ -210,11 +210,15 @@ int main(int argc, char **argv)
   } else {
     std::cout << "* seedsPerVoxel: " << seedsPerVoxel << std::endl;
   }
+  bool noTransformPosition = false;
+  bool branchesOnly = false;
+  //if (normalizedDWIData) {
+    //outputNormalizedDWIData = false ;
+  //}
+  bool normalizedDWIData = false;
+  bool outputNormalizedDWIData = false; 
 
-  if (normalizedDWIData) {
-    outputNormalizedDWIData = false ;
-  }
-
+  std::vector<double> weightsOnTensors;
   if (weightsOnTensors.empty()) {
     for (int i = 0; i < numTensor; i++) {
       weightsOnTensors.push_back(1.0 / numTensor) ;

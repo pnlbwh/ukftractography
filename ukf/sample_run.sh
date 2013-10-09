@@ -1,31 +1,28 @@
 #!/bin/bash
 
-SRC="../ukf_tractography"
+SRC="../ukftractography"
 
 # BINARY
 BINARY='bin/UKFTractography'
 
 # VOLUME
-diff_im_path="$SRC/data/dwi.nhdr"
+dwi_path="$SRC/ukf/Data/Input/dwi.nhdr"
 
 # MASK
-mask_path="$SRC/data/dwi-mask.nhdr"
+mask_path="$SRC/ukf/Data/Input/dwi-mask.nhdr"
 
 # SEEDS
-seeds_path="$SRC/data/seeds_tc.nhdr"
+seeds_path="$SRC/ukf/Data/Input/seeds_tc.nhdr"
 
 # OUTPUT FIBER
-output_path='./fiber.vtk'
+output_path='./seeds_tc.vtk'
 
 eval $BINARY \
- --dwiFile $diff_im_path \
+ --dwiFile $dwi_path \
  --maskFile $mask_path \
  --tracts $output_path \
  --seedsFile $seeds_path \
- --minBranchingAngle 0.0 \
- --maxBranchingAngle 0.0 \
  --seedsPerVoxel 5 \
  --numTensor 2  \
- --simpleTensorModel \
 
-diff $output_path $SRC/data/fiber_gold.vtk
+#diff $output_path $SRC/ukf/Data/Baseline/seeds_tc.vtk

@@ -68,7 +68,7 @@ set(GenerateCLP_DIR ${SlicerExecutionModel_DIR}/GenerateCLP)
 # to install teem somewhere for find_package to work
 set(TEEM_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/teem-prefix/src/teem-install)
 ExternalProject_add(teem
-  SVN_REPOSITORY "http://teem.svn.sourceforge.net/svnroot/teem/teem/tags/1.10.0"
+  SVN_REPOSITORY "http://svn.code.sf.net/p/teem/code/teem/tags/1.10.0"
   UPDATE_COMMAND ""
   CMAKE_GENERATOR ${gen}
   CMAKE_ARGS

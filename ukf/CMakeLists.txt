@@ -23,6 +23,8 @@ if (UKFTractography_SuperBuild)
     find_package(GenerateCLP REQUIRED)
     include(${GenerateCLP_USE_FILE})
 
+    find_package(VTK REQUIRED)
+    include(${VTK_USE_FILE})
 endif()
 
 

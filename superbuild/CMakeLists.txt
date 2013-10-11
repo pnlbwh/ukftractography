@@ -50,6 +50,18 @@ ExternalProject_add(ITK
   )
 set(ITK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ITK-prefix/src/ITK-build)
 
+ExternalProject_add(VTK
+  GIT_REPOSITORY git://vtk.org/VTK.git
+  GIT_TAG "v5.10.0"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  CMAKE_ARGS
+  ${COMMON_CMAKE_ARGS}
+  -DVTK_LEGACY_REMOVE:BOOL=OFF
+  -DVTK_USE_PARALLEL:BOOL=ON
+  )
+set(VTK_DIR ${CMAKE_CURRENT_BINARY_DIR}/VTK-prefix/src/VTK-build)
+
 ExternalProject_add(SlicerExecutionModel
   GIT_REPOSITORY https://github.com/Slicer/SlicerExecutionModel.git
   GIT_TAG "origin/master"
@@ -79,7 +91,6 @@ ExternalProject_add(teem
   -DTeem_BZIP2:BOOL=OFF
   -DTeem_ZLIB:BOOL=ON
   -DTeem_PNG:BOOL=OFF
-  # -DTeem_VTK_MANGLE:BOOL=ON
   )
 set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/Teem-1.10.0)
 #set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/)
@@ -101,55 +112,18 @@ set(Teem_DIR ${TEEM_INSTALL_PREFIX}/lib/Teem-1.10.0)
 #set(Boost_INCLUDE_DIRS ${BOOST_INSTALL_PREFIX}/include)
 #set(Boost_LIBRARY_DIRS ${BOOST_INSTALL_PREFIX}/lib)
 
-#-----------------------------------------------------------------------------
-# Invoke the main project
-#-----------------------------------------------------------------------------
-ExternalProject_add(UKFCommonLib
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../common/
-  CMAKE_ARGS
-  ${COMMON_CMAKE_ARGS}
-  -DUKFTractography_SuperBuild::bool=ON
-  -DITK_DIR:PATH=${ITK_DIR}
-  -DTeem_DIR:PATH=${Teem_DIR}
-  -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
-  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
-  -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ITK teem SlicerExecutionModel
-)
-
 ExternalProject_add(UKFTractography
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../ukf/
+  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..
   CMAKE_ARGS
   ${COMMON_CMAKE_ARGS}
   -DUKFTractography_SuperBuild::bool=ON
+  -DSlicer_SOURCE_DIR:BOOL=ON ## THIS is a hack to prevent looking for slicer
   -DITK_DIR:PATH=${ITK_DIR}
+  -DVTK_DIR:PATH=${VTK_DIR}
   -DTeem_DIR:PATH=${Teem_DIR}
   -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
   -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
   -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ITK teem SlicerExecutionModel UKFCommonLib
+  DEPENDS ITK teem SlicerExecutionModel VTK
 )
 
-ExternalProject_add(vtk2mask
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../vtk2mask/
-  CMAKE_ARGS
-  ${COMMON_CMAKE_ARGS}
-  -DUKFTractography_SuperBuild::bool=ON
-  -DITK_DIR:PATH=${ITK_DIR}
-  -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
-  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
-  -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ITK SlicerExecutionModel UKFCommonLib
-)
-
-ExternalProject_add(vtkFilter
-  SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/../vtkFilter/
-  CMAKE_ARGS
-  ${COMMON_CMAKE_ARGS}
-  -DUKFTractography_SuperBuild::bool=ON
-  -DITK_DIR:PATH=${ITK_DIR}
-  -DGenerateCLP_DIR:PATH=${GenerateCLP_DIR}
-  -DSlicerExecutionModel_DIR:PATH=${SlicerExecutionModel_DIR}
-  -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}
-  DEPENDS ITK SlicerExecutionModel UKFCommonLib
-)

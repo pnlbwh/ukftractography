@@ -78,12 +78,13 @@ int main(int argc, char *argv[])
     {
     const double *pt1 = input1->GetPoint(i);
     const double *pt2 = input2->GetPoint(i);
-    double distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
+    const double distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
                             + ((pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
                             + ((pt1[2] - pt2[2]) * (pt1[2] - pt2[2])));
-    if(distance > 1.0E-3)
+    const double TOLERANCE=1.0E-1; // Allow for a cummulative 100th of a voxel error
+    if(distance > TOLERANCE)
       {
-      std::cerr << "Difference in Points is above tolerance (1e-9): " << distance << std::endl;
+      std::cerr << "Difference in Points is above tolerance (" << TOLERANCE << "): " << distance << std::endl;
       return EXIT_FAILURE;
       }
     }
@@ -93,9 +94,9 @@ int main(int argc, char *argv[])
   vtkPointData *masterPD;
   // pd1->Print(std::cerr);
   // pd2->Print(std::cerr);
-  int numComponents1 = pd1->GetNumberOfComponents();
-  int numComponents2 = pd2->GetNumberOfComponents();
-  int maxNumComponents = numComponents1 > numComponents2 ? numComponents1 : numComponents2;
+  const int numComponents1 = pd1->GetNumberOfComponents();
+  const int numComponents2 = pd2->GetNumberOfComponents();
+  const int maxNumComponents = numComponents1 > numComponents2 ? numComponents1 : numComponents2;
   masterPD = pd1;
   if(numComponents1 != numComponents2)
     {
@@ -138,8 +139,8 @@ int main(int argc, char *argv[])
       }
     for(vtkIdType j = 0; j < farray1size; ++j)
       {
-      float f1 = farray1->GetValue(j);
-      float f2 = farray2->GetValue(j);
+      const float f1 = farray1->GetValue(j);
+      const float f2 = farray2->GetValue(j);
       if(fabs(f1 - f2) > 1.0e-3)
         {
         std::cerr << "Difference is aove tolerance "

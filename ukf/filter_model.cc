@@ -116,16 +116,17 @@ void Full2T::H(const  ukfMatrixType& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    double l11 = std::max(X(3, i), _lambda_min);
-    double l12 = std::max(X(4, i), _lambda_min);
-    double l13 = std::max(X(5, i), _lambda_min);
-    double l21 = std::max(X(9, i), _lambda_min);
-    double l22 = std::max(X(10, i), _lambda_min);
-    double l23 = std::max(X(11, i), _lambda_min);
+    const double l11 = std::max(X(3, i), _lambda_min);
+    const double l12 = std::max(X(4, i), _lambda_min);
+    const double l13 = std::max(X(5, i), _lambda_min);
+    const double l21 = std::max(X(9, i), _lambda_min);
+    const double l22 = std::max(X(10, i), _lambda_min);
+    const double l23 = std::max(X(11, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    mat_t D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    //HACK: TODO :%s/mat_t *D/const mat_t \&D/g
+    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -208,20 +209,20 @@ void Full3T::H(const  ukfMatrixType& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    double l11 = std::max(X(3, i), _lambda_min);
-    double l12 = std::max(X(4, i), _lambda_min);
-    double l13 = std::max(X(5, i), _lambda_min);
-    double l21 = std::max(X(9, i), _lambda_min);
-    double l22 = std::max(X(10, i), _lambda_min);
-    double l23 = std::max(X(11, i), _lambda_min);
-    double l31 = std::max(X(15, i), _lambda_min);
-    double l32 = std::max(X(16, i), _lambda_min);
-    double l33 = std::max(X(17, i), _lambda_min);
+    const double l11 = std::max(X(3, i), _lambda_min);
+    const double l12 = std::max(X(4, i), _lambda_min);
+    const double l13 = std::max(X(5, i), _lambda_min);
+    const double l21 = std::max(X(9, i), _lambda_min);
+    const double l22 = std::max(X(10, i), _lambda_min);
+    const double l23 = std::max(X(11, i), _lambda_min);
+    const double l31 = std::max(X(15, i), _lambda_min);
+    const double l32 = std::max(X(16, i), _lambda_min);
+    const double l33 = std::max(X(17, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    mat_t D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
-    mat_t D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), l31, l32, l33);
+    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat_t &D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), l31, l32, l33);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -327,8 +328,8 @@ void Simple1T::H(const  ukfMatrixType& X,
     initNormalized(m, X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-    double l1 = std::max(X(3, i), _lambda_min);
-    double l2 = std::max(X(4, i), _lambda_min);
+    const double l1 = std::max(X(3, i), _lambda_min);
+    const double l2 = std::max(X(4, i), _lambda_min);
 
     // Flip if necessary.
     // Why is that???
@@ -338,7 +339,7 @@ void Simple1T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat_t & local_D = diffusion(m, l1, l2); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -424,11 +425,11 @@ void Simple2T::H(const  ukfMatrixType& X,
     initNormalized(m2, X(5, i), X(6, i), X(7, i));
 
     // Clamp lambdas.
-    double l11 = std::max(X(3, i), _lambda_min);
-    double l12 = std::max(X(4, i), _lambda_min);
+    const double l11 = std::max(X(3, i), _lambda_min);
+    const double l12 = std::max(X(4, i), _lambda_min);
 
-    double l21 = std::max(X(8, i), _lambda_min);
-    double l22 = std::max(X(9, i), _lambda_min);
+    const double l21 = std::max(X(8, i), _lambda_min);
+    const double l22 = std::max(X(9, i), _lambda_min);
 
     // Flip if necessary.
     if( m1[0] < 0 )
@@ -441,8 +442,8 @@ void Simple2T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion(m1, l11, l12);
-    mat_t D2 = diffusion(m2, l21, l22);
+    const mat_t &D1 = diffusion(m1, l11, l12);
+    const mat_t &D2 = diffusion(m2, l21, l22);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -557,14 +558,14 @@ void Simple3T::H(const  ukfMatrixType& X,
     initNormalized(m3,X(10, i), X(11, i), X(12, i));
 
     // Clamp lambdas.
-    double l11 = std::max(X(3, i), _lambda_min);
-    double l12 = std::max(X(4, i), _lambda_min);
+    const double l11 = std::max(X(3, i), _lambda_min);
+    const double l12 = std::max(X(4, i), _lambda_min);
 
-    double l21 = std::max(X(8, i), _lambda_min);
-    double l22 = std::max(X(9, i), _lambda_min);
+    const double l21 = std::max(X(8, i), _lambda_min);
+    const double l22 = std::max(X(9, i), _lambda_min);
 
-    double l31 = std::max(X(13, i), _lambda_min);
-    double l32 = std::max(X(14, i), _lambda_min);
+    const double l31 = std::max(X(13, i), _lambda_min);
+    const double l32 = std::max(X(14, i), _lambda_min);
 
     // flip if necessary
     if( m1[0] < 0 )
@@ -581,9 +582,9 @@ void Simple3T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion(m1, l11, l12);
-    mat_t D2 = diffusion(m2, l21, l22);
-    mat_t D3 = diffusion(m3, l31, l32);
+    const mat_t &D1 = diffusion(m1, l11, l12);
+    const mat_t &D2 = diffusion(m2, l21, l22);
+    const mat_t &D3 = diffusion(m3, l31, l32);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -692,18 +693,18 @@ void Simple1T_FW::H(const ukfMatrixType& X,
     initNormalized(m,X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-//     double l1 = std::max(X(3, i), 0.0);
-//     double l2 = std::max(X(4, i), 0.0);
+//     const double l1 = std::max(X(3, i), 0.0);
+//     const double l2 = std::max(X(4, i), 0.0);
 
-    double l1 = CheckZero(X(3, i) );
-    double l2 = CheckZero(X(4, i) );
+    const double l1 = CheckZero(X(3, i) );
+    const double l2 = CheckZero(X(4, i) );
     if( l1 < 0 || l2 < 0 )
       {
       std::cout << "Warning: eigenvalues became negative" << std::endl;
       }
 
     // get weight from state
-    double w = CheckZero(X(5, i) );
+    const double w = CheckZero(X(5, i) );
     // FOR DEBUGGIN :
     if( w < 0 - 1.0e-5 )
       {
@@ -726,7 +727,7 @@ void Simple1T_FW::H(const ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    mat_t local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat_t &local_D = diffusion(m, l1, l2); // l3 == l2
     mat_t D_iso;
     D_iso << _d_iso, 0, 0,
       0, _d_iso, 0,
@@ -797,9 +798,9 @@ void Full1T_FW::H(const ukfMatrixType& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
 
-    double l1 = CheckZero(X(3, i) );
-    double l2 = CheckZero(X(4, i) );
-    double l3 = CheckZero(X(5, i) );
+    const double l1 = CheckZero(X(3, i) );
+    const double l2 = CheckZero(X(4, i) );
+    const double l3 = CheckZero(X(5, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 || X(5, i) < 0 )
       {
@@ -807,10 +808,10 @@ void Full1T_FW::H(const ukfMatrixType& X,
       }
 
     // get weight from state
-    double w = CheckZero(X(6, i) );
+    const double w = CheckZero(X(6, i) );
 
     // Calculate diffusion matrix.
-    mat_t local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     mat_t D_iso;
     D_iso << _d_iso, 0, 0,
       0, _d_iso, 0,
@@ -907,11 +908,11 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
     vec_t m2;
     initNormalized(m2,X(5, i), X(6, i), X(7, i) );
 
-    double l11 = CheckZero(X(3, i) );
-    double l12 = CheckZero(X(4, i) );
+    const double l11 = CheckZero(X(3, i) );
+    const double l12 = CheckZero(X(4, i) );
 
-    double l21 = CheckZero(X(8, i) );
-    double l22 = CheckZero(X(9, i) );
+    const double l21 = CheckZero(X(8, i) );
+    const double l22 = CheckZero(X(9, i) );
 
     if( l11 < 0 || l12 < 0 || l21 < 0 || l22 < 0 )
       {
@@ -930,11 +931,11 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
       }
 
     // get weight from state
-    double w = CheckZero(X(10, i) );
+    const double w = CheckZero(X(10, i) );
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion(m1, l11, l12);
-    mat_t D2 = diffusion(m2, l21, l22);
+    const mat_t &D1 = diffusion(m1, l11, l12);
+    const mat_t &D2 = diffusion(m2, l21, l22);
     mat_t D_iso;
     D_iso << _d_iso, 0, 0,
       0, _d_iso, 0,
@@ -1029,12 +1030,12 @@ void Full2T_FW::H(const   ukfMatrixType& X,
   for( size_t i = 0; i < X.cols(); ++i )
     {
 
-    double l11 = CheckZero(X(3, i) );
-    double l12 = CheckZero(X(4, i) );
-    double l13 = CheckZero(X(5, i) );
-    double l21 = CheckZero(X(9, i) );
-    double l22 = CheckZero(X(10, i) );
-    double l23 = CheckZero(X(11, i) );
+    const double l11 = CheckZero(X(3, i) );
+    const double l12 = CheckZero(X(4, i) );
+    const double l13 = CheckZero(X(5, i) );
+    const double l21 = CheckZero(X(9, i) );
+    const double l22 = CheckZero(X(10, i) );
+    const double l23 = CheckZero(X(11, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 ||  X(5, i) < 0 || X(9, i) < 0 || X(10, i) < 0 ||  X(11, i) < 0 )
       {
@@ -1042,11 +1043,11 @@ void Full2T_FW::H(const   ukfMatrixType& X,
       }
 
     // get weight from state
-    double w = CheckZero(X(12, i) );
+    const double w = CheckZero(X(12, i) );
 
     // Calculate diffusion matrix.
-    mat_t D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    mat_t D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
     mat_t D_iso;
     D_iso << _d_iso, 0, 0,
       0, _d_iso, 0,

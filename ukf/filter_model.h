@@ -21,8 +21,10 @@
  * A generic class that defines the transition function and the observation
  * model to be used in the Kalman filter.
 */
-struct FilterModel
+class FilterModel
   {
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Constructor */
   FilterModel(const int local_state_dim, const double rs, const std::vector<double>& weights_on_tensors, bool constrained)
@@ -189,12 +191,17 @@ protected:
  * Model describing 1-tensor tractography with the full tensor representation (3 angles, 3 eigenvalues)
  * and free water estimation.
 */
-struct Full1T_FW : public FilterModel
+class Full1T_FW : public FilterModel
   {
+public:
   Full1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
             const double diff_fw)
-    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = ql;
     _Q(6, 6) = qw;
@@ -232,7 +239,7 @@ struct Full1T_FW : public FilterModel
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat_t m_D_iso;
 
   };
 
@@ -243,8 +250,9 @@ struct Full1T_FW : public FilterModel
  * Model describing 1-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full1T : public FilterModel
+class Full1T : public FilterModel
   {
+public:
   Full1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -273,8 +281,9 @@ struct Full1T : public FilterModel
  * Model describing 2-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full2T : public FilterModel
+class Full2T : public FilterModel
   {
+public:
   Full2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(12, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -303,12 +312,17 @@ struct Full2T : public FilterModel
  * Model describing 2-tensor tractography with the full tensor representation (3 angles, 3 eigenvalues)
  * and free water estimation.
 */
-struct Full2T_FW : public FilterModel
+class Full2T_FW : public FilterModel
   {
+public:
   Full2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
             const double diff_fw)
-    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = _Q(9, 9) = _Q(10, 10) = _Q(11, 11) = ql;
     _Q(12, 12) = qw; // noise for weights
@@ -351,8 +365,7 @@ struct Full2T_FW : public FilterModel
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
-
+  mat_t m_D_iso;
   };
 
 /**
@@ -362,8 +375,9 @@ struct Full2T_FW : public FilterModel
  * Model describing 3-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full3T : public FilterModel
+class Full3T : public FilterModel
   {
+public:
   Full3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(18, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -399,12 +413,16 @@ struct Full3T : public FilterModel
  * Model describing 1-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
  * and free water estimation
 */
-struct Simple1T_FW : public FilterModel
+class Simple1T_FW : public FilterModel
   {
+public:
   Simple1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
               bool constrained, const double diff_fw)
-    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = ql;
@@ -441,7 +459,7 @@ struct Simple1T_FW : public FilterModel
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat_t m_D_iso;
 
   };
 
@@ -451,8 +469,9 @@ struct Simple1T_FW : public FilterModel
  *
  * Model describing 1-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
 */
-struct Simple1T : public FilterModel
+class Simple1T : public FilterModel
   {
+public:
   Simple1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(5, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -479,8 +498,9 @@ struct Simple1T : public FilterModel
  *
  * Model describing 2-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal).
 */
-struct Simple2T : public FilterModel
+class Simple2T : public FilterModel
   {
+public:
   Simple2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(10, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -510,12 +530,17 @@ struct Simple2T : public FilterModel
  * Model describing 2-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
  * and free water estimation
 */
-struct Simple2T_FW : public FilterModel
+class Simple2T_FW : public FilterModel
   {
+public:
   Simple2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
               bool constrained, const double diff_fw)
-    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(8, 8) = _Q(9, 9) = ql;
     _Q(10, 10) = qw; // noise for weights
@@ -554,7 +579,7 @@ struct Simple2T_FW : public FilterModel
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat_t m_D_iso;
   };
 
 /**
@@ -563,8 +588,9 @@ struct Simple2T_FW : public FilterModel
  *
  * Model describing 3-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
 */
-struct Simple3T : public FilterModel
+class Simple3T : public FilterModel
   {
+public:
   Simple3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
     : FilterModel(15, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {

@@ -728,16 +728,12 @@ void Simple1T_FW::H(const ukfMatrixType& X,
 
     // Calculate diffusion matrix.
     const mat_t &local_D = diffusion(m, l1, l2); // l3 == l2
-    mat_t D_iso;
-    D_iso << _d_iso, 0, 0,
-      0, _d_iso, 0,
-      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
       Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
-        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
+        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
@@ -812,16 +808,12 @@ void Full1T_FW::H(const ukfMatrixType& X,
 
     // Calculate diffusion matrix.
     const mat_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
-    mat_t D_iso;
-    D_iso << _d_iso, 0, 0,
-      0, _d_iso, 0,
-      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec_t& u = gradients[j];
       Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
-        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
+        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
@@ -936,10 +928,6 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
     // Calculate diffusion matrix.
     const mat_t &D1 = diffusion(m1, l11, l12);
     const mat_t &D2 = diffusion(m2, l21, l22);
-    mat_t D_iso;
-    D_iso << _d_iso, 0, 0,
-      0, _d_iso, 0,
-      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -948,7 +936,7 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
         i) = w
         * (exp(-b[j]
                * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
+        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 
@@ -1048,10 +1036,6 @@ void Full2T_FW::H(const   ukfMatrixType& X,
     // Calculate diffusion matrix.
     const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
     const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
-    mat_t D_iso;
-    D_iso << _d_iso, 0, 0,
-      0, _d_iso, 0,
-      0, 0, _d_iso;
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -1060,7 +1044,7 @@ void Full2T_FW::H(const   ukfMatrixType& X,
         * (exp(-b[j] * u.dot(D1 * u) )
            * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) )
            * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * u.dot(D_iso * u) );
+        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }

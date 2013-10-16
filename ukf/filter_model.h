@@ -51,10 +51,10 @@ struct FilterModel
   }
 
   /** state transition function */
-  virtual void F(vnl_matrix<double>& X) const = 0;
+  virtual void F(ukfMatrixType& X) const = 0;
 
   /** observation, i.e. signal reconstruction */
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const = 0;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const = 0;
 
   // Functions that convert the state into a tensor representation that can be
   // used for tractography (meaning the main direction and all the eigenvalues/
@@ -108,13 +108,13 @@ struct FilterModel
   }
 
   /** The noise in the state transfer function used by the UKF. */
-  const vnl_matrix<double> & Q() const
+  const ukfMatrixType & Q() const
   {
     return _Q;
   }
 
   /** The noise in the signal reconstruction used by the UKF. */
-  const vnl_matrix<double> & R() const
+  const ukfMatrixType & R() const
   {
     return _R;
   }
@@ -122,13 +122,13 @@ struct FilterModel
   // The next two functions are only used for the constrained case
 
   /** The inequality constraint matrix for the constrained UKF */
-  const vnl_matrix<double> & D() const
+  const ukfMatrixType & D() const
   {
     return _D;
   }
 
   /** The inequality constraint right hand side for the constrained UKF */
-  const vnl_vector<double> & d() const
+  const ukfVectorType & d() const
   {
     return _d;
   }
@@ -164,16 +164,16 @@ protected:
   ISignalData *_signal_data;
 
   /** Process noise */
-  vnl_matrix<double> _Q;
+  ukfMatrixType _Q;
 
   /** Signal reconstruction noise */
-  vnl_matrix<double> _R;
+  ukfMatrixType _R;
 
   /** Inequality constraint matrix, only used for constrained UKF */
-  vnl_matrix<double> _D;
+  ukfMatrixType _D;
 
   /** Inequality right hand side, only used for constrained UKF */
-  vnl_vector<double> _d;
+  ukfVectorType _d;
 
   /** The weights of each tensor. (Most commonly equal all are equal) */
   const std::vector<double> weights_on_tensors_;
@@ -222,9 +222,9 @@ struct Full1T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -256,9 +256,9 @@ struct Full1T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -286,9 +286,9 @@ struct Full2T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -341,9 +341,9 @@ struct Full2T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -380,9 +380,9 @@ struct Full3T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);
@@ -431,9 +431,9 @@ struct Simple1T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -464,9 +464,9 @@ struct Simple1T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -492,9 +492,9 @@ struct Simple2T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -544,9 +544,9 @@ struct Simple2T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -579,9 +579,9 @@ struct Simple3T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
   virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);

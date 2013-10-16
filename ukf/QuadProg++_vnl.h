@@ -19,9 +19,7 @@
 #ifndef _QUADPROGPP
 #define _QUADPROGPP
 
-#include <vnl/vnl_matrix.h>
-#include <vnl/vnl_vector.h>
-
+#include "ukf_types.h"
 /**
  * \namespace QuadProgPP
  * \brief Contains the Quadratic Programming functionality.
@@ -47,13 +45,13 @@ namespace QuadProgPP
 * \param[in]     ci0  Inequality constraint righthand side. Vnl vector of dimension n
 * \param[in,out] x  The vector to be constrained.
 */
-double solve_quadprog(vnl_matrix<double>& G,         // nxn Matrix - Will be changed in the function!
-                      vnl_vector<double>& g0,        // n
-                      const vnl_matrix<double>& CE,  // nxp - Equality constraints, just a dummy
-                      const vnl_vector<double>& ce0, // p   - Equality constraints, just a dummy
-                      const vnl_matrix<double>& CI,  // nxm - Inequality constraints
-                      const vnl_vector<double>& ci0, // m
-                      vnl_vector<double>& x);        // n   - Solution of the QP problem
+double solve_quadprog(ukfMatrixType& G,         // nxn Matrix - Will be changed in the function!
+                      ukfVectorType& g0,        // n
+                      const ukfMatrixType& CE,  // nxp - Equality constraints, just a dummy
+                      const ukfVectorType& ce0, // p   - Equality constraints, just a dummy
+                      const ukfMatrixType& CI,  // nxm - Inequality constraints
+                      const ukfVectorType& ci0, // m
+                      ukfVectorType& x);        // n   - Solution of the QP problem
 
 }
 

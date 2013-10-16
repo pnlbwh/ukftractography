@@ -21,7 +21,7 @@ double l2fa(double l1, double l2, double l3)
     }
 }
 
-double s2ga(const vnl_matrix<double>& signal)
+double s2ga(const ukfMatrixType& signal)
 {
 
   int n = signal.rows();

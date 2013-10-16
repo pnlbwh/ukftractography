@@ -14,11 +14,9 @@
 #include <vnl/vnl_vector_ref.h>
 #include <vnl/algo/vnl_cholesky.h>
 #include <vnl/algo/vnl_solve_qp.h>
+#include "ukf_types.h"
 
 struct FilterModel;
-
-/** Short hand for the state vector */
-typedef std::vector<double> State;
 
 /**
  * \class UnscentedKalmanFilter
@@ -44,12 +42,12 @@ public:
    * \param[out] p_new Updated covariance
    * \param[out] The normalized mean squared reconstruction error
   */
-  void Filter(const State& x, const vnl_matrix<double>& p, const std::vector<double>& z, // This is the signal
-              State& x_new, vnl_matrix<double>& p_new, double& dNormMSE);
+  void Filter(const State& x, const ukfMatrixType& p, const std::vector<double>& z, // This is the signal
+              State& x_new, ukfMatrixType& p_new, double& dNormMSE);
 
 private:
   /** Spreads the points around the current state using the covariance. */
-  void SigmaPoints(const State& x, const vnl_matrix<double>& p, vnl_matrix<double>& x_spread);
+  void SigmaPoints(const State& x, const ukfMatrixType& p, ukfMatrixType& x_spread);
 
   /**
    * \brief Contrains the state matrix
@@ -57,65 +55,38 @@ private:
    *          Will be constrained in this function.
    * \param W The covariance necesseray for contraining. See the malcolm MICCAI paper.
   */
-  void Constrain(vnl_matrix<double>& X, const vnl_matrix<double>& W);
+  void Constrain(ukfMatrixType& X, const ukfMatrixType& W);
 
   /**
    * \brief Contrains the state vector
    * \param X The state vector which will be constrained.
    * \param W The covariance necesseray for contraining. See the malcolm MICCAI paper.
   */
-  void Constrain(vnl_vector<double>& x, const vnl_matrix<double>& W);
+  void Constrain(vnl_vector<double>& x, const ukfMatrixType& W);
 
   /** A helper function to check if the constrain operation is necessary */
   bool violatesContraints(vnl_vector<double>& x);
 
   /** Pointer to the filter model */
-  FilterModel *_filter_model;
+  FilterModel *m_FilterModel;
 
   /** state vector dimension */
   // HACK REMOVE int _state_dim;
 
-  /** for the distribution of the sigma ponts (:= sqrt(dim + _k) ) */
-  double _scale;
+  /** for the distribution of the sigma ponts (:= sqrt(dim + m_SigmaPointSpread) ) */
+  double m_Scale;
 
   /** The weights for spreading the sigma points */
-  std::vector<double> _w;
+  std::vector<double> m_Weights;
 
-  /** Matrix of weights for spreading of sigma points consisting of the repeted entries of _w */
-  vnl_matrix<double> _w_;
+  /** Matrix of weights for spreading of sigma points consisting of the repeted entries of m_Weights */
+  ukfMatrixType m_WeightsRepeated;
 
   /** A fixed parameters used for spreading of the sigma points */
-  double _k;
-
-  // Temporary storage.
-  vnl_matrix<double> dim_dimext;
-  vnl_matrix<double> signaldim_dimext;
-  vnl_matrix<double> dim_dim;
-  vnl_matrix<double> dim_signaldim;
-  vnl_matrix<double> signaldim_dim;
-
-  vnl_matrix<double> X_;
-
-  /** The state spread out according to the unscented transform */
-  vnl_matrix<double> X;
-
-  /** The signal */
-  vnl_matrix<double> Y;
-
-  /** Covariance matrix state/signal */
-  vnl_matrix<double> Pxy;
-
-  /** Covariance of the signal */
-  vnl_matrix<double> Pyy;
+  double m_SigmaPointSpread;
 
   /** Kalman Gain matrix */
-  vnl_matrix<double> K;
-
-  /** Used for the estimation of the new state */
-  vnl_vector<double> X_hat;
-
-  /** Used for the estimation of the signal */
-  vnl_vector<double> Y_hat;
+  ukfMatrixType m_KalmanGainMatrix;
 };
 
 #endif  // UNSCENTED_KALMAN_FILTER_H_

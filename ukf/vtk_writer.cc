@@ -4,6 +4,7 @@
  * \todo The case differentiation in the beginning is very hackish..
 */
 
+#include "ukf_types.h"
 #include "vtk_writer.h"
 #include <fstream>
 #include <iostream>
@@ -163,7 +164,6 @@ void VtkWriter
 
   if( _write_tensors )
     {
-    typedef std::vector<double> State;
     counter = 0;
     vtkPointData *pointData = polyData->GetPointData();
 
@@ -536,7 +536,9 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
       const State& state = fibers[i].state[j];
 
       // Get the directions.
-      vec_t m1, m2, m3;
+      vec_t m1 = vec_t::Zero();
+      vec_t m2 = vec_t::Zero();
+      vec_t m3 = vec_t::Zero();
       if( state.size() == 5 )
         {
         m1 << state[2], state[1], state[0];
@@ -545,7 +547,7 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
       else if( state.size() == 6 )
         {
         m1 = rotation_main_dir(state[0], state[1], state[2]);
-        double tmp = m1[0];
+        const double tmp = m1[0];
         m1[0] = m1[2];
         m1[2] = tmp;
         m1 = state[3] / 100.0 * m1;

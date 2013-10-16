@@ -12,19 +12,21 @@
 #include <vnl/vnl_matrix.h>
 
 /**
- * \struct SeedPointInfo
+ * \class SeedPointInfo
  * \brief Describes a seed point
  *
  * Stores all information for a seed point to start tractography. The
  * start_dir is only used for the simple model and the angles only for the
  * complex/full representation.
 */
-struct SeedPointInfo
+class SeedPointInfo
   {
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   /** The state of the state-space represenation of the model. */
   State state;
   /** The covariance matrix of the state */
-  vnl_matrix<double> covariance;
+  ukfMatrixType covariance;
   /** The location of the seed */
   vec_t point;
   /** The starting direction for the simple model */

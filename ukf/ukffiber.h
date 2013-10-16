@@ -36,7 +36,7 @@ struct UKFFiber
   /** State of the current model at the current position*/
   std::vector<State> state;
   /** dim(state) x dim(state) matrix */
-  std::vector<vnl_matrix<double> > covariance;
+  std::vector<ukfMatrixType > covariance;
   /** Percentage of free water i.e. 1-w */
   std::vector<double> free_water;
   /** Normalized mean squared error of the signal reconstruction to the signal */

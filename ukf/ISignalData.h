@@ -89,13 +89,13 @@ public:
   virtual vec_t dim() const = 0;
 
   /** Returns the ijk-to-RAS matrix */
-  const vnl_matrix<double> i2r() const
+  const ukfMatrixType i2r() const
   {
     return _i2r;
   }
 
   /** Returns the RAS-to-ijk matrix */
-  const vnl_matrix<double> r2i() const
+  const ukfMatrixType r2i() const
   {
     return _r2i;
   }
@@ -111,10 +111,10 @@ protected:
   vec_t _voxel;
 
   /** matrix for RAS to ijk conversion */
-  vnl_matrix<double> _r2i;
+  ukfMatrixType _r2i;
 
   /** matrix for ijk to RAS conversion */
-  vnl_matrix<double> _i2r;
+  ukfMatrixType _i2r;
 };
 
 #endif // ISIGNALDATA_H

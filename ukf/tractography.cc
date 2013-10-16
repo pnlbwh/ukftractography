@@ -267,7 +267,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
         // If we do full brain tractography we only want seed voxels where the
         // GA is bigger than 0.18.
-        vnl_matrix<double> signal_tmp(signal_dim * 2, 1);
+        ukfMatrixType signal_tmp(signal_dim * 2, 1);
         signal_tmp.set_column(0, signal_vnl);
         if( _full_brain && s2ga(signal_tmp) < _full_brain_ga_min )
           {
@@ -568,7 +568,7 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
   assert(ret.size() == s.size() );
 
   // Build B matrix.
-  vnl_matrix<double> B(signal_dim * 2, 6);
+  ukfMatrixType B(signal_dim * 2, 6);
   for( int i = 0; i < signal_dim * 2; ++i )
     {
     const vec_t& g = u[i];
@@ -582,13 +582,13 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
     }
 
   // The six tensor components.
-  vnl_vector<double> d(6);
+  ukfVectorType d(6);
 
   // Temporary variables.
-  vnl_matrix<double> D(3, 3);
-  vnl_matrix<double> Q(3, 3);
-  vnl_matrix<double> QT(3, 3);
-  vnl_vector<double> sigma(3);
+  ukfMatrixType D(3, 3);
+  ukfMatrixType Q(3, 3);
+  ukfMatrixType QT(3, 3);
+  ukfVectorType sigma(3);
   double             theta, phi, psi;
 
   std::cout << "Estimating seed tensors:" << std::endl;
@@ -691,7 +691,7 @@ void Tractography::Follow3T(const int thread_id,
   // Unpack the seed information.
   vec_t              x = seed.point;
   State              state = seed.state;
-  vnl_matrix<double> p(seed.covariance);
+  ukfMatrixType p(seed.covariance);
   double             fa = seed.fa;
   double             fa2 = seed.fa2;
   double             dNormMSE = 0; // no error at the seed
@@ -705,8 +705,8 @@ void Tractography::Follow3T(const int thread_id,
   m1 = seed.start_dir;
 
   // Tract the fiber.
-  vnl_matrix<double> signal_tmp(_model->signal_dim(), 1);
-  vnl_matrix<double> state_tmp(_model->state_dim(), 1);
+  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
+  ukfMatrixType state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -873,7 +873,7 @@ void Tractography::Follow2T(const int thread_id,
   vec_t x = seed.point;   // NOTICE that the x here is in ijk coordinate system
   State state = seed.state;
 
-  vnl_matrix<double> p(seed.covariance);
+  ukfMatrixType p(seed.covariance);
 
   double fa = seed.fa;
   double fa2 = seed.fa2;
@@ -888,8 +888,8 @@ void Tractography::Follow2T(const int thread_id,
   m1 = seed.start_dir;
 
   // Track the fiber.
-  vnl_matrix<double> signal_tmp(_model->signal_dim(), 1);
-  vnl_matrix<double> state_tmp(_model->state_dim(), 1);
+  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
+  ukfMatrixType state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -991,7 +991,7 @@ void Tractography::Follow1T(const int thread_id,
 //   }
 //   std::cout << std::endl;
 
-  vnl_matrix<double> p(seed.covariance);
+  ukfMatrixType p(seed.covariance);
 
   double fa = seed.fa;
   double fa2 = seed.fa2; // just needed for record
@@ -1003,8 +1003,8 @@ void Tractography::Follow1T(const int thread_id,
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
   // Tract the fiber.
-  vnl_matrix<double> signal_tmp(_model->signal_dim(), 1);
-  vnl_matrix<double> state_tmp(_model->state_dim(), 1);
+  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
+  ukfMatrixType state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -1054,7 +1054,7 @@ void Tractography::Step3T(const int thread_id,
                           double& fa,
                           double& fa2,
                           State& state,
-                          vnl_matrix<double>& covariance,
+                          ukfMatrixType& covariance,
                           double& dNormMSE,
                           double& trace,
                           double& trace2
@@ -1066,7 +1066,7 @@ void Tractography::Step3T(const int thread_id,
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
   State state_new(_model->state_dim() );
 
-  vnl_matrix<double> covariance_new(_model->state_dim(), _model->state_dim() );
+  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
 
   // Use the Unscented Kalman Filter to get the next estimate.
   std::vector<double> signal(_signal_data->GetSignalDimension() * 2);
@@ -1146,7 +1146,7 @@ void Tractography::Step2T(const int thread_id,
                           double& fa,
                           double& fa2,
                           State& state,
-                          vnl_matrix<double>& covariance,
+                          ukfMatrixType& covariance,
                           double& dNormMSE,
                           double& trace,
                           double& trace2
@@ -1158,7 +1158,7 @@ void Tractography::Step2T(const int thread_id,
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
 
   State              state_new(_model->state_dim() );
-  vnl_matrix<double> covariance_new(_model->state_dim(), _model->state_dim() );
+  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
   covariance_new.fill(0);
 
   // Use the Unscented Kalman Filter to get the next estimate.
@@ -1191,7 +1191,7 @@ void Tractography::Step2T(const int thread_id,
     l1 = l2;
     l2 = tmp;
 
-    vnl_matrix<double> old = covariance;
+    ukfMatrixType old = covariance;
 
     SwapState2T(state, covariance);   // Swap the two tensors
 
@@ -1217,7 +1217,7 @@ void Tractography::Step2T(const int thread_id,
       l1 = l2;
       l2 = tmp;
 
-      vnl_matrix<double> old = covariance;
+      ukfMatrixType old = covariance;
 
       SwapState2T(state, covariance);   // Swap the two tensors
 
@@ -1264,7 +1264,7 @@ void Tractography::Step1T(const int thread_id,
                           vec_t& x,
                           double& fa,
                           State& state,
-                          vnl_matrix<double>& covariance,
+                          ukfMatrixType& covariance,
                           double& dNormMSE,
                           double& trace
                           )
@@ -1274,7 +1274,7 @@ void Tractography::Step1T(const int thread_id,
          static_cast<int>(covariance.rows() ) == _model->state_dim() );
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
   State              state_new(_model->state_dim() );
-  vnl_matrix<double> covariance_new(_model->state_dim(), _model->state_dim() );
+  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
 
   std::vector<double> signal(_signal_data->GetSignalDimension() * 2);
   _signal_data->Interp3Signal(x, signal);
@@ -1311,7 +1311,7 @@ void Tractography::Step1T(const int thread_id,
 }
 
 void Tractography::SwapState3T(State& state,
-                               vnl_matrix<double>& covariance,
+                               ukfMatrixType& covariance,
                                int i)
 {
 
@@ -1321,7 +1321,7 @@ void Tractography::SwapState3T(State& state,
   vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
 
   int                state_dim = _model->state_dim();
-  vnl_matrix<double> tmp(state_dim, state_dim);
+  ukfMatrixType tmp(state_dim, state_dim);
   state_dim /= 3;
   assert(state_dim == 5 || state_dim == 6);
   --i;
@@ -1343,7 +1343,7 @@ void Tractography::SwapState3T(State& state,
 
   // Swap the state.
 
-  vnl_vector<double> tmp_vec(state_dim * 3);
+  ukfVectorType tmp_vec(state_dim * 3);
   tmp_vec = state_vnl;
 
   state_vnl.update(tmp_vec.extract(state_dim, 0), i);
@@ -1352,7 +1352,7 @@ void Tractography::SwapState3T(State& state,
 }
 
 void Tractography::SwapState2T( State& state,
-                                vnl_matrix<double>& covariance)
+                                ukfMatrixType& covariance)
 {
   // This function is only for 2T.
 
@@ -1360,7 +1360,7 @@ void Tractography::SwapState2T( State& state,
 
   int state_dim = _model->state_dim();
 
-  vnl_matrix<double> tmp(state_dim, state_dim);
+  ukfMatrixType tmp(state_dim, state_dim);
   bool               bUnevenState = false;
 
   if( state_dim % 2 != 0 )
@@ -1388,7 +1388,7 @@ void Tractography::SwapState2T( State& state,
 
   // Swap the state.
 
-  vnl_vector<double> tmp_vec(state_dim * 2);
+  ukfVectorType tmp_vec(state_dim * 2);
   tmp_vec = state_vnl;
   state_vnl.update(tmp_vec.extract(state_dim, 0), state_dim);
   state_vnl.update(tmp_vec.extract(state_dim, state_dim), 0);
@@ -1396,7 +1396,7 @@ void Tractography::SwapState2T( State& state,
 }
 
 void Tractography::Record(const vec_t& x, double fa, double fa2, const State& state,
-                          const vnl_matrix<double> p,
+                          const ukfMatrixType p,
                           UKFFiber& fiber, double dNormMSE, double trace, double trace2)
 {
 

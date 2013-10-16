@@ -25,51 +25,51 @@
 namespace QuadProgPP
 {
 // Utility functions for updating some data needed by the solution method
-void compute_d(vnl_vector<double>& d, const vnl_matrix<double>& J, const vnl_vector<double>& np);
+void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorType& np);
 
-void update_z(vnl_vector<double>& z, const vnl_matrix<double>& J, const vnl_vector<double>& d, int iq);
+void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorType& d, int iq);
 
-void update_r(const vnl_matrix<double>& R, vnl_vector<double>& r, const vnl_vector<double>& d, int iq);
+void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorType& d, int iq);
 
-bool add_constraint(vnl_matrix<double>& R, vnl_matrix<double>& J, vnl_vector<double>& d, int& iq, double& rnorm);
+bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, double& rnorm);
 
-void delete_constraint(vnl_matrix<double>& R, vnl_matrix<double>& J, vnl_vector<int>& A, vnl_vector<double>& u, int n,
+void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, ukfVectorType& u, int n,
                        int p, int& iq, int l);
 
 // Utility functions for computing the Cholesky decomposition and solving
 // linear systems
-void cholesky_decomposition(vnl_matrix<double>& A);
+void cholesky_decomposition(ukfMatrixType& A);
 
-void cholesky_solve(const vnl_matrix<double>& L, vnl_vector<double>& x, const vnl_vector<double>& b);
+void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorType& b);
 
-void forward_elimination(const vnl_matrix<double>& L, vnl_vector<double>& y, const vnl_vector<double>& b);
+void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const ukfVectorType& b);
 
-void backward_elimination(const vnl_matrix<double>& U, vnl_vector<double>& x, const vnl_vector<double>& y);
+void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const ukfVectorType& y);
 
 // Utility functions for computing the scalar product and the euclidean
 // distance between two numbers
-double dot_product(const vnl_vector<double>& x, const vnl_vector<double>& y);
+double dot_product(const ukfVectorType& x, const ukfVectorType& y);
 
 double distance(double a, double b);
 
 // Utility functions for printing vectors and matrices
-void print_matrix(const char* name, const vnl_matrix<double>& A, int n = -1, int m = -1);
+void print_matrix(const char* name, const ukfMatrixType& A, int n = -1, int m = -1);
 
 template <typename T>
 void print_vector(const char* name, const vnl_vector<T>& v, int n = -1);
 
 // The Solving function, implementing the Goldfarb-Idnani method
 
-double solve_quadprog(vnl_matrix<double>& G, vnl_vector<double>& g0,
-                      const vnl_matrix<double>& CE, const vnl_vector<double>& ce0,
-                      const vnl_matrix<double>& CI, const vnl_vector<double>& ci0,
-                      vnl_vector<double>& x)
+double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
+                      const ukfMatrixType& CE, const ukfVectorType& ce0,
+                      const ukfMatrixType& CI, const ukfVectorType& ci0,
+                      ukfVectorType& x)
 {
   std::ostringstream msg;
     {
     // Ensure that the dimensions of the matrices and vectors can be
     // safely converted from unsigned int into to int without overflow.
-    unsigned mx = std::numeric_limits<int>::max();
+    const unsigned mx = std::numeric_limits<int>::max();
     if( G.cols() >= mx || G.rows() >= mx ||
         CE.rows() >= mx || CE.cols() >= mx ||
         CI.rows() >= mx || CI.cols() >= mx ||
@@ -82,7 +82,9 @@ double solve_quadprog(vnl_matrix<double>& G, vnl_vector<double>& g0,
       throw std::logic_error(msg.str() );
       }
     }
-  int n = G.cols(), p = CE.cols(), m = CI.cols();
+  const int n = G.cols();
+  const int p = CE.cols();
+  const int m = CI.cols();
 
   if( (int)G.rows() != n )
     {
@@ -117,8 +119,8 @@ double solve_quadprog(vnl_matrix<double>& G, vnl_vector<double>& g0,
   x.set_size(n);
   register int       i, j, k, l; /* indices */
   int                ip;         // this is the index of the constraint to be added to the active set
-  vnl_matrix<double> R(n, n), J(n, n);
-  vnl_vector<double> s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
+  ukfMatrixType R(n, n), J(n, n);
+  ukfVectorType s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
   double             f_value, psi, c1, c2, sum, ss, R_norm;
   double             inf;
   if( std::numeric_limits<double>::has_infinity )
@@ -513,7 +515,7 @@ l2a: /* Step 2a: determine step direction */
   goto l2a;
 }
 
-inline void compute_d(vnl_vector<double>& d, const vnl_matrix<double>& J, const vnl_vector<double>& np)
+inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorType& np)
 {
   register int    i, j, n = d.size();
   register double sum;
@@ -530,7 +532,7 @@ inline void compute_d(vnl_vector<double>& d, const vnl_matrix<double>& J, const 
     }
 }
 
-inline void update_z(vnl_vector<double>& z, const vnl_matrix<double>& J, const vnl_vector<double>& d, int iq)
+inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorType& d, int iq)
 {
   register int i, j, n = z.size();
 
@@ -545,7 +547,7 @@ inline void update_z(vnl_vector<double>& z, const vnl_matrix<double>& J, const v
     }
 }
 
-inline void update_r(const vnl_matrix<double>& R, vnl_vector<double>& r, const vnl_vector<double>& d, int iq)
+inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorType& d, int iq)
 {
   register int    i, j; /*, n = d.size();*/
   register double sum;
@@ -562,9 +564,9 @@ inline void update_r(const vnl_matrix<double>& R, vnl_vector<double>& r, const v
     }
 }
 
-bool add_constraint(vnl_matrix<double>& R, vnl_matrix<double>& J, vnl_vector<double>& d, int& iq, double& R_norm)
+bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, double& R_norm)
 {
-  int n = d.size();
+  const int n = d.size();
 
 #ifdef TRACE_SOLVER
   std::cout << "Add constraint " << iq << '/';
@@ -639,7 +641,7 @@ bool add_constraint(vnl_matrix<double>& R, vnl_matrix<double>& J, vnl_vector<dou
   return true;
 }
 
-void delete_constraint(vnl_matrix<double>& R, vnl_matrix<double>& J, vnl_vector<int>& A, vnl_vector<double>& u, int n,
+void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, ukfVectorType& u, int n,
                        int p, int& iq, int l)
 {
 #ifdef TRACE_SOLVER
@@ -745,7 +747,7 @@ inline double distance(double a, double b)
   return a1 * ::std::sqrt(2.0);
 }
 
-inline double dot_product(const vnl_vector<double>& x, const vnl_vector<double>& y)
+inline double dot_product(const ukfVectorType& x, const ukfVectorType& y)
 {
   register int    i, n = x.size();
   register double sum;
@@ -758,7 +760,7 @@ inline double dot_product(const vnl_vector<double>& x, const vnl_vector<double>&
   return sum;
 }
 
-void cholesky_decomposition(vnl_matrix<double>& A)
+void cholesky_decomposition(ukfMatrixType& A)
 {
   register int    i, j, k, n = A.rows();
   register double sum;
@@ -797,11 +799,11 @@ void cholesky_decomposition(vnl_matrix<double>& A)
     }
 }
 
-void cholesky_solve(const vnl_matrix<double>& L, vnl_vector<double>& x, const vnl_vector<double>& b)
+void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorType& b)
 {
   int n = L.rows();
 
-  vnl_vector<double> y(n);
+  ukfVectorType y(n);
 
   /* Solve L * y = b */
   forward_elimination(L, y, b);
@@ -809,7 +811,7 @@ void cholesky_solve(const vnl_matrix<double>& L, vnl_vector<double>& x, const vn
   backward_elimination(L, x, y);
 }
 
-inline void forward_elimination(const vnl_matrix<double>& L, vnl_vector<double>& y, const vnl_vector<double>& b)
+inline void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const ukfVectorType& b)
 {
   register int i, j, n = L.rows();
 
@@ -825,7 +827,7 @@ inline void forward_elimination(const vnl_matrix<double>& L, vnl_vector<double>&
     }
 }
 
-inline void backward_elimination(const vnl_matrix<double>& U, vnl_vector<double>& x, const vnl_vector<double>& y)
+inline void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const ukfVectorType& y)
 {
   register int i, j, n = U.rows();
 
@@ -841,7 +843,7 @@ inline void backward_elimination(const vnl_matrix<double>& U, vnl_vector<double>
     }
 }
 
-void print_matrix(const char* name, const vnl_matrix<double>& A, int n, int m)
+void print_matrix(const char* name, const ukfMatrixType& A, int n, int m)
 {
   std::ostringstream s;
   std::string        t;

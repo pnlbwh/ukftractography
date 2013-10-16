@@ -16,7 +16,7 @@
 double l2fa(double l1, double l2, double l3);
 
 /** Calculate Generalized anisotropy from signal */
-double s2ga(const vnl_matrix<double>& signal);
+double s2ga(const ukfMatrixType& signal);
 
 /** Calculate curve radius from fiber */
 double curve_radius(const std::vector<vec_t>& fiber);

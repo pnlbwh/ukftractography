@@ -10,7 +10,6 @@
 #include <cassert>
 
 #include <vnl/vnl_inverse.h>
-#include <vnl/vnl_vector.h>
 
 NrrdData::NrrdData(double sigma_signal, double sigma_mask)
   : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
@@ -482,7 +481,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   assert(_num_gradients == static_cast<int>(_gradients.size() ) );
 
   // Get the measurement frame.
-  vnl_matrix<double> measurement_frame(3, 3);
+  ukfMatrixType measurement_frame(3, 3);
   for( int i = 0; i < 3; ++i )
     {
     for( int j = 0; j < 3; ++j )
@@ -515,7 +514,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   _r2i = vnl_inverse(_i2r);
 
   // Transform gradients.
-  vnl_matrix<double> R(3, 3);
+  ukfMatrixType R(3, 3);
   R = _i2r.extract(3, 3);
 
   // The gradient should not be affected by voxel size, so factor out the voxel sizes
@@ -535,10 +534,10 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   R(1, 2) *=  vox_z_inv;
   R(2, 2) *=  vox_z_inv;
 
-  vnl_matrix<double> tmp_mat = vnl_inverse(R) * measurement_frame;
+  ukfMatrixType tmp_mat = vnl_inverse(R) * measurement_frame;
 
   int                count = _gradients.size();
-  vnl_vector<double> u(3), u_new(3);
+  ukfVectorType u(3), u_new(3);
   for( int i = 0; i < count; ++i )
     {
     // Transform and normalize.

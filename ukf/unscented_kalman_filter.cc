@@ -20,6 +20,7 @@
 using namespace QuadProgPP;
 using namespace LU_Solver;
 
+
 UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   : m_FilterModel(filter_model), m_SigmaPointSpread(0.01)
 {
@@ -41,7 +42,7 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   assert(static_cast<int>( (m_FilterModel->Q() ).rows() ) == dim &&
          static_cast<int>( (m_FilterModel->Q() ).cols() ) == dim);
 
-  int signal_dim = m_FilterModel->signal_dim();
+  const int signal_dim = m_FilterModel->signal_dim();
   assert(static_cast<int>( (m_FilterModel->R() ).rows() ) == signal_dim &&
          static_cast<int>( (m_FilterModel->R() ).cols() ) == signal_dim);
 
@@ -58,11 +59,11 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
 {
   const unsigned int dim = m_FilterModel->state_dim();
 
-  assert(x_spread.rows() == static_cast<unsigned int>(dim) &&
+  assert(x_spread.rows() == dim &&
          x_spread.cols() == static_cast<unsigned int>(2 * dim + 1) );
-  assert(x.size() == static_cast<unsigned int>(dim) );
-  assert(p.rows() == static_cast<unsigned int>(dim) &&
-         p.cols() == static_cast<unsigned int>(dim) );
+  assert(x.size() == dim );
+  assert(p.rows() == dim &&
+         p.cols() == dim );
 
   State                  tmp_x = x;
   vnl_vector_ref<double> x_vnl(tmp_x.size(), &tmp_x.front() );
@@ -90,21 +91,15 @@ void UnscentedKalmanFilter::Constrain(ukfVectorType& x, const ukfMatrixType& W)
   if( violatesContraints(x) )
     {
     const int    dim_state = x.size();
-
     // The equality constraints are just dummy variables. The solve_quadprog function has been changed
     // to ignore equality constraints.
-    ukfMatrixType CE(dim_state, 1);
-    CE.fill(0);
-    ukfVectorType ce0(1);
-    ce0.fill(0);
+    ukfMatrixType CE(dim_state, 1, 0.0);
+    ukfVectorType ce0(1,0.0);
 
-#if 0
-    ukfMatrixType W_tmp = W;             // W will be changed in solve_quadprog
-    W_tmp = (W_tmp + W_tmp.transpose() ) / 2; // ensure symmetry
-#else
-    ukfMatrixType W_tmp = (W + W.transpose() ) *0.5;
-#endif
+    const ukfMatrixType & WTranspose = W.transpose();
+    ukfMatrixType W_tmp = (W + WTranspose) * 0.5;
 
+    //TODO:  review solve_quadprog to determine if any of these are const parameters.
     ukfVectorType g0 = -1.0 * (W_tmp.transpose() ) * x;
     ukfVectorType d  = m_FilterModel->d(); // the inequality constraints
     ukfMatrixType D  = m_FilterModel->D(); // -- " --
@@ -164,60 +159,16 @@ void UnscentedKalmanFilter::Filter(const State& x,
   assert(localConstFilterModel);
   assert(static_cast<int>(m_Weights.size() ) == 2 * localConstFilterModel->state_dim() + 1);
 
-  int dim = m_FilterModel->state_dim();
-  int signal_dim = m_FilterModel->signal_dim();
+  const int dim = m_FilterModel->state_dim();
+  const int signal_dim = m_FilterModel->signal_dim();
 
-  ukfMatrixType     signaldim_dimext;
-  signaldim_dimext.set_size(signal_dim, 2 * dim + 1);
-  signaldim_dimext.fill(0);
 
-  ukfMatrixType     signaldim_dim;
-  signaldim_dim.set_size(signal_dim, dim);
-  signaldim_dim.fill(0);
 
-  ukfMatrixType dim_dimext;
-  dim_dimext.set_size(dim, 2 * dim + 1);
-  dim_dimext.fill(0);
-
-  ukfMatrixType dim_dim;
-  dim_dim.set_size(dim, dim);
-  dim_dim.fill(0);
+  ukfMatrixType dim_dim(dim, dim,0.0);
 
   // Temporary storage.
-  ukfMatrixType X_;
-  X_.set_size(dim, 2 * dim + 1);
-  X_.fill(0);
-
   /** The state spread out according to the unscented transform */
-  ukfMatrixType X;
-  X.set_size(dim, 2 * dim + 1);
-  X.fill(0);
-
-  /** The signal */
-  ukfMatrixType Y;
-  Y.set_size(signal_dim, 2 * dim + 1);
-  Y.fill(0);
-
-  /** Covariance matrix state/signal */
-  ukfMatrixType Pxy;
-  Pxy.set_size(dim, signal_dim);
-  Pxy.fill(0);
-
-  /** Covariance of the signal */
-  ukfMatrixType Pyy;
-  Pyy.set_size(signal_dim, signal_dim);
-  Pyy.fill(0);
-
-  /** Used for the estimation of the new state */
-  ukfVectorType X_hat;
-  X_hat.set_size(dim);
-
-  /** Used for the estimation of the signal */
-  ukfVectorType Y_hat;
-  Y_hat.set_size(signal_dim);
-
-
-
+  ukfMatrixType X(dim, 2 * dim + 1,0.0);
   // Create sigma points.
   SigmaPoints(x, p, X); // doesnt change p, its const
 
@@ -230,24 +181,35 @@ void UnscentedKalmanFilter::Filter(const State& x,
   localConstFilterModel->F(X); // slightly negative fw is fixed here
 
   // copy step needed because z is a const variable and can't be referenced
-  std::vector<double>    z_tmp = z;
-  vnl_vector_ref<double> z_vnl(z_tmp.size(), &z_tmp.front() );
+  vnl_vector<double> z_vnl(z.size());
+  for( size_t i = 0; i < z.size(); ++i)
+  {
+    z_vnl[i]=z[i];
+  }
 
+  /** Used for the estimation of the new state */
+  ukfMatrixType dim_dimext(dim, 2 * dim + 1,0.0);
   vnl_vector_ref<double> _w_vnl(m_Weights.size(), &m_Weights.front() );
-  X_hat = X * _w_vnl;
+  const ukfVectorType & X_hat = X * _w_vnl;
   for( size_t i = 0; i < dim_dimext.cols(); ++i )
     {
     dim_dimext.set_column(i, X_hat);
     }
-  X_ = X - dim_dimext;
 
-  // Use const reference to avoid copying
   const ukfMatrixType & Q = localConstFilterModel->Q();
+
+  const ukfMatrixType &X_ = X - dim_dimext;
+  // Use const reference to avoid copying
   p_new = X_ * m_WeightsRepeated * X_.transpose() + Q;
 
+  /** The signal */
+  ukfMatrixType Y(signal_dim, 2 * dim + 1);
   localConstFilterModel->H(X, Y);
 
-  Y_hat = Y * _w_vnl;
+  /** Used for the estimation of the signal */
+
+  ukfMatrixType     signaldim_dimext(signal_dim, 2 * dim + 1,0.0);
+  const ukfVectorType &Y_hat = Y * _w_vnl;
   for( size_t i = 0; i < signaldim_dimext.cols(); ++i )
     {
     signaldim_dimext.set_column(i, Y_hat);
@@ -258,13 +220,17 @@ void UnscentedKalmanFilter::Filter(const State& x,
   const ukfMatrixType& WeightsRepeated_Y_Transpose =m_WeightsRepeated*Y_.transpose();
 
   const ukfMatrixType & R = localConstFilterModel->R();
-  Pyy = Y_ * WeightsRepeated_Y_Transpose + R;
+
+  /** Covariance of the signal */
+  const ukfMatrixType & Pyy = Y_ * WeightsRepeated_Y_Transpose + R;
 
   // Predict cross-correlation between state and observation.
-  Pxy = X_ * WeightsRepeated_Y_Transpose;
+  /** Covariance matrix state/signal */
+  const ukfMatrixType & Pxy = X_ * WeightsRepeated_Y_Transpose;
 
   // Kalman gain m_KalmanGainMatrix, estimate state/observation, compute covariance.
   // Solve m_KalmanGainMatrix = Pyy \ Pxy'
+  ukfMatrixType     signaldim_dim(signal_dim, dim,0);
   signaldim_dim = Pxy.transpose();
 
   ukfMatrixType LU = Pyy;
@@ -276,16 +242,15 @@ void UnscentedKalmanFilter::Filter(const State& x,
   dNormMSE = ( (z_vnl - Y_hat).squared_magnitude() ) / (z_vnl.squared_magnitude() );
 
   p_new = p_new - m_KalmanGainMatrix.transpose() * Pyy * m_KalmanGainMatrix;
-  Y_hat = z_vnl - Y_hat; // z is the real signal
+  const ukfVectorType & Y_hat2 = z_vnl - Y_hat; // z is the real signal
 
   vnl_vector_ref<double> x_new_vnl(x_new.size(), &x_new.front() );
   // NOTE:  x_new_vnl = ... wont work for the reference type because the operator= is private.
   //    Instead the copy in function of the vnl_vector base class is used.
-  x_new_vnl.copy_in( &( (m_KalmanGainMatrix.transpose() * Y_hat + X_hat)[0]) );
+  x_new_vnl.copy_in( &( (m_KalmanGainMatrix.transpose() * Y_hat2 + X_hat)[0]) );
 
   if( localConstFilterModel->isConstrained() )
     {
     Constrain(x_new_vnl, p_new);
     }
-
 }

@@ -20,6 +20,29 @@
 using namespace QuadProgPP;
 using namespace LU_Solver;
 
+// HACK:  A quick conversion code for testing conversions between libraries.
+void ToMatrixXd( const ukfMatrixType & in, Eigen::MatrixXd & out)
+{
+  out.resize(in.rows(),in.cols());
+  for(size_t r=0; r< in.rows(); ++r)
+    {
+    for(size_t c=0; c< in.cols(); ++c)
+      {
+      out(r,c)=in[r][c];
+      }
+    }
+}
+void ToVNL( const Eigen::MatrixXd & in, ukfMatrixType & out)
+{
+  out.set_size(in.rows(),in.cols());
+  for(int r=0; r< in.rows(); ++r)
+    {
+    for(int c=0; c< in.cols(); ++c)
+      {
+      out[r][c]=in(r,c);
+      }
+    }
+}
 
 UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   : m_FilterModel(filter_model), m_SigmaPointSpread(0.01)
@@ -41,16 +64,6 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
 
   assert(static_cast<int>( (m_FilterModel->Q() ).rows() ) == dim &&
          static_cast<int>( (m_FilterModel->Q() ).cols() ) == dim);
-
-  const int signal_dim = m_FilterModel->signal_dim();
-  assert(static_cast<int>( (m_FilterModel->R() ).rows() ) == signal_dim &&
-         static_cast<int>( (m_FilterModel->R() ).cols() ) == signal_dim);
-
-  // Resizing of temporary storage.
-  // NOTE: filling all temp matrices with zeroes, to make sure they are really empty.
-  m_KalmanGainMatrix.set_size(signal_dim, dim);
-  m_KalmanGainMatrix.fill(0);
-
 }
 
 void UnscentedKalmanFilter::SigmaPoints(const State& x,
@@ -228,26 +241,53 @@ void UnscentedKalmanFilter::Filter(const State& x,
   /** Covariance matrix state/signal */
   const ukfMatrixType & Pxy = X_ * WeightsRepeated_Y_Transpose;
 
-  // Kalman gain m_KalmanGainMatrix, estimate state/observation, compute covariance.
-  // Solve m_KalmanGainMatrix = Pyy \ Pxy'
-  ukfMatrixType     signaldim_dim(signal_dim, dim,0);
-  signaldim_dim = Pxy.transpose();
-
+  // Kalman gain KalmanGainMatrix, estimate state/observation, compute covariance.
+  // Solve KalmanGainMatrix = Pyy \ Pxy'
+  ukfMatrixType KalmanGainMatrix;
+#if  0 // OLD WAY
+  ukfMatrixType     signaldim_dim(signal_dim, dim,0.0);
+  //signaldim_dim.fill(0);
   ukfMatrixType LU = Pyy;
   LUdecmpDoolittle(&LU(0, 0), LU.rows() );
   LUsolveDoolittle(&LU(0, 0), &signaldim_dim(0, 0), signaldim_dim.rows(), signaldim_dim.cols() );
-
-  m_KalmanGainMatrix = signaldim_dim;
+  KalmanGainMatrix = signaldim_dim;
+#else
+  Eigen::MatrixXd A;
+  ToMatrixXd(Pyy,A);
+  Eigen::MatrixXd b;
+  ToMatrixXd(Pxy.transpose(),b);
+  // Solve Ax = b. Result stored in x. Matlab: x = A \ b.
+  //x = A.ldlt().solve(b));
+  Eigen::MatrixXd eK = A.ldlt().solve(b);
+  ToVNL(eK,KalmanGainMatrix);
+#endif
+#if 0 //Validation Code
+  ukfMatrixType vnl_k;
+  ToVNL(eK,vnl_k);
+  const ukfMatrixType & errorMatrix=(KalmanGainMatrix-vnl_k);
+  std::cout << errorMatrix << std::endl;
+  const double det = vnl_determinant ( errorMatrix );
+  std::cout << "\n\n Determinant" << det << std::endl;
+  if (fabs(det) > 1e-5 )
+  {
+  std::cout << "ERROR: difference is to big!" << std::endl;
+  exit(-1);
+  }
+  else
+  {
+  std::cout << "==== OK " << std::endl;
+  }
+#endif
 
   dNormMSE = ( (z_vnl - Y_hat).squared_magnitude() ) / (z_vnl.squared_magnitude() );
 
-  p_new = p_new - m_KalmanGainMatrix.transpose() * Pyy * m_KalmanGainMatrix;
+  p_new = p_new - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
   const ukfVectorType & Y_hat2 = z_vnl - Y_hat; // z is the real signal
 
   vnl_vector_ref<double> x_new_vnl(x_new.size(), &x_new.front() );
   // NOTE:  x_new_vnl = ... wont work for the reference type because the operator= is private.
   //    Instead the copy in function of the vnl_vector base class is used.
-  x_new_vnl.copy_in( &( (m_KalmanGainMatrix.transpose() * Y_hat2 + X_hat)[0]) );
+  x_new_vnl.copy_in( &( (KalmanGainMatrix.transpose() * Y_hat2 + X_hat)[0]) );
 
   if( localConstFilterModel->isConstrained() )
     {

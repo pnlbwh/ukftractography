@@ -84,9 +84,6 @@ private:
 
   /** A fixed parameters used for spreading of the sigma points */
   double m_SigmaPointSpread;
-
-  /** Kalman Gain matrix */
-  ukfMatrixType m_KalmanGainMatrix;
 };
 
 #endif  // UNSCENTED_KALMAN_FILTER_H_

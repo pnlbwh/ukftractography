@@ -68,7 +68,7 @@ private:
   bool violatesContraints(vnl_vector<double>& x);
 
   /** Pointer to the filter model */
-  FilterModel *m_FilterModel;
+  const FilterModel * const m_FilterModel;
 
   /** state vector dimension */
   // HACK REMOVE int _state_dim;

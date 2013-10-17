@@ -13,7 +13,7 @@
 #include "QuadProg++_vnl.h"
 
 #include <limits>
-
+#include <algorithm>
 #include <vnl/algo/vnl_determinant.h>
 #include <vnl/algo/vnl_cholesky.h>
 
@@ -21,8 +21,11 @@ using namespace QuadProgPP;
 using namespace LU_Solver;
 
 // HACK:  A quick conversion code for testing conversions between libraries.
-void ToMatrixXd( const ukfMatrixType & in, Eigen::MatrixXd & out)
+namespace
 {
+inline Eigen::MatrixXd ToMatrixXd( const ukfMatrixType & in)
+{
+  Eigen::MatrixXd out;
   out.resize(in.rows(),in.cols());
   for(size_t r=0; r< in.rows(); ++r)
     {
@@ -31,9 +34,11 @@ void ToMatrixXd( const ukfMatrixType & in, Eigen::MatrixXd & out)
       out(r,c)=in[r][c];
       }
     }
+  return out;
 }
-void ToVNL( const Eigen::MatrixXd & in, ukfMatrixType & out)
+inline ukfMatrixType ToVNL( const Eigen::MatrixXd & in)
 {
+  ukfMatrixType out;
   out.set_size(in.rows(),in.cols());
   for(int r=0; r< in.rows(); ++r)
     {
@@ -42,6 +47,17 @@ void ToVNL( const Eigen::MatrixXd & in, ukfMatrixType & out)
       out[r][c]=in(r,c);
       }
     }
+  return out;
+}
+
+template <typename TIn, typename TOut>
+TOut ConvertVector(const TIn &in)
+{
+  TOut out(in.size());
+  std::copy(in.begin(),in.end(),out.begin());
+  return out;
+}
+
 }
 
 UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
@@ -53,6 +69,13 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
 
   m_Weights.push_back(m_SigmaPointSpread / (dim + m_SigmaPointSpread) );
   m_Weights.insert(m_Weights.end(), dim * 2, 0.5 / (dim + m_SigmaPointSpread) );
+  // HANS NOTE: I think this would be the equivalent for Eigen
+  // m_Weights.resize((2 * dim) + 1);
+  // m_Weights(0) = m_SigmaPointSpread / (dim + m_SigmaPointSpread);
+  // for(unsigned i = 1; i < (2 * dim) + 1; ++i)
+  //   {
+  //   m_Weights(i) = 0.5 / (dim + m_SigmaPointSpread);
+  //   }
 
   // Create diagonal matrix.
   m_WeightsRepeated.set_size(2 * dim + 1, 2 * dim + 1);
@@ -78,8 +101,7 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
   assert(p.rows() == dim &&
          p.cols() == dim );
 
-  State                  tmp_x = x;
-  vnl_vector_ref<double> x_vnl(tmp_x.size(), &tmp_x.front() );
+  vnl_vector<double> x_vnl = ConvertVector<State,vnl_vector<double> >(x);
 
   vnl_cholesky       cholesky_decomp(p, vnl_cholesky::quiet);
   const ukfMatrixType &M = cholesky_decomp.lower_triangle()*m_Scale;
@@ -202,7 +224,9 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   /** Used for the estimation of the new state */
   ukfMatrixType dim_dimext(dim, 2 * dim + 1,0.0);
-  vnl_vector_ref<double> _w_vnl(m_Weights.size(), &m_Weights.front() );
+
+  vnl_vector<double> _w_vnl = ConvertVector<std::vector<double>, vnl_vector<double> >(this->m_Weights);
+
   const ukfVectorType & X_hat = X * _w_vnl;
   for( size_t i = 0; i < dim_dimext.cols(); ++i )
     {
@@ -252,18 +276,16 @@ void UnscentedKalmanFilter::Filter(const State& x,
   LUsolveDoolittle(&LU(0, 0), &signaldim_dim(0, 0), signaldim_dim.rows(), signaldim_dim.cols() );
   KalmanGainMatrix = signaldim_dim;
 #else
-  Eigen::MatrixXd A;
-  ToMatrixXd(Pyy,A);
-  Eigen::MatrixXd b;
-  ToMatrixXd(Pxy.transpose(),b);
+  Eigen::MatrixXd A = ToMatrixXd(Pyy);
+  Eigen::MatrixXd b = ToMatrixXd(Pxy.transpose());
   // Solve Ax = b. Result stored in x. Matlab: x = A \ b.
   //x = A.ldlt().solve(b));
   Eigen::MatrixXd eK = A.ldlt().solve(b);
-  ToVNL(eK,KalmanGainMatrix);
+  KalmanGainMatrix = ToVNL(eK);
 #endif
 #if 0 //Validation Code
   ukfMatrixType vnl_k;
-  ToVNL(eK,vnl_k);
+  vnl_k = ToVNL(eK);
   const ukfMatrixType & errorMatrix=(KalmanGainMatrix-vnl_k);
   std::cout << errorMatrix << std::endl;
   const double det = vnl_determinant ( errorMatrix );
@@ -284,13 +306,16 @@ void UnscentedKalmanFilter::Filter(const State& x,
   p_new = p_new - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
   const ukfVectorType & Y_hat2 = z_vnl - Y_hat; // z is the real signal
 
-  vnl_vector_ref<double> x_new_vnl(x_new.size(), &x_new.front() );
-  // NOTE:  x_new_vnl = ... wont work for the reference type because the operator= is private.
-  //    Instead the copy in function of the vnl_vector base class is used.
-  x_new_vnl.copy_in( &( (KalmanGainMatrix.transpose() * Y_hat2 + X_hat)[0]) );
+  // HANS NOTE -- the original code (through the vector_ref)
+  // over_wrote x_new with the following expression's result, then
+  // optionally called Constrain on it. So this code doesn't bother
+  // copying the old value of x_new into x_new_vnl before doing this
+  // computation, it just copies the resut in afterwards.
+  vnl_vector<double> x_new_vnl = KalmanGainMatrix.transpose() * Y_hat2 + X_hat;
 
   if( localConstFilterModel->isConstrained() )
     {
     Constrain(x_new_vnl, p_new);
     }
+  x_new = ConvertVector<vnl_vector<double>,State>(x_new_vnl);
 }

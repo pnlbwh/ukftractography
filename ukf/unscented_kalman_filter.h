@@ -16,7 +16,7 @@
 #include <vnl/algo/vnl_solve_qp.h>
 #include "ukf_types.h"
 
-struct FilterModel;
+class FilterModel;
 
 /**
  * \class UnscentedKalmanFilter

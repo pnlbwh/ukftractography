@@ -25,6 +25,7 @@ class FilterModel;
 class UnscentedKalmanFilter
 {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /**
    * \brief Constructor
@@ -47,7 +48,7 @@ public:
 
 private:
   /** Spreads the points around the current state using the covariance. */
-  void SigmaPoints(const State& x, const ukfMatrixType& p, ukfMatrixType& x_spread);
+  void SigmaPoints(const State& x, const Eigen::MatrixXd& p, Eigen::MatrixXd& x_spread);
 
   /**
    * \brief Contrains the state matrix
@@ -55,17 +56,17 @@ private:
    *          Will be constrained in this function.
    * \param W The covariance necesseray for contraining. See the malcolm MICCAI paper.
   */
-  void Constrain(ukfMatrixType& X, const ukfMatrixType& W);
+  void Constrain(Eigen::MatrixXd& X, const Eigen::MatrixXd& W);
 
   /**
    * \brief Contrains the state vector
    * \param X The state vector which will be constrained.
    * \param W The covariance necesseray for contraining. See the malcolm MICCAI paper.
   */
-  void Constrain(vnl_vector<double>& x, const ukfMatrixType& W);
+  void Constrain(Eigen::VectorXd& x, const Eigen::MatrixXd& W);
 
   /** A helper function to check if the constrain operation is necessary */
-  bool violatesContraints(vnl_vector<double>& x);
+  bool violatesContraints(Eigen::VectorXd& x);
 
   /** Pointer to the filter model */
   const FilterModel * const m_FilterModel;
@@ -80,7 +81,7 @@ private:
   std::vector<double> m_Weights;
 
   /** Matrix of weights for spreading of sigma points consisting of the repeted entries of m_Weights */
-  ukfMatrixType m_WeightsRepeated;
+  Eigen::MatrixXd m_WeightsRepeated;
 
   /** A fixed parameters used for spreading of the sigma points */
   double m_SigmaPointSpread;

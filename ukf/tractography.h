@@ -76,8 +76,10 @@ public:
   */
   void Init(std::vector<SeedPointInfo>& seed_infos);
 
-  /** Performs the tractography */
-  void Run();
+  /** \breif Performs the tractography
+      \return true if files written successfully, else false
+  */
+  bool Run();
 
   /**
    * Follows one seed point for the 3 Tensor case

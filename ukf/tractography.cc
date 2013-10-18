@@ -422,7 +422,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
 }
 
-void Tractography::Run()
+bool Tractography::Run()
 {
   assert(_signal_data);   // The _signal_data is initialized in Tractography::LoadFiles(),
   // Thus Run() must be invoked after LoadFiles()
@@ -531,6 +531,10 @@ void Tractography::Run()
   std::vector<UKFFiber> fibers;
   PostProcessFibers(raw_primary, raw_branch, branch_seed_affiliation, _branches_only, fibers);
   std::cout << "fiber size after postprocessibers: " << fibers.size() << std::endl;
+  if ( fibers.size()  == 0 )
+  {
+    return EXIT_FAILURE;
+  }
 
   // Write the fiber data to the output vtk file.
   VtkWriter writer(_signal_data, _filter_model_type, _record_tensors);
@@ -539,13 +543,14 @@ void Tractography::Run()
   writer.SetWriteCompressed(this->_writeCompressed);
 
   writer.set_transform_position(_transform_position);
-  writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs);
+  const int writeStatus = writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs);
   // Clear up the kalman filters
   for( size_t i = 0; i < _ukf.size(); i++ )
     {
     delete _ukf[i];
     }
   _ukf.clear();
+  return writeStatus;
 }
 
 void Tractography::UnpackTensor(const std::vector<double>& b,

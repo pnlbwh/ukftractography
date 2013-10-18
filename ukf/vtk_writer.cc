@@ -246,7 +246,7 @@ VtkWriter
     }
 }
 
-bool
+int
 VtkWriter::
 Write(const std::string& file_name,
       const std::string & tractsWithSecondTensor,
@@ -257,7 +257,7 @@ Write(const std::string& file_name,
   if( fibers.size() == 0 )
     {
     std::cout << "No fiber exists." << std::endl;
-    return true;
+    return EXIT_FAILURE;
     }
 
   //
@@ -267,9 +267,9 @@ Write(const std::string& file_name,
     std::stringstream ss;
     ss << file_name.substr(0, file_name.find_last_of(".") ) << "_glyphs"
        << ".vtk";
-    if( WriteGlyphs(ss.str(), fibers) )
+    if( WriteGlyphs(ss.str(), fibers)  == EXIT_FAILURE )
       {
-      return true;
+      return EXIT_FAILURE;
       }
     }
   // polyData object to fill in
@@ -499,17 +499,16 @@ Write(const std::string& file_name,
     }
 
   WritePolyData(polyData,file_name.c_str());
-  return false;
-
+  return EXIT_SUCCESS;
 }
 
-bool VtkWriter::WriteGlyphs(const std::string& file_name,
+int VtkWriter::WriteGlyphs(const std::string& file_name,
                             const std::vector<UKFFiber>& fibers)
 {
   if( fibers.size() == 0 )
     {
     std::cout << "No fibers existing." << std::endl;
-    return true;
+    return EXIT_FAILURE;
     }
   // polyData object to fill in
   vtkSmartPointer<vtkPolyData> polyData;
@@ -654,7 +653,7 @@ bool VtkWriter::WriteGlyphs(const std::string& file_name,
     }
   polyData->SetLines(lines);
   WritePolyData(polyData,file_name.c_str());
-  return false;
+  return EXIT_SUCCESS;
 }
 
 vec_t

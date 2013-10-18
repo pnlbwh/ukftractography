@@ -64,9 +64,15 @@ int main(int argc, char *argv[])
             << " Strips " << input2->GetNumberOfStrips()
             << std::endl;
 
-  vtkIdType size1 = input1->GetNumberOfPoints();
-  vtkIdType size2 = input2->GetNumberOfPoints();
-  if(size1 != size2)
+  const vtkIdType size1 = input1->GetNumberOfPoints();
+  if(size1 == 0 )
+    {
+    std::cerr << "first file fiber has " << size1
+              << " points " << std::endl;
+    return EXIT_FAILURE;
+    }
+  const vtkIdType size2 = input2->GetNumberOfPoints();
+  if(size1 != size2 || size1 == 0 )
     {
     std::cerr << "first file fiber has " << size1
               << " points, second file has " << size2

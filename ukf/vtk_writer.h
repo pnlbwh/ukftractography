@@ -44,12 +44,15 @@ public:
    * \param[in] tractsWithSecondTensor File path for the fibers generated with the second tensor
    *                                   This one is optional.
    * \param[in] store_glyphs Write glyphs (i.e. main tensor directions) to a file named glyphs_{tracts}.
+   * \return EXIT_FAILURE or EXIT_SUCCESS
   */
-  bool Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
+  int Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
              bool write_state, bool store_glyphs);
 
-  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}. */
-  bool WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
+  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}.
+   * \return EXIT_FAILURE or EXIT_SUCCESS
+   */
+  int WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
 
   /** Sets the variable that toggles the transform from ijk to RAS before writing the fiber to VTK. */
   void set_transform_position(bool transform_position)

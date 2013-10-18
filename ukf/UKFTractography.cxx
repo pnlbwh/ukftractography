@@ -214,7 +214,7 @@ int main(int argc, char **argv)
     //outputNormalizedDWIData = false ;
   //}
   bool normalizedDWIData = false;
-  bool outputNormalizedDWIData = false; 
+  bool outputNormalizedDWIData = false;
 
   std::vector<double> weightsOnTensors;
   if (weightsOnTensors.empty()) {
@@ -324,11 +324,11 @@ int main(int argc, char **argv)
   }
 
   // Run the tractography.
-  tract->Run();
+  const int writeStatus = tract->Run();
 
   // Clean up.
   delete tract;
   delete filter_model;
 
-  return 0;
+  return writeStatus;
 }

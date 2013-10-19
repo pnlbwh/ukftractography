@@ -106,12 +106,6 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
   assert(p.rows() == dim &&
          p.cols() == dim );
 
-  const ukfMatrixType p_vnl = ToVNL(p);
-  vnl_cholesky       cholesky_decomp(p_vnl, vnl_cholesky::quiet);
-  const ukfMatrixType &M_vnl = cholesky_decomp.lower_triangle()*m_Scale;
-
-  const Eigen::MatrixXd M = ToMatrixXd( M_vnl );
-
   const Eigen::VectorXd x_vnl = ConvertVector<State,Eigen::VectorXd >(x);
 
   // Horizontally stack x to the X_tmp matrix.
@@ -120,11 +114,14 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
     {
     X_tmp.col(c) = x_vnl;
     }
+  Eigen::LLT<Eigen::MatrixXd> lltOfA(p); // compute the Cholesky decomposition of A
+  Eigen::MatrixXd NewM = ( lltOfA.matrixL() ); // retrieve factor L  in the decomposition
+  NewM *= m_Scale;
 
   // Create dim x (2 * dim + 1) matrix (x, x + m, x - m).
   x_spread.col(0) = x_vnl;
-  x_spread.block(0,    1,dim,dim) = X_tmp + M;
-  x_spread.block(0,dim+1,dim,dim) = X_tmp - M;
+  x_spread.block(0,    1,dim,dim) = X_tmp + NewM;
+  x_spread.block(0,dim+1,dim,dim) = X_tmp - NewM;
 }
 
 // vector version

@@ -30,7 +30,7 @@ void Full1T::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     X(3, i) = std::max(X(3, i), _lambda_min);
     X(4, i) = std::max(X(4, i), _lambda_min);
@@ -52,7 +52,7 @@ void Full1T::H(const  Eigen::MatrixXd& X,
 
   const ukfVectorType& b        = _signal_data->GetBValues();
   const stdVec_t&  gradients = _signal_data->gradients();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
     const double l1 = std::max(X(3, i), _lambda_min);
@@ -88,7 +88,7 @@ void Full2T::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     X(3, i) = std::max(X(3, i), _lambda_min);
     X(4, i) = std::max(X(4, i), _lambda_min);
@@ -113,7 +113,7 @@ void Full2T::H(const  Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
     const double l11 = std::max(X(3, i), _lambda_min);
@@ -178,7 +178,7 @@ void Full3T::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     X(3, i) = std::max(X(3, i), _lambda_min);
     X(4, i) = std::max(X(4, i), _lambda_min);
@@ -206,7 +206,7 @@ void Full3T::H(const  Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
     const double l11 = std::max(X(3, i), _lambda_min);
@@ -288,7 +288,7 @@ void Simple1T::F(Eigen::MatrixXd& X) const
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vector.
     double norm_inv = 0.0; // 1e-16;
@@ -321,7 +321,7 @@ void Simple1T::H(const  Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
     vec_t m;
@@ -370,7 +370,7 @@ void Simple2T::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
     double norm_inv = 0.0; // 1e-16;
@@ -416,7 +416,7 @@ void Simple2T::H(const  Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
     vec_t m1;
@@ -488,7 +488,7 @@ void Simple3T::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
     double norm_inv = 0.0; // 1e-16;
@@ -547,7 +547,7 @@ void Simple3T::H(const  Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
     vec_t m1;
@@ -642,7 +642,7 @@ void Simple1T_FW::F(Eigen::MatrixXd& X) const
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vector.
     double norm_inv = 0.0; // 1e-16;
@@ -686,7 +686,7 @@ void Simple1T_FW::H(const Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
     vec_t m;
@@ -762,7 +762,7 @@ void Full1T_FW::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     X(3, i) = CheckZero(X(3, i) );
     X(4, i) = CheckZero(X(4, i) );
@@ -791,7 +791,7 @@ void Full1T_FW::H(const Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
 
     const double l1 = CheckZero(X(3, i) );
@@ -839,7 +839,7 @@ void Simple2T_FW::F(Eigen::MatrixXd& X) const
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
     double norm_inv = 0.0; // 1e-16;
@@ -892,7 +892,7 @@ void Simple2T_FW::H(const   Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
     vec_t m1;
@@ -983,7 +983,7 @@ void Full2T_FW::F(Eigen::MatrixXd& X) const
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
   // Clamp lambdas.
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
     X(3, i) = CheckZero(X(3, i) );
     X(4, i) = CheckZero(X(4, i) );
@@ -1015,7 +1015,7 @@ void Full2T_FW::H(const   Eigen::MatrixXd& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
-  for( size_t i = 0; i < X.cols(); ++i )
+  for( unsigned int i = 0; i < X.cols(); ++i )
     {
 
     const double l11 = CheckZero(X(3, i) );

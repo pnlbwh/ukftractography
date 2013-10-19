@@ -20,75 +20,24 @@ using namespace QuadProgPP;
 //#include "LU_solver.h"
 //using namespace LU_Solver;
 
-// HACK:  A quick conversion code for testing conversions between libraries.
-namespace
-{
-inline Eigen::MatrixXd ToMatrixXd( const ukfMatrixType & in)
-{
-  Eigen::MatrixXd out;
-  out.resize(in.rows(),in.cols());
-  for(size_t r=0; r< in.rows(); ++r)
-    {
-    for(size_t c=0; c< in.cols(); ++c)
-      {
-      out(r,c)=in[r][c];
-      }
-    }
-  return out;
-}
-inline ukfMatrixType ToVNL( const Eigen::MatrixXd & in)
-{
-  ukfMatrixType out;
-  out.set_size(in.rows(),in.cols());
-  for(int r=0; r< in.rows(); ++r)
-    {
-    for(int c=0; c< in.cols(); ++c)
-      {
-      out[r][c]=in(r,c);
-      }
-    }
-  return out;
-}
-
-template <typename TIn, typename TOut>
-TOut ConvertVector(const TIn &in)
-{
-  TOut out(in.size());
-  //std::copy(in.begin(),in.end(),out.begin());
-  for (unsigned int i =0 ; i < in.size(); ++i )
-  {
-    out[i] = in[i];
-  }
-  return out;
-}
-
-}
-
 UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   : m_FilterModel(filter_model), m_SigmaPointSpread(0.01)
 {
-  const int dim = m_FilterModel->state_dim();
+  const unsigned int dim = m_FilterModel->state_dim();
 
   m_Scale = sqrt(dim + m_SigmaPointSpread);
 
-  m_Weights.push_back(m_SigmaPointSpread / (dim + m_SigmaPointSpread) );
-  m_Weights.insert(m_Weights.end(), dim * 2, 0.5 / (dim + m_SigmaPointSpread) );
-
-  // HANS NOTE: I think this would be the equivalent for Eigen
-  // m_Weights.resize((2 * dim) + 1);
-  // m_Weights(0) = m_SigmaPointSpread / (dim + m_SigmaPointSpread);
-  // for(unsigned i = 1; i < (2 * dim) + 1; ++i)
-  //   {
-  //   m_Weights(i) = 0.5 / (dim + m_SigmaPointSpread);
-  //   }
-
+  m_Weights.resize((2 * dim) + 1);
+  m_Weights(0) = m_SigmaPointSpread / (dim + m_SigmaPointSpread);
   // Create diagonal matrix.
   m_WeightsRepeated.resize(2 * dim + 1,2 * dim + 1);
   m_WeightsRepeated.setConstant(0.0);
-  for( int i = 0; i < 2 * dim + 1; ++i )
-    {
-    m_WeightsRepeated(i, i) = m_Weights[i];
-    }
+  m_WeightsRepeated(0, 0) = m_Weights[0];
+  for(unsigned int i = 1; i < (2 * dim) + 1; ++i)
+     {
+     m_Weights(i) = 0.5 / (dim + m_SigmaPointSpread);
+     m_WeightsRepeated(i, i) = m_Weights[i];
+     }
 
   assert(static_cast<int>( (m_FilterModel->Q() ).rows() ) == dim &&
          static_cast<int>( (m_FilterModel->Q() ).cols() ) == dim);
@@ -142,8 +91,8 @@ void UnscentedKalmanFilter::Constrain(Eigen::VectorXd& x, const Eigen::MatrixXd&
     Eigen::MatrixXd W_tmp = (W + WTranspose) * 0.5;
 
     Eigen::VectorXd g0 = -1.0 * (W_tmp.transpose() ) * x;
-    const Eigen::VectorXd d  = ConvertVector< ukfVectorType, Eigen::VectorXd>( m_FilterModel->d() ); // the inequality constraints
-    const Eigen::MatrixXd D  = ToMatrixXd( m_FilterModel->D() ); // -- " --
+    const Eigen::VectorXd d  = m_FilterModel->d(); // the inequality constraints
+    const Eigen::MatrixXd D  = m_FilterModel->D(); // -- " --
     const double error = solve_quadprog(W_tmp, g0, CE, ce0, D, d, x);
     if( error > 0.01 )   // error usually much smaller than that, if solve_quadprog fails it returns inf
       {
@@ -167,7 +116,7 @@ void UnscentedKalmanFilter::Constrain(Eigen::MatrixXd& localX, const Eigen::Matr
 
 bool UnscentedKalmanFilter::violatesContraints(Eigen::VectorXd & x)
 {
-  const Eigen::VectorXd d_test = (-1.0) * ( ToMatrixXd( m_FilterModel->D().transpose() ) * x); // -D'*x
+  const Eigen::VectorXd d_test = (-1.0) * ( m_FilterModel->D().transpose() ) * x; // -D'*x
   for( unsigned int i = 0; i < d_test.size(); ++i )                              // if any(-D'*x > d) constraint is
                                                                                  // broken
     {
@@ -180,13 +129,12 @@ bool UnscentedKalmanFilter::violatesContraints(Eigen::VectorXd & x)
 }
 
 void UnscentedKalmanFilter::Filter(const State& x,
-                                   const ukfMatrixType& p_VNL,
-                                   const std::vector<double>& z,
+                                   const ukfMatrixType& p,
+                                   const ukfVectorType& z,
                                    State& x_new,
                                    ukfMatrixType& p_new,
                                    double& dNormMSE )
 {
-  const Eigen::MatrixXd p = ToMatrixXd( p_VNL );
   // Force a const version of the m_FilterModel to be used to ensure that it is not modified.
   FilterModel const * const localConstFilterModel = m_FilterModel;
 
@@ -216,13 +164,11 @@ void UnscentedKalmanFilter::Filter(const State& x,
     }
 
   {
-  ukfMatrixType X_toFix = ToVNL(X); //HACK
-  localConstFilterModel->F(X_toFix); // slightly negative fw is fixed here
-  X = ToMatrixXd( X_toFix );
+  localConstFilterModel->F(X); // slightly negative fw is fixed here
   }
   // copy step needed because z is a const variable and can't be referenced
   Eigen::VectorXd z_vnl(z.size());
-  for( size_t i = 0; i < z.size(); ++i)
+  for( unsigned int i = 0; i < z.size(); ++i)
   {
     z_vnl[i]=z[i];
   }
@@ -230,35 +176,28 @@ void UnscentedKalmanFilter::Filter(const State& x,
   /** Used for the estimation of the new state */
   Eigen::MatrixXd dim_dimext(dim, 2 * dim + 1);
   dim_dimext.setConstant(0.0);
-  Eigen::VectorXd _w_vnl = ConvertVector<std::vector<double>, Eigen::VectorXd >(this->m_Weights);
-  const Eigen::VectorXd X_hat = X * _w_vnl;
+  const Eigen::VectorXd X_hat = X * this->m_Weights;
   for( unsigned int i = 0; i < dim_dimext.cols(); ++i )
     {
     dim_dimext.col(i) = X_hat;
     }
 
-  const Eigen::MatrixXd & Q = ToMatrixXd( localConstFilterModel->Q() );
+  const Eigen::MatrixXd & Q = localConstFilterModel->Q();
 
   const Eigen::MatrixXd &X_ = X - dim_dimext;
   // Use const reference to avoid copying
-  Eigen::MatrixXd p_new_Eigen = X_ * m_WeightsRepeated * X_.transpose() + Q;
+  p_new = X_ * m_WeightsRepeated * X_.transpose() + Q;
 
   /** The signal */
   Eigen::MatrixXd Y(signal_dim, 2 * dim + 1);
   Y.setConstant(0.0);
-    { // HACK
-    ukfMatrixType X_VNL = ToVNL( X );
-    ukfMatrixType Y_VNL = ToVNL( Y );
-    localConstFilterModel->H(X_VNL, Y_VNL);
-    X = ToMatrixXd( X_VNL );
-    Y = ToMatrixXd( Y_VNL );
-    }
+  localConstFilterModel->H(X, Y);
 
   /** Used for the estimation of the signal */
 
   Eigen::MatrixXd     signaldim_dimext(signal_dim, 2 * dim + 1);
   signaldim_dimext.setConstant(0.0);
-  const Eigen::VectorXd Y_hat = Y * _w_vnl;
+  const Eigen::VectorXd Y_hat = Y * this->m_Weights;
   for( unsigned int i = 0; i < signaldim_dimext.cols(); ++i )
     {
     signaldim_dimext.col(i) = Y_hat;
@@ -268,7 +207,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   const Eigen::MatrixXd Y_ = Y;
   const Eigen::MatrixXd WeightsRepeated_Y_Transpose =m_WeightsRepeated*Y_.transpose();
 
-  const Eigen::MatrixXd R = ToMatrixXd( localConstFilterModel->R() );
+  const Eigen::MatrixXd R = localConstFilterModel->R();
 
   /** Covariance of the signal */
   const Eigen::MatrixXd Pyy = Y_ * WeightsRepeated_Y_Transpose + R;
@@ -285,7 +224,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   dNormMSE = ( (z_vnl - Y_hat).squaredNorm() ) / (z_vnl.squaredNorm() );
 
-  p_new_Eigen = p_new_Eigen - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
+  p_new = p_new - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
   const Eigen::VectorXd Y_hat2 = z_vnl - Y_hat; // z is the real signal
 
   // HANS NOTE -- the original code (through the vector_ref)
@@ -296,8 +235,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   Eigen::VectorXd x_new_Eigen = KalmanGainMatrix.transpose() * Y_hat2 + X_hat;
   if( localConstFilterModel->isConstrained() )
     {
-    Constrain(x_new_Eigen, p_new_Eigen);
+    Constrain(x_new_Eigen, p_new);
     }
   x_new = ConvertVector<Eigen::VectorXd,State>(x_new_Eigen);
-  p_new = ToVNL( p_new_Eigen );
 }

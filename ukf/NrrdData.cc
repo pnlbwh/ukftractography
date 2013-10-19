@@ -9,8 +9,6 @@
 #include <iostream>
 #include <cassert>
 
-#include <vnl/vnl_inverse.h>
-
 NrrdData::NrrdData(double sigma_signal, double sigma_mask)
   : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
 {
@@ -42,7 +40,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
 
   double w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
-  assert(signal.size() == static_cast<size_t>(_num_gradients * 2) );
+  assert(signal.size() == static_cast<unsigned int>(_num_gradients * 2) );
   assert(_data);
   // Is this really necessary?
   for( int i = 0; i < 2 * _num_gradients; ++i )
@@ -281,7 +279,6 @@ bool NrrdData::LoadData(const std::string& data_file,
 
   _mask_nrrd = nrrdNew();
 
-  char *err;
 
   // Load seeds
   if( !seed_file.empty() )
@@ -289,7 +286,7 @@ bool NrrdData::LoadData(const std::string& data_file,
     _seed_nrrd = nrrdNew();
     if( nrrdLoad(_seed_nrrd, seed_file.c_str(), NULL) )
       {
-      err = biffGetDone(NRRD);
+      char *err = biffGetDone(NRRD);
       std::cout << "Trouble reading " << seed_file << ": " << err << std::endl;
       free( err );
       return true;
@@ -303,7 +300,7 @@ bool NrrdData::LoadData(const std::string& data_file,
   // Load mask
   if( nrrdLoad(_mask_nrrd, mask_file.c_str(), NULL) )
     {
-    err = biffGetDone(NRRD);
+    char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
     free( err );
     return true;
@@ -333,13 +330,12 @@ bool NrrdData::LoadData(const std::string& data_file,
 bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWIData)
 {
   Nrrd *tempNrrd = nrrdNew();
-
   _data_nrrd = nrrdNew();
 
-  char *err;
+
   if( nrrdLoad(tempNrrd, data_file.c_str(), NULL) )
     {
-    err = biffGetDone(NRRD);
+    char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
     free( err );
     return true;
@@ -373,8 +369,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
   assert(size == 2);
 
-  double              b = 0.0;
-  ukfVectorType norm_vec;
+  double              bValue = 0.0;
 
   assert(_gradients.size() == 0);
   // Read key value pairs.
@@ -386,7 +381,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
     if( !key.compare("DWMRI_b-value") )   // NOTE:compare returns 0 if strings match DWMRI_b-value
       {
-      b = atof(_data_nrrd->kvp[i + 1]);
+      bValue = atof(_data_nrrd->kvp[i + 1]);
       }
     else if( key.length() > 14 &&
              !key.substr(0, 14).compare("DWMRI_gradient") )
@@ -399,51 +394,28 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
         }
 
       // DEBUGING
-      // std::cout << "Gradients: " << gx << " " << gy << " " << gz << std::endl;
-
-      // normalizing the gradients
-
-      double norm = sqrt(gx * gx + gy * gy + gz * gz);
-      norm_vec.push_back(norm);
-
-      gx /= norm;
-      gy /= norm;
-      gz /= norm;
-
+      //std::cout << "Gradients: " << gx << " " << gy << " " << gz << std::endl;
       _gradients.push_back(vec_t(gx, gy, gz) );
-
       }
     else if( !key.compare("modality") )
       {
       assert(!std::string(_data_nrrd->kvp[i + 1]).compare("DWMRI") );
       }
     }
-
-  // if the norm of any gradient norm is >= 1.5 we assume multiple b values
-  bool multiple_b_values = false;
-  for( unsigned int i = 0; i < _gradients.size(); ++i )
+  // if multiple bValues are present the gradient norms are the bValues
+  // otherwise the bValues are taken from the header
+  // if bValue not in header also take the norm
+  // normalizing the gradients
+  const unsigned int gradientCount = _gradients.size();
+  _b_values.resize(gradientCount * 2 );
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
-    if( norm_vec[i] > 1.5 )
-      {
-      multiple_b_values = true;
-      break;
-      }
-    }
-
-  // if multiple b values are present the gradient norms are the b values
-  // otherwise the b values are taken from the header
-  // if b not in header also take the norm
-  _b_values.resize(_gradients.size() );
-  for( unsigned int i = 0; i < _gradients.size(); ++i )
-    {
-    if( multiple_b_values || b == 0.0 )
-      {
-      _b_values[i] = norm_vec[i];
-      }
-    else
-      {
-      _b_values[i] = b;
-      }
+    const double gradientNorm = _gradients[i].norm();
+    const double effectiveBvalue = (fabs( gradientNorm - 1.0 ) > 1e-4 ) ? gradientNorm * bValue: bValue;
+    //http://www.na-mic.org/Wiki/index.php/NAMIC_Wiki:DTI:Nrrd_format
+    //It is after this magnitude rescaling that the nominal bValue (given via "DWMRI_b-value:=bValue") applies.
+    _b_values[i] = effectiveBvalue;
+    _gradients[i].normalize();
     }
 
   // Voxel spacing.
@@ -478,7 +450,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   // std::cout << "dim: " << _dim[0] << " " << _dim[1] << " " << _dim[2] << std::endl;
 
   _num_gradients = _data_nrrd->axis[0].size;
-  assert(_num_gradients == static_cast<int>(_gradients.size() ) );
+  assert(_num_gradients == static_cast<int>(gradientCount ) );
 
   // Get the measurement frame.
   ukfMatrixType measurement_frame(3, 3);
@@ -493,8 +465,8 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
 
   // Get the ijk->RAS transform matrix
-  _i2r.set_size(4, 4);
-  _i2r.fill(0);
+  _i2r.resize(4, 4);
+  _i2r.setConstant(0.0);
 
   _i2r(0, 0) = _data_nrrd->axis[1].spaceDirection[0];
   _i2r(1, 0) = _data_nrrd->axis[1].spaceDirection[1];
@@ -511,17 +483,17 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   _i2r(3, 3) = 1.0;
 
   // RAS->ijk.
-  _r2i = vnl_inverse(_i2r);
+  _r2i = _i2r.inverse();
 
   // Transform gradients.
   ukfMatrixType R(3, 3);
-  R = _i2r.extract(3, 3);
+  R = _i2r.block(0,0,3,3);
 
   // The gradient should not be affected by voxel size, so factor out the voxel sizes
   // This is equivalent to normalizing the space directions
-  double vox_x_inv = 1.0 / _voxel[2];
-  double vox_y_inv = 1.0 / _voxel[1];
-  double vox_z_inv = 1.0 / _voxel[0];
+  const double vox_x_inv = 1.0 / _voxel[2];
+  const double vox_y_inv = 1.0 / _voxel[1];
+  const double vox_z_inv = 1.0 / _voxel[0];
 
   R(0, 0) *=  vox_x_inv;
   R(1, 0) *=  vox_x_inv;
@@ -534,11 +506,11 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   R(1, 2) *=  vox_z_inv;
   R(2, 2) *=  vox_z_inv;
 
-  ukfMatrixType tmp_mat = vnl_inverse(R) * measurement_frame;
+  ukfMatrixType tmp_mat = R.inverse() * measurement_frame;
 
-  int                count = _gradients.size();
-  ukfVectorType u(3), u_new(3);
-  for( int i = 0; i < count; ++i )
+  ukfVectorType u(3);
+  ukfVectorType u_new(3);
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
     // Transform and normalize.
     u[0] = _gradients[i][0];
@@ -546,7 +518,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     u[2] = _gradients[i][2];
 
     u_new = tmp_mat * u;
-    double dNorm_inv = 1.0 / u_new.magnitude();
+    const double dNorm_inv = 1.0 / u_new.norm();
 
     // No need to worry about the divison by zero here, since the normalized dwi data has no zero gradient
     _gradients[i][0] = u_new[0] * dNorm_inv;
@@ -557,11 +529,12 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   // Add reversed gradients
   // This is necessary since the data (signals and gradients) stored in the data files are typically for a half-sphere
   // To get the data for the other half-sphere, simply reverse the gradients and duplicate the signals
-  for( int i = 0; i < count; ++i )
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
+    const unsigned int dupIndex = i + gradientCount;
     // Duplicate and reverse direction.
     _gradients.push_back(-_gradients[i]);
-    _b_values.push_back(_b_values[i]);
+    _b_values[dupIndex] =_b_values[i];
     }
   return false;
 }

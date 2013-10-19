@@ -85,7 +85,7 @@ bool FiberFilter::inRegion(const Fiber & fiber)
   PointType                point;
   int                      nMultIndex;
 
-  std::vector<vec_t>::const_iterator cit;
+  stdVec_t::const_iterator cit;
 
   if( _bConnectionMode == PASS )
     {

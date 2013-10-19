@@ -100,7 +100,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
     }
 
   // this also upon initialization of writer, its the same for all
-  vnl_matrix<double> i2r = _signal_data->i2r();
+  ukfMatrixType i2r = _signal_data->i2r();
   vec_t              voxel = _signal_data->voxel();
   // Factor out the effect of voxel size
   _sizeFreeI2R <<
@@ -661,7 +661,7 @@ VtkWriter::
 PointConvert(const vec_t& point)
 {
   vec_t rval;
-  vnl_vector<double> p(4);
+  ukfVectorType p(4);
   p[0] = point[2];    // NOTICE the change of order here. Flips back to the original axis order
   p[1] = point[1];
   p[2] = point[0];
@@ -669,7 +669,7 @@ PointConvert(const vec_t& point)
   if( _transform_position )
     {
     p[3] = 1.0;
-    vnl_vector<double> p_new(4);
+    ukfVectorType p_new(4);
     p_new = _signal_data->i2r() * p;    // ijk->RAS transform
     rval[0] = p_new[0];
     rval[1] = p_new[1];

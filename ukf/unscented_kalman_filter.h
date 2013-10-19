@@ -43,7 +43,7 @@ public:
    * \param[out] p_new Updated covariance
    * \param[out] The normalized mean squared reconstruction error
   */
-  void Filter(const State& x, const ukfMatrixType& p, const std::vector<double>& z, // This is the signal
+  void Filter(const State& x, const ukfMatrixType& p, const ukfVectorType& z, // This is the signal
               State& x_new, ukfMatrixType& p_new, double& dNormMSE);
 
 private:
@@ -78,7 +78,7 @@ private:
   double m_Scale;
 
   /** The weights for spreading the sigma points */
-  std::vector<double> m_Weights;
+  ukfVectorType m_Weights;
 
   /** Matrix of weights for spreading of sigma points consisting of the repeted entries of m_Weights */
   Eigen::MatrixXd m_WeightsRepeated;

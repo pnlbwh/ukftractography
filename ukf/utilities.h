@@ -19,6 +19,6 @@ double l2fa(double l1, double l2, double l3);
 double s2ga(const ukfMatrixType& signal);
 
 /** Calculate curve radius from fiber */
-double curve_radius(const std::vector<vec_t>& fiber);
+double curve_radius(const stdVec_t& fiber);
 
 #endif  // UTILITIES_H_

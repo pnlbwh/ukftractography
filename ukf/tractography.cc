@@ -159,7 +159,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   assert(_signal_data);
   int signal_dim = _signal_data->GetSignalDimension();
 
-  std::vector<vec_t> seeds;
+  stdVec_t seeds;
   assert(_labels.size() > 0);
   if( !_full_brain )
     {
@@ -191,7 +191,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   srand(0);
 
   // Create random offsets from the seed voxel.
-  std::vector<vec_t> rand_dirs;
+  stdVec_t rand_dirs;
 
   if( seeds.size() == 1 && _seeds_per_voxel == 1 )   // if there is only one seed don't use offset so fibers can be
                                                      // compared
@@ -218,21 +218,18 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       }
     }
   // Calculate all starting points.
-  std::vector<vec_t>                starting_points;
-  std::vector<std::vector<double> > signal_values;
-  std::vector<double>               signal;
-  signal.resize(signal_dim * 2);
+  stdVec_t      starting_points;
+  stdEigVec_t   signal_values;
+  ukfVectorType signal(signal_dim * 2);
 
-  std::vector<vec_t>::const_iterator cit;
-  std::vector<vec_t>::iterator       jt;
-  int                                num_less_than_zero = 0;
-  int                                num_invalid = 0;
-  int                                num_ga_too_low = 0;
+  int num_less_than_zero = 0;
+  int num_invalid = 0;
+  int num_ga_too_low = 0;
 
   int tmp_counter = 1;
-  for( cit = seeds.begin(); cit != seeds.end(); ++cit )
+  for( stdVec_t::const_iterator cit = seeds.begin(); cit != seeds.end(); ++cit )
     {
-    for( jt = rand_dirs.begin(); jt != rand_dirs.end(); ++jt )
+    for( stdVec_t::iterator jt = rand_dirs.begin(); jt != rand_dirs.end(); ++jt )
       {
       vec_t point = *cit + *jt;
 
@@ -263,12 +260,10 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
           break;
           }
 
-        vnl_vector_ref<double> signal_vnl(signal.size(), &signal.front() );
-
         // If we do full brain tractography we only want seed voxels where the
         // GA is bigger than 0.18.
-        ukfMatrixType signal_tmp(signal_dim * 2, 1);
-        signal_tmp.set_column(0, signal_vnl);
+        Eigen::MatrixXd signal_tmp(signal_dim * 2, 1);
+        signal_tmp.col(0) = signal;
         if( _full_brain && s2ga(signal_tmp) < _full_brain_ga_min )
           {
           keep = false;
@@ -285,7 +280,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         }
       }
     }
-  std::vector<std::vector<double> > starting_params(starting_points.size() );
+  stdEigVec_t starting_params(starting_points.size() );
 
   UnpackTensor(_signal_data->GetBValues(), _signal_data->gradients(),
                signal_values, starting_params);
@@ -305,7 +300,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   int fa_too_low = 0;
   for( size_t i = 0; i < starting_points.size(); ++i )
     {
-    const std::vector<double>& param = starting_params[i];
+    const ukfVectorType& param = starting_params[i];
 
     assert(param.size() == 9);
 
@@ -404,12 +399,12 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
     int state_dim = info.state.size();
 
-    info.covariance.set_size(state_dim, state_dim);
-    info_inv.covariance.set_size(state_dim, state_dim);
+    info.covariance.resize(state_dim, state_dim);
+    info_inv.covariance.resize(state_dim, state_dim);
 
     // make sure covariances are really empty
-    info.covariance.fill(0);
-    info_inv.covariance.fill(0);
+    info.covariance.setConstant(0.0);
+    info_inv.covariance.setConstant(0.0);
     for( int local_i = 0; local_i < state_dim; ++local_i )
       {
       info.covariance(local_i, local_i) = _p0;
@@ -553,10 +548,10 @@ bool Tractography::Run()
   return writeStatus;
 }
 
-void Tractography::UnpackTensor(const std::vector<double>& b,
-                                const std::vector<vec_t>& u,            // u - directions
-                                std::vector<std::vector<double> >& s,   // s = signal values
-                                std::vector<std::vector<double> >& ret) // starting params [i][j] : i - signal number; j
+void Tractography::UnpackTensor(const ukfVectorType& b,
+                                const stdVec_t& u,            // u - directions
+                                stdEigVec_t& s,   // s = signal values
+                                stdEigVec_t& ret) // starting params [i][j] : i - signal number; j
                                                                         // - param
 {
 
@@ -573,7 +568,7 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
   assert(ret.size() == s.size() );
 
   // Build B matrix.
-  ukfMatrixType B(signal_dim * 2, 6);
+  Eigen::MatrixXd B(signal_dim * 2, 6);
   for( int i = 0; i < signal_dim * 2; ++i )
     {
     const vec_t& g = u[i];
@@ -586,23 +581,18 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
 
     }
 
-  // The six tensor components.
-  ukfVectorType d(6);
 
   // Temporary variables.
-  ukfMatrixType D(3, 3);
-  ukfMatrixType Q(3, 3);
-  ukfMatrixType QT(3, 3);
-  ukfVectorType sigma(3);
-  double             theta, phi, psi;
+  Eigen::MatrixXd D(3, 3);
+  Eigen::MatrixXd QT(3, 3);
 
   std::cout << "Estimating seed tensors:" << std::endl;
   // Timer timer ;
   // boost::progress_display disp(static_cast<unsigned long>(ret.size())) ;
   // Unpack data
-  for( size_t i = 0; i < s.size(); ++i )
+  for( stdEigVec_t::size_type i = 0; i < s.size(); ++i )
     {
-    for( size_t j = 0; j < s[i].size(); ++j )
+    for( unsigned int j = 0; j < s[i].size(); ++j )
       {
       if( s[i][j] <= 0 )
         {
@@ -615,12 +605,15 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
 
     // Use QR decomposition to find the matrix representation of the tensor at the
     // seed point of the fiber. Raplacement of the gmm function gmm::least_squares_cg(..)
-    vnl_vector_ref<double> s_i_vnl(s[i].size(), &s[i].front() );
+    Eigen::HouseholderQR<MatrixXf> qr(B);
+    // The six tensor components.
+    //TODO: this could be fixed size
+    Eigen::VectorXd d = QR.solve(s[i]);
 
+#if 0
     vnl_qr<double> QR(B);
-
-    d = QR.solve(s_i_vnl);
-
+    d = QR.solve(s[i]);
+#endif
     // symmetric diffusion tensor
     D(0, 0) = d[0];
     D(0, 1) = d[1];
@@ -636,22 +629,30 @@ void Tractography::UnpackTensor(const std::vector<double>& b,
     // NOTE that svd can be used here only because D is a normal matrix
 
     // std::cout << "Tensor test: " << std::endl << D << std::endl;
-
+#if 0
     vnl_svd<double> svd_decomp(D);
     Q = svd_decomp.U();
+    sigma = svd_decomp.W().diagonal(); // diagonal() returns elements of a diag matrix as a vector.
+#else
+   Eigen::JacobiSVD<MatrixXd> svd_decomp(D, ComputeThinU | ComputeThinV);
+   Eigen::MatrixXd Q(3, 3);
+   Q = svd_decomp.matrixU();
+   Eigen::VectorXd sigma(3);
+   sigma = svd_decomp.singularValues(); // diagonal() returns elements of a diag matrix as a vector.
+#endif
     // QT = (svd_decomp.V()).transpose(); // NOTE: QT is never used
 
-    sigma = svd_decomp.W().diagonal(); // diagonal() returns elements of a diag matrix as a vector.
 
     assert(sigma[0] >= sigma[1] && sigma[1] >= sigma[2]);
-    if( vnl_determinant(Q) < 0 )
+    if( Q.determinant()  < 0 )
       {
       Q = Q * (-1.0);
       }
-    assert(vnl_determinant(Q) > 0);
+    assert(Q.determinant() > 0);
 
     // Extract the three Euler Angles from the rotation matrix.
-    theta = acos(Q(2, 2) );
+    double phi, psi;
+    const double theta = acos(Q(2, 2) );
     double epsilon = 1.0e-10;
     if( fabs(theta) > epsilon )
       {
@@ -696,7 +697,7 @@ void Tractography::Follow3T(const int thread_id,
   // Unpack the seed information.
   vec_t              x = seed.point;
   State              state = seed.state;
-  ukfMatrixType p(seed.covariance);
+  Eigen::MatrixXd p(seed.covariance);
   double             fa = seed.fa;
   double             fa2 = seed.fa2;
   double             dNormMSE = 0; // no error at the seed
@@ -710,8 +711,8 @@ void Tractography::Follow3T(const int thread_id,
   m1 = seed.start_dir;
 
   // Tract the fiber.
-  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
-  ukfMatrixType state_tmp(_model->state_dim(), 1);
+  Eigen::MatrixXd signal_tmp(_model->signal_dim(), 1);
+  Eigen::MatrixXd state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -724,12 +725,9 @@ void Tractography::Follow3T(const int thread_id,
     // Check if we should abort following this fiber. We abort if we reach the
     // CSF, if FA or GA get too small, if the curvature get's too high or if
     // the fiber gets too long.
-
-    vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
-
     bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1;
 
-    state_tmp.set_column(0, state_vnl);
+    state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
 
     double ga = s2ga(signal_tmp);
@@ -831,7 +829,7 @@ void Tractography::Follow3T(const int thread_id,
           local_seed.state.resize(state_dim);
           local_seed.state = state;
 
-          local_seed.covariance.set_size(state_dim, state_dim);
+          local_seed.covariance.resize(state_dim, state_dim);
           local_seed.covariance = p;
 
           SwapState3T(local_seed.state, local_seed.covariance, 2);
@@ -852,7 +850,7 @@ void Tractography::Follow3T(const int thread_id,
 
           local_seed.state.resize(state_dim);
           local_seed.state = state;
-          local_seed.covariance.set_size(state_dim, state_dim);
+          local_seed.covariance.resize(state_dim, state_dim);
           local_seed.covariance = p;
           SwapState3T(local_seed.state, local_seed.covariance, 3);
           local_seed.point = x;
@@ -878,7 +876,7 @@ void Tractography::Follow2T(const int thread_id,
   vec_t x = seed.point;   // NOTICE that the x here is in ijk coordinate system
   State state = seed.state;
 
-  ukfMatrixType p(seed.covariance);
+  Eigen::MatrixXd p(seed.covariance);
 
   double fa = seed.fa;
   double fa2 = seed.fa2;
@@ -893,8 +891,8 @@ void Tractography::Follow2T(const int thread_id,
   m1 = seed.start_dir;
 
   // Track the fiber.
-  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
-  ukfMatrixType state_tmp(_model->state_dim(), 1);
+  Eigen::MatrixXd signal_tmp(_model->signal_dim(), 1);
+  Eigen::MatrixXd state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -915,11 +913,7 @@ void Tractography::Follow2T(const int thread_id,
 
     // after here state doesnt change until next step.
 
-    vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
-
-    // stateFile << state_vnl << std::endl;
-
-    state_tmp.set_column(0, state_vnl);
+    state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
@@ -964,7 +958,7 @@ void Tractography::Follow2T(const int thread_id,
         int state_dim = _model->state_dim();
         local_seed.state.resize(state_dim);
         local_seed.state = state;
-        local_seed.covariance.set_size(state_dim, state_dim);
+        local_seed.covariance.resize(state_dim, state_dim);
         local_seed.covariance = p;
         SwapState2T(local_seed.state, local_seed.covariance);
         local_seed.point = x;
@@ -996,7 +990,7 @@ void Tractography::Follow1T(const int thread_id,
 //   }
 //   std::cout << std::endl;
 
-  ukfMatrixType p(seed.covariance);
+  Eigen::MatrixXd p(seed.covariance);
 
   double fa = seed.fa;
   double fa2 = seed.fa2; // just needed for record
@@ -1008,8 +1002,8 @@ void Tractography::Follow1T(const int thread_id,
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
   // Tract the fiber.
-  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
-  ukfMatrixType state_tmp(_model->state_dim(), 1);
+  Eigen::MatrixXd signal_tmp(_model->signal_dim(), 1);
+  Eigen::MatrixXd state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
 
@@ -1022,9 +1016,7 @@ void Tractography::Follow1T(const int thread_id,
     // Terminate if off brain or in CSF.
     bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
 
-    vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
-
-    state_tmp.set_column(0, state_vnl);
+    state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp);
 
@@ -1059,7 +1051,7 @@ void Tractography::Step3T(const int thread_id,
                           double& fa,
                           double& fa2,
                           State& state,
-                          ukfMatrixType& covariance,
+                          Eigen::MatrixXd& covariance,
                           double& dNormMSE,
                           double& trace,
                           double& trace2
@@ -1071,10 +1063,10 @@ void Tractography::Step3T(const int thread_id,
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
   State state_new(_model->state_dim() );
 
-  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
+  Eigen::MatrixXd covariance_new(_model->state_dim(), _model->state_dim() );
 
   // Use the Unscented Kalman Filter to get the next estimate.
-  std::vector<double> signal(_signal_data->GetSignalDimension() * 2);
+  ukfVectorType signal(_signal_data->GetSignalDimension() * 2);
   _signal_data->Interp3Signal(x, signal);
   _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);
 
@@ -1151,7 +1143,7 @@ void Tractography::Step2T(const int thread_id,
                           double& fa,
                           double& fa2,
                           State& state,
-                          ukfMatrixType& covariance,
+                          Eigen::MatrixXd& covariance,
                           double& dNormMSE,
                           double& trace,
                           double& trace2
@@ -1163,11 +1155,11 @@ void Tractography::Step2T(const int thread_id,
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
 
   State              state_new(_model->state_dim() );
-  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
-  covariance_new.fill(0);
+  Eigen::MatrixXd covariance_new(_model->state_dim(), _model->state_dim() );
+  covariance_new.setConstant(0.0);
 
   // Use the Unscented Kalman Filter to get the next estimate.
-  std::vector<double> signal(_signal_data->GetSignalDimension() * 2);
+  ukfVectorType signal(_signal_data->GetSignalDimension() * 2);
   _signal_data->Interp3Signal(x, signal);
 
   _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);
@@ -1196,7 +1188,7 @@ void Tractography::Step2T(const int thread_id,
     l1 = l2;
     l2 = tmp;
 
-    ukfMatrixType old = covariance;
+    Eigen::MatrixXd old = covariance;
 
     SwapState2T(state, covariance);   // Swap the two tensors
 
@@ -1222,7 +1214,7 @@ void Tractography::Step2T(const int thread_id,
       l1 = l2;
       l2 = tmp;
 
-      ukfMatrixType old = covariance;
+      Eigen::MatrixXd old = covariance;
 
       SwapState2T(state, covariance);   // Swap the two tensors
 
@@ -1269,7 +1261,7 @@ void Tractography::Step1T(const int thread_id,
                           vec_t& x,
                           double& fa,
                           State& state,
-                          ukfMatrixType& covariance,
+                          Eigen::MatrixXd& covariance,
                           double& dNormMSE,
                           double& trace
                           )
@@ -1279,9 +1271,9 @@ void Tractography::Step1T(const int thread_id,
          static_cast<int>(covariance.rows() ) == _model->state_dim() );
   assert(static_cast<int>(state.size() ) == _model->state_dim() );
   State              state_new(_model->state_dim() );
-  ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
+  Eigen::MatrixXd covariance_new(_model->state_dim(), _model->state_dim() );
 
-  std::vector<double> signal(_signal_data->GetSignalDimension() * 2);
+  ukfVectorType signal(_signal_data->GetSignalDimension() * 2);
   _signal_data->Interp3Signal(x, signal);
 
   _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);
@@ -1316,17 +1308,16 @@ void Tractography::Step1T(const int thread_id,
 }
 
 void Tractography::SwapState3T(State& state,
-                               ukfMatrixType& covariance,
+                               Eigen::MatrixXd& covariance,
                                int i)
 {
 
   // This function is only for 3T.
   assert(i == 2 || i == 3);
 
-  vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
 
   int                state_dim = _model->state_dim();
-  ukfMatrixType tmp(state_dim, state_dim);
+  Eigen::MatrixXd tmp(state_dim, state_dim);
   state_dim /= 3;
   assert(state_dim == 5 || state_dim == 6);
   --i;
@@ -1334,7 +1325,7 @@ void Tractography::SwapState3T(State& state,
   i *= state_dim;
   j *= state_dim;
 
-  tmp.fill(0);
+  tmp.setConstant(0.0);
   tmp = covariance;
   covariance.update(tmp.extract(state_dim, state_dim, 0, 0), i, i);
   covariance.update(tmp.extract(state_dim, state_dim, i, i), 0, 0);
@@ -1348,8 +1339,8 @@ void Tractography::SwapState3T(State& state,
 
   // Swap the state.
 
-  ukfVectorType tmp_vec(state_dim * 3);
-  tmp_vec = state_vnl;
+  Eigen::VectorXd tmp_vec(state_dim * 3);
+  tmp_vec = state;
 
   state_vnl.update(tmp_vec.extract(state_dim, 0), i);
   state_vnl.update(tmp_vec.extract(state_dim, i), 0);
@@ -1357,7 +1348,7 @@ void Tractography::SwapState3T(State& state,
 }
 
 void Tractography::SwapState2T( State& state,
-                                ukfMatrixType& covariance)
+                                Eigen::MatrixXd& covariance)
 {
   // This function is only for 2T.
 
@@ -1365,7 +1356,7 @@ void Tractography::SwapState2T( State& state,
 
   int state_dim = _model->state_dim();
 
-  ukfMatrixType tmp(state_dim, state_dim);
+  Eigen::MatrixXd tmp(state_dim, state_dim);
   bool               bUnevenState = false;
 
   if( state_dim % 2 != 0 )
@@ -1374,7 +1365,7 @@ void Tractography::SwapState2T( State& state,
     }
   state_dim = state_dim >> 1; // for uneven state (fw) rounds down, thats good
 
-  tmp.fill(0);
+  tmp.setConstant(0.0);
   tmp = covariance;
 
   covariance.update(tmp.extract(state_dim, state_dim, 0, 0), state_dim, state_dim);
@@ -1393,7 +1384,7 @@ void Tractography::SwapState2T( State& state,
 
   // Swap the state.
 
-  ukfVectorType tmp_vec(state_dim * 2);
+  Eigen::VectorXd tmp_vec(state_dim * 2);
   tmp_vec = state_vnl;
   state_vnl.update(tmp_vec.extract(state_dim, 0), state_dim);
   state_vnl.update(tmp_vec.extract(state_dim, state_dim), 0);
@@ -1401,7 +1392,7 @@ void Tractography::SwapState2T( State& state,
 }
 
 void Tractography::Record(const vec_t& x, double fa, double fa2, const State& state,
-                          const ukfMatrixType p,
+                          const Eigen::MatrixXd p,
                           UKFFiber& fiber, double dNormMSE, double trace, double trace2)
 {
 

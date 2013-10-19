@@ -27,14 +27,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Constructor */
-  FilterModel(const int local_state_dim, const double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  FilterModel(const int local_state_dim, const double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : _state_dim(local_state_dim),
       _rs(rs), _signal_dim(0), _signal_data(NULL), weights_on_tensors_(weights_on_tensors),
     _constrained(constrained)
   {
 
-    _Q.set_size(_state_dim, _state_dim);
-    _Q.fill(0); // necessary because otherwise there is memory left overs in the matrix
+    _Q.resize(_state_dim, _state_dim);
+    _Q.setConstant(0.0); // necessary because otherwise there is memory left overs in the matrix
 
     if( constrained )
       {
@@ -53,10 +53,10 @@ public:
   }
 
   /** state transition function */
-  virtual void F(ukfMatrixType& X) const = 0;
+  virtual void F(Eigen::MatrixXd& X) const = 0;
 
   /** observation, i.e. signal reconstruction */
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const = 0;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const = 0;
 
   // Functions that convert the state into a tensor representation that can be
   // used for tractography (meaning the main direction and all the eigenvalues/
@@ -94,8 +94,8 @@ public:
   {
     _signal_dim = dim;
 
-    _R.set_size(_signal_dim, _signal_dim);
-    _R.fill(0); // necessary because otherwise there is memory leftovers in the matrix
+    _R.resize(_signal_dim, _signal_dim);
+    _R.setConstant(0.0); // necessary because otherwise there is memory leftovers in the matrix
     for( int i = 0; i < _signal_dim; ++i )
       {
       _R(i, i) = _rs;
@@ -110,13 +110,13 @@ public:
   }
 
   /** The noise in the state transfer function used by the UKF. */
-  const ukfMatrixType & Q() const
+  const Eigen::MatrixXd & Q() const
   {
     return _Q;
   }
 
   /** The noise in the signal reconstruction used by the UKF. */
-  const ukfMatrixType & R() const
+  const Eigen::MatrixXd & R() const
   {
     return _R;
   }
@@ -124,13 +124,13 @@ public:
   // The next two functions are only used for the constrained case
 
   /** The inequality constraint matrix for the constrained UKF */
-  const ukfMatrixType & D() const
+  const Eigen::MatrixXd & D() const
   {
     return _D;
   }
 
   /** The inequality constraint right hand side for the constrained UKF */
-  const ukfVectorType & d() const
+  const Eigen::VectorXd & d() const
   {
     return _d;
   }
@@ -166,19 +166,19 @@ protected:
   ISignalData *_signal_data;
 
   /** Process noise */
-  ukfMatrixType _Q;
+  Eigen::MatrixXd _Q;
 
   /** Signal reconstruction noise */
-  ukfMatrixType _R;
+  Eigen::MatrixXd _R;
 
   /** Inequality constraint matrix, only used for constrained UKF */
-  ukfMatrixType _D;
+  Eigen::MatrixXd _D;
 
   /** Inequality right hand side, only used for constrained UKF */
-  ukfVectorType _d;
+  Eigen::VectorXd _d;
 
   /** The weights of each tensor. (Most commonly equal all are equal) */
-  const std::vector<double> weights_on_tensors_;
+  const ukfVectorType weights_on_tensors_;
 
   /** Are we using the constrained filter */
   bool _constrained;
@@ -194,7 +194,7 @@ protected:
 class Full1T_FW : public FilterModel
   {
 public:
-  Full1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
+  Full1T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors, bool constrained,
             const double diff_fw)
     : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -206,10 +206,10 @@ public:
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = ql;
     _Q(6, 6) = qw;
 
-    _D.set_size(7, 5);
-    _D.fill(0);
+    _D.resize(7, 5);
+    _D.setConstant(0.0);
 
-    _d.set_size(5);
+    _d.resize(5);
 
     // Setting the constraints according to D'*x >= -d
     _D(6, 0) = -1;
@@ -229,9 +229,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -253,7 +253,7 @@ public:
 class Full1T : public FilterModel
   {
 public:
-  Full1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Full1T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -264,9 +264,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -284,7 +284,7 @@ public:
 class Full2T : public FilterModel
   {
 public:
-  Full2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Full2T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(12, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
@@ -295,9 +295,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -315,7 +315,7 @@ public:
 class Full2T_FW : public FilterModel
   {
 public:
-  Full2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
+  Full2T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors, bool constrained,
             const double diff_fw)
     : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -327,10 +327,10 @@ public:
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = _Q(9, 9) = _Q(10, 10) = _Q(11, 11) = ql;
     _Q(12, 12) = qw; // noise for weights
 
-    _D.set_size(13, 8);
-    _D.fill(0);
+    _D.resize(13, 8);
+    _D.setConstant(0.0);
 
-    _d.set_size(8);
+    _d.resize(8);
 
     // Setting the constraints according to D'*x >= -d
     _D(12, 0) = -1;
@@ -355,9 +355,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -378,7 +378,7 @@ public:
 class Full3T : public FilterModel
   {
 public:
-  Full3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Full3T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(18, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -394,9 +394,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);
@@ -416,7 +416,7 @@ public:
 class Simple1T_FW : public FilterModel
   {
 public:
-  Simple1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
+  Simple1T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors,
               bool constrained, const double diff_fw)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -428,10 +428,10 @@ public:
     _Q(3, 3) = _Q(4, 4) = ql;
     _Q(5, 5) = qw; // noise for weights
 
-    _D.set_size(6, 4);
-    _D.fill(0);
+    _D.resize(6, 4);
+    _D.setConstant(0.0);
 
-    _d.set_size(4);
+    _d.resize(4);
 
     // Setting the constraints according to D'*x >= -d
     _D(5, 0) = -1;
@@ -449,9 +449,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -472,7 +472,7 @@ public:
 class Simple1T : public FilterModel
   {
 public:
-  Simple1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Simple1T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(5, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -483,9 +483,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
 
@@ -501,7 +501,7 @@ public:
 class Simple2T : public FilterModel
   {
 public:
-  Simple2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Simple2T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(10, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
@@ -512,9 +512,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -533,7 +533,7 @@ public:
 class Simple2T_FW : public FilterModel
   {
 public:
-  Simple2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
+  Simple2T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors,
               bool constrained, const double diff_fw)
     : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
@@ -545,10 +545,10 @@ public:
     _Q(3, 3) = _Q(4, 4) = _Q(8, 8) = _Q(9, 9) = ql;
     _Q(10, 10) = qw; // noise for weights
 
-    _D.set_size(11, 6);
-    _D.fill(0);
+    _D.resize(11, 6);
+    _D.setConstant(0.0);
 
-    _d.set_size(6);
+    _d.resize(6);
 
     // Setting the constraints according to D'*x >= -d
     _D(10, 0) = -1;
@@ -569,9 +569,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
 
@@ -591,7 +591,7 @@ public:
 class Simple3T : public FilterModel
   {
 public:
-  Simple3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  Simple3T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(15, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -605,9 +605,9 @@ public:
   {
   }
 
-  virtual void F(ukfMatrixType& X) const;
+  virtual void F(Eigen::MatrixXd& X) const;
 
-  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
+  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
 
   virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
                             vec_t& l3);

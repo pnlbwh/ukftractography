@@ -26,7 +26,7 @@ struct UKFFiber
   {
 
   /** vector of 3D points defining the fiber path */
-  std::vector<vec_t> position;
+  stdVec_t position;
   /** FA of tensor 1 */
   std::vector<double> fa;
   /** FA of tensor 2 */

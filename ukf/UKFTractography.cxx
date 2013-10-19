@@ -216,26 +216,27 @@ int main(int argc, char **argv)
   bool normalizedDWIData = false;
   bool outputNormalizedDWIData = false;
 
-  std::vector<double> weightsOnTensors;
-  if (weightsOnTensors.empty()) {
-    for (int i = 0; i < numTensor; i++) {
-      weightsOnTensors.push_back(1.0 / numTensor) ;
-    }
-  } else {
-    if (static_cast<int>(weightsOnTensors.size()) != numTensor) {
-      std::cout << "Wrong number of weights on tensors!" << std::endl << std::endl ;
-      exit(1) ;
+  ukfVectorType weightsOnTensors(numTensor);
+  for (int i = 0; i < numTensor; i++)
+    {
+    weightsOnTensors[i]=(1.0 / numTensor) ;
     }
 
-    double weight_accumu = 0 ;
-    for (int i = 0; i < numTensor; i++) {
-      weight_accumu += weightsOnTensors[i] ;
+  double weight_accumu = 0 ;
+  for (int i = 0; i < numTensor; i++)
+    {
+    weight_accumu += weightsOnTensors[i] ;
     }
-    if (std::abs(weight_accumu - 1.0) > 0.000001) {
-      std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
-      exit(1) ;
+  if (std::abs(weight_accumu - 1.0) > 0.000001)
+    {
+    std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
+    exit(1) ;
     }
-  }
+  else
+    {
+    weightsOnTensors.norm(); // Normilize for all to add up to 1.
+    }
+
 
   // Initialize the tractography object.
   FilterModel *filter_model = NULL; //Silence warnings.  This will cause segfault if it ever reaches this point.

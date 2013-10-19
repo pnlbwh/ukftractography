@@ -47,7 +47,7 @@ double s2ga(const ukfMatrixType& signal)
   return sqrt(mu_sub * n) / sqrt( (n - 1) * mu_sq);
 }
 
-double curve_radius(const std::vector<vec_t>& fiber)
+double curve_radius(const stdVec_t& fiber)
 {
   int length = fiber.size();
 

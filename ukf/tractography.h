@@ -23,8 +23,8 @@ class ISignalData;
 */
 class Tractography
 {
-
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Defines a type to specify the model */
   enum model_type { _1T,
@@ -107,39 +107,39 @@ private:
    * Calculate six tensor coefficients by solving B * d = log(s), where d are
    * tensor coefficients, B is gradient weighting, s is signal.
   */
-  void UnpackTensor(const std::vector<double>& b, const std::vector<vec_t>& u, std::vector<std::vector<double> >& s,
-                    std::vector<std::vector<double> >& ret);
+  void UnpackTensor(const ukfVectorType& b, const stdVec_t& u, stdEigVec_t& s,
+                    stdEigVec_t& ret);
 
   /** One step along the fiber for the 3-tensor case. */
   void Step3T(const int thread_id, vec_t& x, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3, vec_t& l3,
-              double& fa, double& fa2, State& state, ukfMatrixType& covariance, double& dNormMSE, double& trace,
+              double& fa, double& fa2, State& state, Eigen::MatrixXd& covariance, double& dNormMSE, double& trace,
               double& trace2);
 
   /** One step along the fiber for the 2-tensor case. */
   void Step2T(const int thread_id, vec_t& x, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, double& fa, double& fa2,
-              State& state, ukfMatrixType& covariance, double& dNormMSE, double& trace, double& trace2);
+              State& state, Eigen::MatrixXd& covariance, double& dNormMSE, double& trace, double& trace2);
 
   /** One step along the fiber for the 1-tensor case. */
-  void Step1T(const int thread_id, vec_t& x, double& fa, State& state, ukfMatrixType& covariance, double& dNormMSE,
+  void Step1T(const int thread_id, vec_t& x, double& fa, State& state, Eigen::MatrixXd& covariance, double& dNormMSE,
               double& trace);
 
   /**
    * Swaps the first tensor with the i-th tensor in state and covariance matrix for the 3 Tensor case.
    * This is used when the main direction of the tractography 'switches' tensor.
   */
-  void SwapState3T(State& state, ukfMatrixType& covariance, int i);
+  void SwapState3T(State& state, Eigen::MatrixXd& covariance, int i);
 
   /**
    * Swap the tensors in the state and covariance matrix for the 2-tensor case. This is used when the
    * principal direction of the minor tensor has more weight than the one of the current tensor.
   */
-  void SwapState2T(State& state, ukfMatrixType& covariance);
+  void SwapState2T(State& state, Eigen::MatrixXd& covariance);
 
   /**
    * Saves one point along the fiber so that everything can be written to a
    * file at the end.
   */
-  void Record(const vec_t& x, double fa, double fa2, const State& state, const ukfMatrixType p, UKFFiber& fiber,
+  void Record(const vec_t& x, double fa, double fa2, const State& state, const Eigen::MatrixXd p, UKFFiber& fiber,
               double dNormMSE, double trace, double trace2);
 
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */

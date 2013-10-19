@@ -24,7 +24,7 @@ double FilterModel::CheckZero(const double & local_d) const
 }
 
 // Functions for 1-tensor full model.
-void Full1T::F(ukfMatrixType& X) const
+void Full1T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -38,8 +38,8 @@ void Full1T::F(ukfMatrixType& X) const
     }
 }
 
-void Full1T::H(const  ukfMatrixType& X,
-               ukfMatrixType& Y) const
+void Full1T::H(const  Eigen::MatrixXd& X,
+               Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -50,8 +50,8 @@ void Full1T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<double>& b        = _signal_data->GetBValues();
-  const std::vector<vec_t>&  gradients = _signal_data->gradients();
+  const ukfVectorType& b        = _signal_data->GetBValues();
+  const stdVec_t&  gradients = _signal_data->gradients();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
@@ -82,7 +82,7 @@ void Full1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor full model.
-void Full2T::F(ukfMatrixType& X) const
+void Full2T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -99,8 +99,8 @@ void Full2T::F(ukfMatrixType& X) const
     }
 }
 
-void Full2T::H(const  ukfMatrixType& X,
-               ukfMatrixType& Y) const
+void Full2T::H(const  Eigen::MatrixXd& X,
+               Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -111,8 +111,8 @@ void Full2T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
@@ -172,7 +172,7 @@ void Full2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor full model.
-void Full3T::F(ukfMatrixType& X) const
+void Full3T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -192,8 +192,8 @@ void Full3T::F(ukfMatrixType& X) const
     }
 }
 
-void Full3T::H(const  ukfMatrixType& X,
-               ukfMatrixType& Y) const
+void Full3T::H(const  Eigen::MatrixXd& X,
+               Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -204,8 +204,8 @@ void Full3T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
@@ -283,7 +283,7 @@ void Full3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 1-tensor simple model.
-void Simple1T::F(ukfMatrixType& X) const
+void Simple1T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -307,8 +307,8 @@ void Simple1T::F(ukfMatrixType& X) const
     }
 }
 
-void Simple1T::H(const  ukfMatrixType& X,
-                 ukfMatrixType& Y) const
+void Simple1T::H(const  Eigen::MatrixXd& X,
+                 Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -319,8 +319,8 @@ void Simple1T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
@@ -364,7 +364,7 @@ void Simple1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor simple model.
-void Simple2T::F(ukfMatrixType& X) const
+void Simple2T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -402,8 +402,8 @@ void Simple2T::F(ukfMatrixType& X) const
     }
 }
 
-void Simple2T::H(const  ukfMatrixType& X,
-                 ukfMatrixType& Y) const
+void Simple2T::H(const  Eigen::MatrixXd& X,
+                 Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -414,8 +414,8 @@ void Simple2T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -482,7 +482,7 @@ void Simple2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor simple model.
-void Simple3T::F(ukfMatrixType& X) const
+void Simple3T::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -533,8 +533,8 @@ void Simple3T::F(ukfMatrixType& X) const
     }
 }
 
-void Simple3T::H(const  ukfMatrixType& X,
-                 ukfMatrixType& Y) const
+void Simple3T::H(const  Eigen::MatrixXd& X,
+                 Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -545,8 +545,8 @@ void Simple3T::H(const  ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -636,7 +636,7 @@ void Simple3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
 ///////  1T SIMPLE MODEL ////
 
 // Functions for 1-tensor simple model.
-void Simple1T_FW::F(ukfMatrixType& X) const
+void Simple1T_FW::F(Eigen::MatrixXd& X) const
 {
 
   assert(_signal_dim > 0);
@@ -672,8 +672,8 @@ void Simple1T_FW::F(ukfMatrixType& X) const
     }
 }
 
-void Simple1T_FW::H(const ukfMatrixType& X,
-                    ukfMatrixType& Y) const
+void Simple1T_FW::H(const Eigen::MatrixXd& X,
+                    Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -684,8 +684,8 @@ void Simple1T_FW::H(const ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
@@ -756,7 +756,7 @@ void Simple1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 
 ///////  1T FULL MODEL ///
 // Functions for 1-tensor full model.
-void Full1T_FW::F(ukfMatrixType& X) const
+void Full1T_FW::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -777,8 +777,8 @@ void Full1T_FW::F(ukfMatrixType& X) const
     }
 }
 
-void Full1T_FW::H(const ukfMatrixType& X,
-                  ukfMatrixType& Y) const
+void Full1T_FW::H(const Eigen::MatrixXd& X,
+                  Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -789,8 +789,8 @@ void Full1T_FW::H(const ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
 
@@ -834,7 +834,7 @@ void Full1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 
 ////////// 2T SIMPLE MODEL ///
 // Functions for 2-tensor simple model.
-void Simple2T_FW::F(ukfMatrixType& X) const
+void Simple2T_FW::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -878,8 +878,8 @@ void Simple2T_FW::F(ukfMatrixType& X) const
     }
 }
 
-void Simple2T_FW::H(const   ukfMatrixType& X,
-                    ukfMatrixType& Y) const
+void Simple2T_FW::H(const   Eigen::MatrixXd& X,
+                    Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -890,8 +890,8 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -977,7 +977,7 @@ void Simple2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 ////////// 2T FULL MODEL ///
-void Full2T_FW::F(ukfMatrixType& X) const
+void Full2T_FW::F(Eigen::MatrixXd& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -1001,8 +1001,8 @@ void Full2T_FW::F(ukfMatrixType& X) const
     }
 }
 
-void Full2T_FW::H(const   ukfMatrixType& X,
-                  ukfMatrixType& Y) const
+void Full2T_FW::H(const   Eigen::MatrixXd& X,
+                  Eigen::MatrixXd& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -1013,8 +1013,8 @@ void Full2T_FW::H(const   ukfMatrixType& X,
           Y.cols() == 1) );
   assert(_signal_data);
 
-  const std::vector<vec_t>&   gradients = _signal_data->gradients();
-  const std::vector<double> & b       = _signal_data->GetBValues();
+  const stdVec_t&   gradients = _signal_data->gradients();
+  const ukfVectorType & b       = _signal_data->GetBValues();
   for( size_t i = 0; i < X.cols(); ++i )
     {
 

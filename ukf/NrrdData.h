@@ -33,7 +33,7 @@ public:
   ~NrrdData();
 
   /** Interpolates the DWI signal at a certain position */
-  virtual void Interp3Signal(const vec_t& pos, std::vector<double>& signal) const;
+  virtual void Interp3Signal(const vec_t& pos, ukfVectorType& signal) const;
 
   /** Interpolates the brain mask at a certain position */
   virtual double Interp3ScalarMask(const vec_t& pos) const;
@@ -46,10 +46,10 @@ public:
    * \param[in]  labels  a vector of labels that define the seed region
    * \param[out] seeds   a vector containing the positions in ijk-space of the seeds
   */
-  virtual void GetSeeds(const std::vector<int>& labels, std::vector<vec_t>& seeds) const;
+  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const;
 
   /** returns the gradients of the diffusion image */
-  virtual const std::vector<vec_t> & gradients() const
+  virtual const stdVec_t & gradients() const
   {
     return _gradients;
   }
@@ -59,7 +59,7 @@ public:
    * Note: Except for cases recorded with multiple b-values it
    *       contains identical values
   */
-  virtual const std::vector<double> & GetBValues() const
+  virtual const ukfVectorType & GetBValues() const
   {
     return _b_values;
   }
@@ -106,10 +106,10 @@ private:
   int _num_gradients;
 
   /** gradient directions of the diffusion image */
-  std::vector<vec_t> _gradients;
+  stdVec_t _gradients;
 
   /** b-values of the diffusion image */
-  std::vector<double> _b_values;
+  ukfVectorType _b_values;
 
   /** pointer diffusion data as float */
   float *_data;

@@ -43,19 +43,19 @@ public:
   }
 
   /** Gets the signal values at a specified position. */
-  virtual void Interp3Signal(const vec_t& pos, std::vector<double>& signal) const = 0;
+  virtual void Interp3Signal(const vec_t& pos, ukfVectorType & signal) const = 0;
 
   /** Checks if a certian position is still within the brain mask. */
   virtual double Interp3ScalarMask(const vec_t& pos) const = 0;
 
   /** Get all the seed points. */
-  virtual void GetSeeds(const std::vector<int>& labels, std::vector<vec_t>& seeds) const = 0;
+  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
 
   /** Returns the gradients. */
-  virtual const std::vector<vec_t> & gradients() const = 0;
+  virtual const stdVec_t & gradients() const = 0;
 
   /** Returns the vector of b values */
-  virtual const std::vector<double> & GetBValues() const = 0;
+  virtual const ukfVectorType & GetBValues() const = 0;
 
   /** Return the size of the signal vector */
   virtual int GetSignalDimension() const = 0;

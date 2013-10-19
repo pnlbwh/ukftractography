@@ -34,7 +34,7 @@ NrrdData::~NrrdData()
 }
 
 void NrrdData::Interp3Signal(const vec_t& pos,
-                             std::vector<double>& signal) const
+                             ukfVectorType& signal) const
 {
   const int nx = static_cast<const int>(_dim[0]);
   const int ny = static_cast<const int>(_dim[1]);
@@ -50,8 +50,8 @@ void NrrdData::Interp3Signal(const vec_t& pos,
     signal[i] = 0.0;
     }
 
-  int step1 = nz * ny * _num_gradients;
-  int step2 = nz * _num_gradients;
+  const int step1 = nz * ny * _num_gradients;
+  const int step2 = nz * _num_gradients;
   // for each location
   for( int xx = -1; xx <= 1; ++xx )
     {
@@ -60,8 +60,8 @@ void NrrdData::Interp3Signal(const vec_t& pos,
       {
       continue;
       }
-    double dx = (x - pos[0]) * _voxel[0];
-    double dxx = dx * dx;
+    const double dx = (x - pos[0]) * _voxel[0];
+    const double dxx = dx * dx;
     for( int yy = -1; yy <= 1; ++yy )
       {
       const int y = static_cast<const int>(round(pos[1]) + yy);
@@ -70,8 +70,8 @@ void NrrdData::Interp3Signal(const vec_t& pos,
         continue;
         }
 
-      double dy = (y - pos[1]) * _voxel[1];
-      double dyy = dy * dy;
+      const double dy = (y - pos[1]) * _voxel[1];
+      const double dyy = dy * dy;
       for( int zz = -1; zz <= 1; ++zz )
         {
         const int z = static_cast<const int>(round(pos[2]) + zz);
@@ -79,11 +79,11 @@ void NrrdData::Interp3Signal(const vec_t& pos,
           {
           continue;
           }
-        double dz = (z - pos[2]) * _voxel[2];
-        double dzz = dz * dz;
+        const double dz = (z - pos[2]) * _voxel[2];
+        const double dzz = dz * dz;
 
         // gaussian smoothing
-        double w = exp(-(dxx + dyy + dzz) / _sigma_signal);
+        const double w = exp(-(dxx + dyy + dzz) / _sigma_signal);
         // for each gradient direction
         for( int i = 0; i < _num_gradients; ++i )
           {
@@ -186,7 +186,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 }
 
 void NrrdData::GetSeeds(const std::vector<int>& labels,
-                        std::vector<vec_t>& seeds) const
+                        stdVec_t& seeds) const
 {
   if( _seed_data )
     {
@@ -374,7 +374,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   assert(size == 2);
 
   double              b = 0.0;
-  std::vector<double> norm_vec;
+  ukfVectorType norm_vec;
 
   assert(_gradients.size() == 0);
   // Read key value pairs.

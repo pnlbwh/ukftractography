@@ -11,25 +11,25 @@
 #include <iostream>
 #include <map>
 
-// typedef std::map<std::string, std::vector<std::vector<double> > > FieldMapType;
-
 /**
  * \struct Fiber
  * \brief Describes a single fiber
 */
-struct Fiber
+class Fiber
   {
 
 public:
 
   /** A map for accessing tensors. Key the tensor name; value a vector of 3D matrices. */
-  typedef std::map<std::string, std::vector<mat_t> > TensorMapType;
+  typedef std::map<std::string, stdMat_t, std::less<std::string>,
+         Eigen::aligned_allocator<std::pair<const std::string, stdMat_t> > > TensorMapType;
+
 
   /** A map with the fieldname as key and a 2D double vector for the field contents */
   typedef std::map<std::string, std::vector<float> > FieldMapType;
 
   /** The points in RAS space of the fiber */
-  std::vector<vec_t> Points;
+  stdVec_t Points;
 
   /** The fields of the fiber */
   FieldMapType Fields;

@@ -1,6 +1,6 @@
 /**
- * \file QuadProg++_vnl.cc
- * \brief implementation of QuadProg++_vnl.h
+ * \file QuadProg++_Eigen.cc
+ * \brief implementation of QuadProg++_Eigen.h
  *
  * This file was adapted from QuadProg++ an open project available on
  * sourceforge.net (see http://sourceforge.net/projects/quadprog/). The major change
@@ -19,29 +19,29 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
-#include "QuadProg++_vnl.h"
+#include "QuadProg++_Eigen.h"
 
 // #define TRACE_SOLVER
 namespace QuadProgPP
 {
 // Utility functions for updating some data needed by the solution method
-inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorType& np)
+inline void compute_d(Eigen::VectorXd& d, const Eigen::MatrixXd& J, const Eigen::VectorXd& np)
 {
   const int    n = d.size();
 
   /* compute d = H^T * np */
-  for( int i = 0; i < n; ++i )
+  for( int c = 0; c < n; ++c )
     {
     double sum = 0.0;
-    for( int j = 0; j < n; ++j )
+    for( int r = 0; r < n; ++r )
       {
-      sum += J[j][i] * np[j];
+      sum += J(r,c) * np[r];
       }
-    d[i] = sum;
+    d[c] = sum;
     }
 }
 
-inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorType& d, int iq)
+inline void update_z(Eigen::VectorXd& z, const Eigen::MatrixXd& J, const Eigen::VectorXd& d, int iq)
 {
   const int n = z.size();
 
@@ -51,12 +51,12 @@ inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorTy
     z[i] = 0.0;
     for( int j = iq; j < n; ++j )
       {
-      z[i] += J[i][j] * d[j];
+      z[i] += J(i,j) * d[j];
       }
     }
 }
 
-inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorType& d, int iq)
+inline void update_r(const Eigen::MatrixXd& R, Eigen::VectorXd& r, const Eigen::VectorXd& d, int iq)
 {
   /* setting of r = R^-1 d */
   for( int i = iq - 1; i >= 0; i-- )
@@ -64,9 +64,9 @@ inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorTy
     double sum = 0.0;
     for( int j = i + 1; j < iq; ++j )
       {
-      sum += R[i][j] * r[j];
+      sum += R(i,j) * r[j];
       }
-    r[i] = (d[i] - sum) / R[i][i];
+    r[i] = (d[i] - sum) / R(i,i);
     }
 }
 
@@ -87,7 +87,7 @@ inline double distance(double a, double b)
   return a1 * ::std::sqrt(2.0);
 }
 
-bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, double& R_norm)
+bool add_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXd& d, int& iq, double& R_norm)
 {
   const int n = d.size();
 
@@ -131,10 +131,10 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
     double xny = ss / (1.0 + cc);
     for( int k = 0; k < n; k++ )
       {
-      double t1 = J[k][j - 1];
-      double t2 = J[k][j];
-      J[k][j - 1] = t1 * cc + t2 * ss;
-      J[k][j] = xny * (t1 + J[k][j - 1]) - t2;
+      double t1 = J(k,j - 1);
+      double t2 = J(k,j);
+      J(k,j - 1) = t1 * cc + t2 * ss;
+      J(k,j) = xny * (t1 + J(k,j - 1)) - t2;
       }
     }
   /* update the number of constraints added*/
@@ -144,7 +144,7 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
    */
   for( int i = 0; i < iq; ++i )
     {
-    R[i][iq - 1] = d[i];
+    R(i,iq - 1) = d[i];
     }
 #ifdef TRACE_SOLVER
   std::cout << iq << std::endl;
@@ -162,7 +162,7 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
   return true;
 }
 
-void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, ukfVectorType& u, int n,
+void delete_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, vnl_vector<int>& A, Eigen::VectorXd& u, int n,
                        int p, int& iq, int l)
 {
 #ifdef TRACE_SOLVER
@@ -185,7 +185,7 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, u
     u[i] = u[i + 1];
     for( int j = 0; j < n; ++j )
       {
-      R[j][i] = R[j][i + 1];
+      R(j,i) = R(j,i + 1);
       }
     }
 
@@ -195,7 +195,7 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, u
   u[iq] = 0.0;
   for( int j = 0; j < iq; ++j )
     {
-    R[j][iq - 1] = 0.0;
+    R(j,iq - 1) = 0.0;
     }
   /* constraint has been fully removed */
   iq--;
@@ -209,8 +209,8 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, u
     }
   for( int j = qq; j < iq; ++j )
     {
-    double cc = R[j][j];
-    double ss = R[j + 1][j];
+    double cc = R(j,j);
+    double ss = R(j + 1,j);
     double h = distance(cc, ss);
     if( fabs(h) < std::numeric_limits<double>::epsilon() ) // h == 0
       {
@@ -218,37 +218,37 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, vnl_vector<int>& A, u
       }
     cc = cc / h;
     ss = ss / h;
-    R[j + 1][j] = 0.0;
+    R(j + 1,j) = 0.0;
     if( cc < 0.0 )
       {
-      R[j][j] = -h;
+      R(j,j) = -h;
       cc = -cc;
       ss = -ss;
       }
     else
       {
-      R[j][j] = h;
+      R(j,j) = h;
       }
 
     double xny = ss / (1.0 + cc);
     for( int k =j + 1; k < iq; ++k )
       {
-      double t1 = R[j][k];
-      double t2 = R[j + 1][k];
-      R[j][k] = t1 * cc + t2 * ss;
-      R[j + 1][k] = xny * (t1 + R[j][k]) - t2;
+      double t1 = R(j,k);
+      double t2 = R(j + 1,2);
+      R(j,k) = t1 * cc + t2 * ss;
+      R(j + 1,2) = xny * (t1 + R(j,k)) - t2;
       }
     for( int k = 0; k < n; ++k )
       {
-      double t1 = J[k][j];
-      double t2 = J[k][j + 1];
-      J[k][j] = t1 * cc + t2 * ss;
-      J[k][j + 1] = xny * (J[k][j] + t1) - t2;
+      double t1 = J(k,j);
+      double t2 = J(k,j + 1);
+      J(k,j) = t1 * cc + t2 * ss;
+      J(k,j + 1) = xny * (J(k,j) + t1) - t2;
       }
     }
 }
 
-void cholesky_decomposition(ukfMatrixType& A)
+void cholesky_decomposition(Eigen::MatrixXd& A)
 {
   const int n = A.rows();
 
@@ -256,10 +256,10 @@ void cholesky_decomposition(ukfMatrixType& A)
     {
     for( int j = i; j < n; ++j )
       {
-      double sum = A[i][j];
+      double sum = A(i,j);
       for( int k =i - 1; k >= 0; k-- )
         {
-        sum -= A[i][k] * A[j][k];
+        sum -= A(i,k) * A(j,k);
         }
       if( i == j )
         {
@@ -272,57 +272,57 @@ void cholesky_decomposition(ukfMatrixType& A)
           throw std::logic_error(os.str() );
           exit(-1);
           }
-        A[i][i] = ::std::sqrt(sum);
+        A(i,i) = ::std::sqrt(sum);
         }
       else
         {
-        A[j][i] = sum / A[i][i];
+        A(j,i) = sum / A(i,i);
         }
       }
     for( int k =i + 1; k < n; ++k )
       {
-      A[i][k] = A[k][i];
+      A(i,k) = A(k,i);
       }
     }
 }
 
-inline void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const ukfVectorType& b)
+inline void forward_elimination(const Eigen::MatrixXd& L, Eigen::VectorXd& y, const Eigen::VectorXd& b)
 {
   const int n = L.rows();
 
-  y[0] = b[0] / L[0][0];
+  y[0] = b[0] / L(0,0);
   for( int i = 1; i < n; ++i )
     {
     y[i] = b[i];
     for( int j = 0; j < i; ++j )
       {
-      y[i] -= L[i][j] * y[j];
+      y[i] -= L(i,j) * y[j];
       }
-    y[i] = y[i] / L[i][i];
+    y[i] = y[i] / L(i,i);
     }
 }
 
-inline void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const ukfVectorType& y)
+inline void backward_elimination(const Eigen::MatrixXd& U, Eigen::VectorXd& x, const Eigen::VectorXd& y)
 {
   const int n = U.rows();
 
-  x[n - 1] = y[n - 1] / U[n - 1][n - 1];
+  x[n - 1] = y[n - 1] / U(n - 1,n - 1);
   for( int i = n - 2; i >= 0; i-- )
     {
     x[i] = y[i];
     for( int j = i + 1; j < n; ++j )
       {
-      x[i] -= U[i][j] * x[j];
+      x[i] -= U(i,j) * x[j];
       }
-    x[i] = x[i] / U[i][i];
+    x[i] = x[i] / U(i,i);
     }
 }
 
-void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorType& b)
+void cholesky_solve(const Eigen::MatrixXd& L, Eigen::VectorXd& x, const Eigen::VectorXd& b)
 {
   const int n = L.rows();
 
-  ukfVectorType y(n);
+  Eigen::VectorXd y(n);
 
   /* Solve L * y = b */
   forward_elimination(L, y, b);
@@ -331,7 +331,7 @@ void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorTyp
 }
 
 
-inline double dot_product(const ukfVectorType& x, const ukfVectorType& y)
+inline double dot_product(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 {
   int    n = x.size();
   double sum;
@@ -345,7 +345,7 @@ inline double dot_product(const ukfVectorType& x, const ukfVectorType& y)
 }
 
 // Utility functions for printing vectors and matrices
-void print_matrix(const char* name, const ukfMatrixType& A, int n, int m)
+void print_matrix(const char* name, const Eigen::MatrixXd& A, int n, int m)
 {
   std::ostringstream s;
   std::string        t;
@@ -365,7 +365,7 @@ void print_matrix(const char* name, const ukfMatrixType& A, int n, int m)
     s << " ";
     for( int j = 0; j < m; ++j )
       {
-      s << A[i][j] << ", ";
+      s << A(i,j) << ", ";
       }
     s << std::endl;
     }
@@ -400,10 +400,10 @@ void print_vector(const char* name, const vnl_vector<T>& v, int n)
 
 // The Solving function, implementing the Goldfarb-Idnani method
 
-double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
-                      const ukfMatrixType& CE, const ukfVectorType& ce0,
-                      const ukfMatrixType& CI, const ukfVectorType& ci0,
-                      ukfVectorType& x)
+double solve_quadprog(Eigen::MatrixXd& G, Eigen::VectorXd& g0,
+                      const Eigen::MatrixXd& CE, const Eigen::VectorXd& ce0,
+                      const Eigen::MatrixXd& CI, const Eigen::VectorXd& ci0,
+                      Eigen::VectorXd& x)
 {
   std::ostringstream msg;
 
@@ -456,9 +456,9 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
         << ci0.size() << ", expecting " << m << ")";
     throw std::logic_error(msg.str() );
     }
-  x.set_size(n);
-  ukfMatrixType R(n, n), J(n, n);
-  ukfVectorType s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
+  x.resize(n);
+  Eigen::MatrixXd R(n, n), J(n, n);
+  Eigen::VectorXd s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
 
   double             inf;
   if( std::numeric_limits<double>::has_infinity )
@@ -493,7 +493,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
   double c1 = 0.0;
   for(int i = 0; i < n; ++i )
     {
-    c1 += G[i][i];
+    c1 += G(i,i);
     }
   /* decompose the matrix G in the form L^T L */
   cholesky_decomposition(G);
@@ -506,7 +506,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
     d[i] = 0.0;
     for( int j = 0; j < n; ++j )
       {
-      R[i][j] = 0.0;
+      R(i,j) = 0.0;
       }
     }
   double R_norm = 1.0; /* this variable will hold the norm of the matrix R */
@@ -519,7 +519,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
     forward_elimination(G, z, d);
     for( int j = 0; j < n; ++j )
       {
-      J[i][j] = z[j];
+      J(i,j) = z[j];
       }
     c2 += z[i];
     d[i] = 0.0;
@@ -553,7 +553,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
     {
     for( int j = 0; j < n; ++j )
       {
-      np[j] = CE[j][i];
+      np[j] = CE(j,i);
       }
     compute_d(d, J, np);
     update_z(z, J, d, iq);
@@ -625,7 +625,7 @@ l1:
     double sum = 0.0;
     for( int j = 0; j < n; ++j )
       {
-      sum += CI[j][i] * x[j];
+      sum += CI(j,i) * x[j];
       }
     sum += ci0[i];
     s[i] = sum;
@@ -668,7 +668,7 @@ l2: /* Step 2: check for feasibility and determine a new S-pair */
   /* set np = n[ip] */
   for( int i = 0; i < n; ++i )
     {
-    np[i] = CI[i][ip];
+    np[i] = CI(i,ip);
     }
   /* set u = [u 0]^T */
   u[iq] = 0.0;
@@ -838,7 +838,7 @@ l2a: /* Step 2a: determine step direction */
   double sum = 0.0;
   for( int k = 0; k < n; k++ )
     {
-    sum += CI[k][ip] * x[k];
+    sum += CI(k,ip) * x[k];
     }
   s[ip] = sum + ci0[ip];
 

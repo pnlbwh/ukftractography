@@ -15,7 +15,7 @@
 #include <vnl/algo/vnl_determinant.h>
 #include <vnl/algo/vnl_cholesky.h>
 
-#include "QuadProg++_vnl.h"
+#include "QuadProg++_Eigen.h"
 using namespace QuadProgPP;
 //#include "LU_solver.h"
 //using namespace LU_Solver;
@@ -142,27 +142,12 @@ void UnscentedKalmanFilter::Constrain(Eigen::VectorXd& x, const Eigen::MatrixXd&
 
     const Eigen::MatrixXd WTranspose = W.transpose();
     //TODO:  review solve_quadprog to determine if any of these are const parameters.
-#if 0 // NOT YET READY FOR CONVERSION
     Eigen::MatrixXd W_tmp = (W + WTranspose) * 0.5;
 
     Eigen::VectorXd g0 = -1.0 * (W_tmp.transpose() ) * x;
     const Eigen::VectorXd d  = ConvertVector< ukfVectorType, Eigen::VectorXd>( m_FilterModel->d() ); // the inequality constraints
     const Eigen::MatrixXd D  = ToMatrixXd( m_FilterModel->D() ); // -- " --
     const double error = solve_quadprog(W_tmp, g0, CE, ce0, D, d, x);
-#else
-    Eigen::MatrixXd W_tmp = (W + WTranspose) * 0.5;
-
-    ukfVectorType g0VNL = ConvertVector< Eigen::VectorXd, ukfVectorType> ( -1.0 * (W_tmp.transpose() ) * x );
-    const ukfVectorType d  = m_FilterModel->d(); // the inequality constraints
-    const ukfMatrixType D  = m_FilterModel->D(); // -- " --
-
-    ukfMatrixType W_tmpVNL = ToVNL( W_tmp );
-    ukfMatrixType CEVNL = ToVNL( CE );
-    ukfVectorType ce0VNL = ConvertVector< Eigen::VectorXd, ukfVectorType> ( ce0 );
-    ukfVectorType xVNL = ConvertVector< Eigen::VectorXd, ukfVectorType> ( x );
-    const double error = solve_quadprog(W_tmpVNL, g0VNL, CEVNL, ce0VNL, D, d, xVNL);
-    x = ConvertVector< ukfVectorType, Eigen::VectorXd> ( xVNL );
-#endif
     if( error > 0.01 )   // error usually much smaller than that, if solve_quadprog fails it returns inf
       {
       exit(1);
@@ -297,30 +282,9 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   // Kalman gain KalmanGainMatrix, estimate state/observation, compute covariance.
   // Solve KalmanGainMatrix = Pyy \ Pxy'
-#if  0 // OLD WAY
-  Eigen::MatrixXd     signaldim_dim(signal_dim, dim,0.0);
-  //signaldim_dim.fill(0);
-  Eigen::MatrixXd LU = Pyy;
-  LUdecmpDoolittle(&LU(0, 0), LU.rows() );
-  LUsolveDoolittle(&LU(0, 0), &signaldim_dim(0, 0), signaldim_dim.rows(), signaldim_dim.cols() );
-  KalmanGainMatrix = signaldim_dim;
-#else
   // Solve Ax = b. Result stored in x. Matlab: x = A \ b.
   //x = A.ldlt().solve(b));
   const Eigen::MatrixXd KalmanGainMatrix = Pyy.ldlt().solve(Pxy.transpose());
-#endif
-#if 0 //Validation Code
-  const Eigen::MatrixXd vnl_k = ToVNL(eK);
-  const Eigen::MatrixXd errorMatrix=(KalmanGainMatrix-vnl_k);
-  const double det = vnl_determinant ( errorMatrix );
-  if (fabs(det) > 1e-5 )
-  {
-  exit(-1);
-  }
-  else
-  {
-  }
-#endif
 
   dNormMSE = ( (z_vnl - Y_hat).squaredNorm() ) / (z_vnl.squaredNorm() );
 

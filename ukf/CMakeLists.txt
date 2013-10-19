@@ -56,7 +56,7 @@ set(MODULE_SRCS
     dwi_normalize.cc
     utilities.cc
     thread.cc
-    QuadProg++_vnl.cc
+    QuadProg++_Eigen.cc
     )
 
 set(MODULE_TARGET_LIBRARIES

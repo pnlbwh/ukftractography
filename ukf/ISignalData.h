@@ -42,10 +42,10 @@ public:
   }
 
   /** Gets the signal values at a specified position. */
-  virtual void Interp3Signal(const vec_t& pos, ukfVectorType & signal) const = 0;
+  virtual void Interp3Signal(const vec3_t& pos, ukfVectorType & signal) const = 0;
 
   /** Checks if a certian position is still within the brain mask. */
-  virtual double Interp3ScalarMask(const vec_t& pos) const = 0;
+  virtual double Interp3ScalarMask(const vec3_t& pos) const = 0;
 
   /** Get all the seed points. */
   virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
@@ -79,13 +79,13 @@ public:
   virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData) = 0;
 
   /** Returns the voxel spacing */
-  vec_t voxel() const
+  vec3_t voxel() const
   {
     return _voxel;
   }
 
   /** Returns the dimensions of the image */
-  virtual vec_t dim() const = 0;
+  virtual vec3_t dim() const = 0;
 
   /** Returns the ijk-to-RAS matrix */
   const ukfMatrixType i2r() const
@@ -107,7 +107,7 @@ protected:
   const double _sigma_mask;
 
   /** voxel size */
-  vec_t _voxel;
+  vec3_t _voxel;
 
   /** matrix for RAS to ijk conversion */
   ukfMatrixType _r2i;

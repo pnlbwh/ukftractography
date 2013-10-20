@@ -66,7 +66,7 @@ protected:
   /**
    * Convert a point from the internal representation into what VTK expects
   */
-  vec_t PointConvert(const vec_t &point);
+  vec3_t PointConvert(const vec3_t &point);
   /**
    * Write a single scalar value out in binary.
    */
@@ -106,7 +106,7 @@ protected:
    * \param[out] D The calculated diffusion tensor
    * \todo I think there is something wrong with choosing a orthonormal basis for the tensor
   */
-  void State2Tensor(const State & state, mat_t & D, const int tensorNumber) const;
+  void State2Tensor(const State & state, mat33_t & D, const int tensorNumber) const;
 
   /** The diffusion weighted signal data */
   const ISignalData *_signal_data;
@@ -140,7 +140,7 @@ protected:
   const double _eigenScaleFactor;
 
   /** Transformation matrix from ijk-RAS with voxel size normalized out */
-  mat_t _sizeFreeI2R;
+  mat33_t _sizeFreeI2R;
 
   /** is the file to be written binary? */
   bool _writeBinary;

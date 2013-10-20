@@ -56,8 +56,8 @@ double curve_radius(const stdVec_t& fiber)
     return 1.0;
     }
 
-  vec_t v1 = fiber[length - 2] - fiber[length - 3];
-  vec_t v2 = fiber[length - 1] - fiber[length - 2];
+  vec3_t v1 = fiber[length - 2] - fiber[length - 3];
+  vec3_t v2 = fiber[length - 1] - fiber[length - 2];
 
   // Normalize
   v1.normalize();

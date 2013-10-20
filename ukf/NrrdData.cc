@@ -31,7 +31,7 @@ NrrdData::~NrrdData()
     }
 }
 
-void NrrdData::Interp3Signal(const vec_t& pos,
+void NrrdData::Interp3Signal(const vec3_t& pos,
                              ukfVectorType& signal) const
 {
   const int nx = static_cast<const int>(_dim[0]);
@@ -109,7 +109,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
 
 }
 
-double NrrdData::Interp3ScalarMask(const vec_t& pos) const
+double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
 {
   const int nx = static_cast<const int>(_dim[0]);
   const int ny = static_cast<const int>(_dim[1]);
@@ -231,7 +231,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
               }
             if( *cit == value )
               {
-              seeds.push_back(vec_t(i, j, k) );
+              seeds.push_back(vec3_t(i, j, k) );
               }
             }
           }
@@ -395,7 +395,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
       // DEBUGING
       //std::cout << "Gradients: " << gx << " " << gy << " " << gz << std::endl;
-      _gradients.push_back(vec_t(gx, gy, gz) );
+      _gradients.push_back(vec3_t(gx, gy, gz) );
       }
     else if( !key.compare("modality") )
       {

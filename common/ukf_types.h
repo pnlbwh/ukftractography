@@ -7,33 +7,24 @@
 #include "Eigen/Dense"
 
 typedef double ukfPrecisionType;
+typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,1> ukfVectorType;
+typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,Eigen::Dynamic> ukfMatrixType;
+typedef Eigen::Matrix<ukfPrecisionType,3,1> vec3_t;
+typedef Eigen::Matrix<ukfPrecisionType,3,3> mat33_t;
+
 
 /** Short hand for the state vector */
 #include <vector>
-#if 0
-typedef std::vector<ukfPrecisionType> State;
-#else
 typedef std::vector<ukfPrecisionType> stdVecState;
-typedef Eigen::VectorXd  State;
-#endif
-
-typedef Eigen::VectorXd ukfVectorType;
-typedef Eigen::MatrixXd ukfMatrixType;
+typedef ukfVectorType  State;
 
 /**
- * \struct vec_t
+ * \struct vec3_t
  * \brief Defines simple 3D vector and matrices. 3
 */
-typedef Eigen::Vector3d  vec_t;
-typedef std::vector<vec_t,Eigen::aligned_allocator<vec_t> > stdVec_t;
+typedef std::vector<vec3_t,Eigen::aligned_allocator<vec3_t> > stdVec_t;
 typedef std::vector<ukfVectorType,Eigen::aligned_allocator<ukfVectorType> > stdEigVec_t;
-
-/**
- * \struct mat_t
- * \brief Defines a 3-by-3 Matrix
-*/
-typedef Eigen::Matrix<ukfPrecisionType,3,3> mat_t;
-typedef std::vector<mat_t,Eigen::aligned_allocator<mat_t> > stdMat_t;
+typedef std::vector<mat33_t,Eigen::aligned_allocator<mat33_t> > stdMat_t;
 
 template <typename TIn, typename TOut>
 TOut ConvertVector(const TIn &in)

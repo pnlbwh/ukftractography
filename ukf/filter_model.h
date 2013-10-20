@@ -53,32 +53,32 @@ public:
   }
 
   /** state transition function */
-  virtual void F(Eigen::MatrixXd& X) const = 0;
+  virtual void F(ukfMatrixType& X) const = 0;
 
   /** observation, i.e. signal reconstruction */
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const = 0;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const = 0;
 
   // Functions that convert the state into a tensor representation that can be
   // used for tractography (meaning the main direction and all the eigenvalues/
   // lambdas).
 
   /** Extracts principal diffusion direction and eigen values from the state for the 1T cases */
-  virtual void State2Tensor1T(const State &, vec_t &, vec_t & )
+  virtual void State2Tensor1T(const State &, vec3_t &, vec3_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 2T cases */
-  virtual void State2Tensor2T(const State &, const vec_t &, vec_t &,
-                            vec_t &, vec_t &, vec_t & )
+  virtual void State2Tensor2T(const State &, const vec3_t &, vec3_t &,
+                            vec3_t &, vec3_t &, vec3_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 3T cases */
-  virtual void State2Tensor3T(const State &, const vec_t &, vec_t &,
-                            vec_t &, vec_t &, vec_t &, vec_t &,
-                            vec_t & )
+  virtual void State2Tensor3T(const State &, const vec3_t &, vec3_t &,
+                            vec3_t &, vec3_t &, vec3_t &, vec3_t &,
+                            vec3_t & )
   {
     assert(!"Not implemented");
   }
@@ -110,13 +110,13 @@ public:
   }
 
   /** The noise in the state transfer function used by the UKF. */
-  const Eigen::MatrixXd & Q() const
+  const ukfMatrixType & Q() const
   {
     return _Q;
   }
 
   /** The noise in the signal reconstruction used by the UKF. */
-  const Eigen::MatrixXd & R() const
+  const ukfMatrixType & R() const
   {
     return _R;
   }
@@ -124,13 +124,13 @@ public:
   // The next two functions are only used for the constrained case
 
   /** The inequality constraint matrix for the constrained UKF */
-  const Eigen::MatrixXd & D() const
+  const ukfMatrixType & D() const
   {
     return _D;
   }
 
   /** The inequality constraint right hand side for the constrained UKF */
-  const Eigen::VectorXd & d() const
+  const ukfVectorType & d() const
   {
     return _d;
   }
@@ -166,16 +166,16 @@ protected:
   ISignalData *_signal_data;
 
   /** Process noise */
-  Eigen::MatrixXd _Q;
+  ukfMatrixType _Q;
 
   /** Signal reconstruction noise */
-  Eigen::MatrixXd _R;
+  ukfMatrixType _R;
 
   /** Inequality constraint matrix, only used for constrained UKF */
-  Eigen::MatrixXd _D;
+  ukfMatrixType _D;
 
   /** Inequality right hand side, only used for constrained UKF */
-  Eigen::VectorXd _d;
+  ukfVectorType _d;
 
   /** The weights of each tensor. (Most commonly equal all are equal) */
   const ukfVectorType weights_on_tensors_;
@@ -229,17 +229,17 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  mat_t m_D_iso;
+  mat33_t m_D_iso;
 
   };
 
@@ -264,11 +264,11 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -295,11 +295,11 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -355,17 +355,17 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  mat_t m_D_iso;
+  mat33_t m_D_iso;
   };
 
 /**
@@ -394,12 +394,12 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                            vec_t& l3);
+  virtual void State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                            vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -449,17 +449,17 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  mat_t m_D_iso;
+  mat33_t m_D_iso;
 
   };
 
@@ -483,11 +483,11 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   const double _lambda_min;
   };
@@ -512,11 +512,11 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
@@ -569,17 +569,17 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  mat_t m_D_iso;
+  mat33_t m_D_iso;
   };
 
 /**
@@ -605,12 +605,12 @@ public:
   {
   }
 
-  virtual void F(Eigen::MatrixXd& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  Eigen::MatrixXd& X, Eigen::MatrixXd& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                            vec_t& l3);
+  virtual void State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                            vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
   const double _lambda_min;

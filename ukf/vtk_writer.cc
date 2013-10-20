@@ -99,7 +99,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 
   // this also upon initialization of writer, its the same for all
   ukfMatrixType i2r = _signal_data->i2r();
-  vec_t              voxel = _signal_data->voxel();
+  vec3_t              voxel = _signal_data->voxel();
   // Factor out the effect of voxel size
   _sizeFreeI2R <<
     i2r(0, 0) / voxel[2], i2r(0, 1) / voxel[1], i2r(0, 2) / voxel[0],
@@ -129,7 +129,7 @@ void VtkWriter
     int fiber_size = fibers[i].position.size();
     for( int j = 0; j < fiber_size; ++j )
       {
-      vec_t current = PointConvert(fibers[i].position[j]);
+      vec3_t current = PointConvert(fibers[i].position[j]);
       points->InsertNextPoint(current[0],current[1],current[2]);
       }
     }
@@ -179,7 +179,7 @@ void VtkWriter
         for( int j = 0; j < fiber_size; ++j )
           {
           const State & state = fibers[i].state[j];
-          mat_t         D;
+          mat33_t         D;
           State2Tensor(state, D, local_tensorNumber);
           double tmp[9];
           for(unsigned ii = 0, v = 0; ii < 3; ++ii)
@@ -529,13 +529,13 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
     int fiber_size = fibers[i].position.size();
     for( int j = 0; j < fiber_size; ++j )
       {
-      vec_t        point = fibers[i].position[j];
+      vec3_t        point = fibers[i].position[j];
       const State& state = fibers[i].state[j];
 
       // Get the directions.
-      vec_t m1 = vec_t::Zero();
-      vec_t m2 = vec_t::Zero();
-      vec_t m3 = vec_t::Zero();
+      vec3_t m1 = vec3_t::Zero();
+      vec3_t m2 = vec3_t::Zero();
+      vec3_t m3 = vec3_t::Zero();
       if( state.size() == 5 )
         {
         m1 << state[2], state[1], state[0];
@@ -598,7 +598,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
         }
 
       // Calculate the points. The glyphs are represented as two-point lines.
-      vec_t pos1, pos2;
+      vec3_t pos1, pos2;
       if( num_tensors == 1 )
         {
         pos1 = point - scale * m1;
@@ -654,11 +654,11 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
   return EXIT_SUCCESS;
 }
 
-vec_t
+vec3_t
 VtkWriter::
-PointConvert(const vec_t& point)
+PointConvert(const vec3_t& point)
 {
-  vec_t rval;
+  vec3_t rval;
   ukfVectorType p(4);
   p[0] = point[2];    // NOTICE the change of order here. Flips back to the original axis order
   p[1] = point[1];
@@ -682,18 +682,18 @@ PointConvert(const vec_t& point)
   return rval;
 }
 
-void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNumber) const
+void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorNumber) const
 {
   static const size_t local_phi_index = 0;
   static const size_t local_theta_index = 1;
   static const size_t local_psi_index =2;
 
-  vec_t eigenVec1, eigenVec2, eigenVec3;
+  vec3_t eigenVec1, eigenVec2, eigenVec3;
 
   if( _full )
     {
     const size_t local_start_index = 6 * (tensorNumber - 1);
-    const mat_t & R =
+    const mat33_t & R =
       rotation(
         state[local_start_index + local_phi_index],
         state[local_start_index + local_theta_index],
@@ -731,7 +731,7 @@ void VtkWriter::State2Tensor(const State & state, mat_t & D, const int tensorNum
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-  mat_t Q;
+  mat33_t Q;
   Q <<
     eigenVec1[0], eigenVec2[0], eigenVec3[0],
     eigenVec1[1], eigenVec2[1], eigenVec3[1],

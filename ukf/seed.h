@@ -26,9 +26,9 @@ public:
   /** The covariance matrix of the state */
   ukfMatrixType covariance;
   /** The location of the seed */
-  vec_t point;
+  vec3_t point;
   /** The starting direction for the simple model */
-  vec_t start_dir;
+  vec3_t start_dir;
   /** Fractional Anisotropy of the first tensor */
   double fa;
   /** Fractional Anisotropy of the second tensor */

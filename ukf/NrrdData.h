@@ -31,10 +31,10 @@ public:
   ~NrrdData();
 
   /** Interpolates the DWI signal at a certain position */
-  virtual void Interp3Signal(const vec_t& pos, ukfVectorType& signal) const;
+  virtual void Interp3Signal(const vec3_t& pos, ukfVectorType& signal) const;
 
   /** Interpolates the brain mask at a certain position */
-  virtual double Interp3ScalarMask(const vec_t& pos) const;
+  virtual double Interp3ScalarMask(const vec3_t& pos) const;
 
   /**
    * \brief Get the seed points from the nrrd file
@@ -91,7 +91,7 @@ public:
   virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData);
 
   /** Returns the dimensions of the signal in each directions as a vector */
-  virtual vec_t dim() const
+  virtual vec3_t dim() const
   {
     return _dim;
   }
@@ -99,7 +99,7 @@ public:
 private:
 
   /** The volume dimensions */
-  vec_t _dim;
+  vec3_t _dim;
 
   int _num_gradients;
 

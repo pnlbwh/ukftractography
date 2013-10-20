@@ -24,7 +24,7 @@ double FilterModel::CheckZero(const double & local_d) const
 }
 
 // Functions for 1-tensor full model.
-void Full1T::F(Eigen::MatrixXd& X) const
+void Full1T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -38,8 +38,8 @@ void Full1T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Full1T::H(const  Eigen::MatrixXd& X,
-               Eigen::MatrixXd& Y) const
+void Full1T::H(const  ukfMatrixType& X,
+               ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -60,17 +60,17 @@ void Full1T::H(const  Eigen::MatrixXd& X,
     const double l3 = std::max(X(5, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    const mat_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat33_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
 
-void Full1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
+void Full1T::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
 {
   // Orientation.
   m = rotation_main_dir(x[0], x[1], x[2]);
@@ -82,7 +82,7 @@ void Full1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor full model.
-void Full2T::F(Eigen::MatrixXd& X) const
+void Full2T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -99,8 +99,8 @@ void Full2T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Full2T::H(const  Eigen::MatrixXd& X,
-               Eigen::MatrixXd& Y) const
+void Full2T::H(const  ukfMatrixType& X,
+               ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -124,13 +124,13 @@ void Full2T::H(const  Eigen::MatrixXd& X,
     const double l23 = std::max(X(11, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    //HACK: TODO :%s/mat_t *D/const mat_t \&D/g
-    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    //HACK: TODO :%s/mat33_t *D/const mat33_t \&D/g
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j,
         i) =
         exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
@@ -138,8 +138,8 @@ void Full2T::H(const  Eigen::MatrixXd& X,
     }
 }
 
-void Full2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
-                          vec_t& l1, vec_t& m2, vec_t& l2)
+void Full2T::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                          vec3_t& l1, vec3_t& m2, vec3_t& l2)
 {
   // First orientation.
   m1 = rotation_main_dir(x[0], x[1], x[2]);
@@ -172,7 +172,7 @@ void Full2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor full model.
-void Full3T::F(Eigen::MatrixXd& X) const
+void Full3T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -192,8 +192,8 @@ void Full3T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Full3T::H(const  Eigen::MatrixXd& X,
-               Eigen::MatrixXd& Y) const
+void Full3T::H(const  ukfMatrixType& X,
+               ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -220,13 +220,13 @@ void Full3T::H(const  Eigen::MatrixXd& X,
     const double l33 = std::max(X(17, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
-    const mat_t &D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), l31, l32, l33);
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat33_t &D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), l31, l32, l33);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
         + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
         + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
@@ -234,9 +234,9 @@ void Full3T::H(const  Eigen::MatrixXd& X,
     }
 }
 
-void Full3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
-                          vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                          vec_t& l3)
+void Full3T::State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                          vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                          vec3_t& l3)
 {
   // First orientation.
   m1 = rotation_main_dir(x[0], x[1], x[2]);
@@ -283,7 +283,7 @@ void Full3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 1-tensor simple model.
-void Simple1T::F(Eigen::MatrixXd& X) const
+void Simple1T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -307,8 +307,8 @@ void Simple1T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Simple1T::H(const  Eigen::MatrixXd& X,
-                 Eigen::MatrixXd& Y) const
+void Simple1T::H(const  ukfMatrixType& X,
+                 ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -324,7 +324,7 @@ void Simple1T::H(const  Eigen::MatrixXd& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
-    vec_t m;
+    vec3_t m;
     initNormalized(m, X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
@@ -339,17 +339,17 @@ void Simple1T::H(const  Eigen::MatrixXd& X,
       }
 
     // Calculate diffusion matrix.
-    const mat_t & local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat33_t & local_D = diffusion(m, l1, l2); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
 
-void Simple1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
+void Simple1T::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
 {
   // Orientation.
   m << x[0], x[1], x[2];
@@ -364,7 +364,7 @@ void Simple1T::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 }
 
 // Functions for 2-tensor simple model.
-void Simple2T::F(Eigen::MatrixXd& X) const
+void Simple2T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -402,8 +402,8 @@ void Simple2T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Simple2T::H(const  Eigen::MatrixXd& X,
-                 Eigen::MatrixXd& Y) const
+void Simple2T::H(const  ukfMatrixType& X,
+                 ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -419,9 +419,9 @@ void Simple2T::H(const  Eigen::MatrixXd& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1;
+    vec3_t m1;
     initNormalized(m1, X(0, i), X(1, i), X(2, i));
-    vec_t m2;
+    vec3_t m2;
     initNormalized(m2, X(5, i), X(6, i), X(7, i));
 
     // Clamp lambdas.
@@ -442,20 +442,20 @@ void Simple2T::H(const  Eigen::MatrixXd& X,
       }
 
     // Calculate diffusion matrix.
-    const mat_t &D1 = diffusion(m1, l11, l12);
-    const mat_t &D2 = diffusion(m2, l21, l22);
+    const mat33_t &D1 = diffusion(m1, l11, l12);
+    const mat33_t &D2 = diffusion(m2, l21, l22);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) = exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
         + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
       }
     }
 }
 
-void Simple2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
-                            vec_t& l1, vec_t& m2, vec_t& l2)
+void Simple2T::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                            vec3_t& l1, vec3_t& m2, vec3_t& l2)
 {
   // Orientations;
   initNormalized(m1,x[0], x[1], x[2]);
@@ -482,7 +482,7 @@ void Simple2T::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 // Functions for 3-tensor simple model.
-void Simple3T::F(Eigen::MatrixXd& X) const
+void Simple3T::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -533,8 +533,8 @@ void Simple3T::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Simple3T::H(const  Eigen::MatrixXd& X,
-                 Eigen::MatrixXd& Y) const
+void Simple3T::H(const  ukfMatrixType& X,
+                 ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -550,11 +550,11 @@ void Simple3T::H(const  Eigen::MatrixXd& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1;
+    vec3_t m1;
     initNormalized(m1,X(0, i), X(1, i), X(2, i));
-    vec_t m2;
+    vec3_t m2;
     initNormalized(m2,X(5, i), X(6, i), X(7, i));
-    vec_t m3;
+    vec3_t m3;
     initNormalized(m3,X(10, i), X(11, i), X(12, i));
 
     // Clamp lambdas.
@@ -582,13 +582,13 @@ void Simple3T::H(const  Eigen::MatrixXd& X,
       }
 
     // Calculate diffusion matrix.
-    const mat_t &D1 = diffusion(m1, l11, l12);
-    const mat_t &D2 = diffusion(m2, l21, l22);
-    const mat_t &D3 = diffusion(m3, l31, l32);
+    const mat33_t &D1 = diffusion(m1, l11, l12);
+    const mat33_t &D2 = diffusion(m2, l21, l22);
+    const mat33_t &D3 = diffusion(m3, l31, l32);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
         + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
         + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
@@ -596,9 +596,9 @@ void Simple3T::H(const  Eigen::MatrixXd& X,
     }
 }
 
-void Simple3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
-                            vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                            vec_t& l3)
+void Simple3T::State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                            vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                            vec3_t& l3)
 {
   // Orientations;
   initNormalized(m1,x[0], x[1], x[2]);
@@ -636,7 +636,7 @@ void Simple3T::State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1,
 ///////  1T SIMPLE MODEL ////
 
 // Functions for 1-tensor simple model.
-void Simple1T_FW::F(Eigen::MatrixXd& X) const
+void Simple1T_FW::F(ukfMatrixType& X) const
 {
 
   assert(_signal_dim > 0);
@@ -672,8 +672,8 @@ void Simple1T_FW::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Simple1T_FW::H(const Eigen::MatrixXd& X,
-                    Eigen::MatrixXd& Y) const
+void Simple1T_FW::H(const ukfMatrixType& X,
+                    ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -689,7 +689,7 @@ void Simple1T_FW::H(const Eigen::MatrixXd& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
-    vec_t m;
+    vec3_t m;
     initNormalized(m,X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
@@ -727,18 +727,18 @@ void Simple1T_FW::H(const Eigen::MatrixXd& X,
       }
 
     // Calculate diffusion matrix.
-    const mat_t &local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat33_t &local_D = diffusion(m, l1, l2); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
         + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
 
-void Simple1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
+void Simple1T_FW::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
 {
   // Orientation.
   initNormalized(m,x[0], x[1], x[2]);
@@ -756,7 +756,7 @@ void Simple1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 
 ///////  1T FULL MODEL ///
 // Functions for 1-tensor full model.
-void Full1T_FW::F(Eigen::MatrixXd& X) const
+void Full1T_FW::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -777,8 +777,8 @@ void Full1T_FW::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Full1T_FW::H(const Eigen::MatrixXd& X,
-                  Eigen::MatrixXd& Y) const
+void Full1T_FW::H(const ukfMatrixType& X,
+                  ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -807,18 +807,18 @@ void Full1T_FW::H(const Eigen::MatrixXd& X,
     const double w = CheckZero(X(6, i) );
 
     // Calculate diffusion matrix.
-    const mat_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat33_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
         + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
 
-void Full1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
+void Full1T_FW::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
 {
   // Orientation.
   m = rotation_main_dir(x[0], x[1], x[2]);
@@ -834,7 +834,7 @@ void Full1T_FW::State2Tensor1T(const State& x, vec_t& m, vec_t& l)
 
 ////////// 2T SIMPLE MODEL ///
 // Functions for 2-tensor simple model.
-void Simple2T_FW::F(Eigen::MatrixXd& X) const
+void Simple2T_FW::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -878,8 +878,8 @@ void Simple2T_FW::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Simple2T_FW::H(const   Eigen::MatrixXd& X,
-                    Eigen::MatrixXd& Y) const
+void Simple2T_FW::H(const   ukfMatrixType& X,
+                    ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -895,9 +895,9 @@ void Simple2T_FW::H(const   Eigen::MatrixXd& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
-    vec_t m1;
+    vec3_t m1;
     initNormalized(m1,X(0, i), X(1, i), X(2, i) );
-    vec_t m2;
+    vec3_t m2;
     initNormalized(m2,X(5, i), X(6, i), X(7, i) );
 
     const double l11 = CheckZero(X(3, i) );
@@ -926,12 +926,12 @@ void Simple2T_FW::H(const   Eigen::MatrixXd& X,
     const double w = CheckZero(X(10, i) );
 
     // Calculate diffusion matrix.
-    const mat_t &D1 = diffusion(m1, l11, l12);
-    const mat_t &D2 = diffusion(m2, l21, l22);
+    const mat33_t &D1 = diffusion(m1, l11, l12);
+    const mat33_t &D2 = diffusion(m2, l21, l22);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j,
         i) = w
         * (exp(-b[j]
@@ -942,8 +942,8 @@ void Simple2T_FW::H(const   Eigen::MatrixXd& X,
 
 }
 
-void Simple2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
-                               vec_t& l1, vec_t& m2, vec_t& l2)
+void Simple2T_FW::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                               vec3_t& l1, vec3_t& m2, vec3_t& l2)
 {
   // Orientations;
   initNormalized(m1, x[0], x[1], x[2]);
@@ -977,7 +977,7 @@ void Simple2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
 }
 
 ////////// 2T FULL MODEL ///
-void Full2T_FW::F(Eigen::MatrixXd& X) const
+void Full2T_FW::F(ukfMatrixType& X) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -1001,8 +1001,8 @@ void Full2T_FW::F(Eigen::MatrixXd& X) const
     }
 }
 
-void Full2T_FW::H(const   Eigen::MatrixXd& X,
-                  Eigen::MatrixXd& Y) const
+void Full2T_FW::H(const   ukfMatrixType& X,
+                  ukfMatrixType& Y) const
 {
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
@@ -1034,12 +1034,12 @@ void Full2T_FW::H(const   Eigen::MatrixXd& X,
     const double w = CheckZero(X(12, i) );
 
     // Calculate diffusion matrix.
-    const mat_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec_t& u = gradients[j];
+      const vec3_t& u = gradients[j];
       Y(j, i) = (w)
         * (exp(-b[j] * u.dot(D1 * u) )
            * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) )
@@ -1049,8 +1049,8 @@ void Full2T_FW::H(const   Eigen::MatrixXd& X,
     }
 }
 
-void Full2T_FW::State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1,
-                             vec_t& l1, vec_t& m2, vec_t& l2)
+void Full2T_FW::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
+                             vec3_t& l1, vec3_t& m2, vec3_t& l2)
 {
   // First orientation.
   m1 = rotation_main_dir(x[0], x[1], x[2]);

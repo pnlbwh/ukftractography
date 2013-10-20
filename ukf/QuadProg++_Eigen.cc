@@ -27,7 +27,7 @@
 namespace QuadProgPP
 {
 // Utility functions for updating some data needed by the solution method
-inline void compute_d(Eigen::VectorXd& d, const Eigen::MatrixXd& J, const Eigen::VectorXd& np)
+inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorType& np)
 {
   const int    n = d.size();
 
@@ -43,7 +43,7 @@ inline void compute_d(Eigen::VectorXd& d, const Eigen::MatrixXd& J, const Eigen:
     }
 }
 
-inline void update_z(Eigen::VectorXd& z, const Eigen::MatrixXd& J, const Eigen::VectorXd& d, int iq)
+inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorType& d, int iq)
 {
   const int n = z.size();
 
@@ -58,7 +58,7 @@ inline void update_z(Eigen::VectorXd& z, const Eigen::MatrixXd& J, const Eigen::
     }
 }
 
-inline void update_r(const Eigen::MatrixXd& R, Eigen::VectorXd& r, const Eigen::VectorXd& d, int iq)
+inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorType& d, int iq)
 {
   /* setting of r = R^-1 d */
   for( int i = iq - 1; i >= 0; i-- )
@@ -89,7 +89,7 @@ inline double distance(double a, double b)
   return a1 * ::std::sqrt(2.0);
 }
 
-bool add_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXd& d, int& iq, double& R_norm)
+bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, double& R_norm)
 {
   const int n = d.size();
 
@@ -164,7 +164,7 @@ bool add_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXd& d, 
   return true;
 }
 
-void delete_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXi& A, Eigen::VectorXd& u, int n,
+void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, Eigen::VectorXi& A, ukfVectorType& u, int n,
                        int p, int& iq, int l)
 {
 #ifdef TRACE_SOLVER
@@ -250,7 +250,7 @@ void delete_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXi& 
     }
 }
 
-void cholesky_decomposition(Eigen::MatrixXd& A)
+void cholesky_decomposition(ukfMatrixType& A)
 {
   const int n = A.rows();
 
@@ -288,7 +288,7 @@ void cholesky_decomposition(Eigen::MatrixXd& A)
     }
 }
 
-inline void forward_elimination(const Eigen::MatrixXd& L, Eigen::VectorXd& y, const Eigen::VectorXd& b)
+inline void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const ukfVectorType& b)
 {
   const int n = L.rows();
 
@@ -304,7 +304,7 @@ inline void forward_elimination(const Eigen::MatrixXd& L, Eigen::VectorXd& y, co
     }
 }
 
-inline void backward_elimination(const Eigen::MatrixXd& U, Eigen::VectorXd& x, const Eigen::VectorXd& y)
+inline void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const ukfVectorType& y)
 {
   const int n = U.rows();
 
@@ -320,11 +320,11 @@ inline void backward_elimination(const Eigen::MatrixXd& U, Eigen::VectorXd& x, c
     }
 }
 
-void cholesky_solve(const Eigen::MatrixXd& L, Eigen::VectorXd& x, const Eigen::VectorXd& b)
+void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorType& b)
 {
   const int n = L.rows();
 
-  Eigen::VectorXd y(n);
+  ukfVectorType y(n);
 
   /* Solve L * y = b */
   forward_elimination(L, y, b);
@@ -333,7 +333,7 @@ void cholesky_solve(const Eigen::MatrixXd& L, Eigen::VectorXd& x, const Eigen::V
 }
 
 
-inline double dot_product(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
+inline double dot_product(const ukfVectorType& x, const ukfVectorType& y)
 {
   int    n = x.size();
   double sum;
@@ -347,7 +347,7 @@ inline double dot_product(const Eigen::VectorXd& x, const Eigen::VectorXd& y)
 }
 
 // Utility functions for printing vectors and matrices
-void print_matrix(const char* name, const Eigen::MatrixXd& A, int n, int m)
+void print_matrix(const char* name, const ukfMatrixType& A, int n, int m)
 {
   std::ostringstream s;
   std::string        t;
@@ -402,10 +402,10 @@ void print_vector(const char* name, const typename Eigen::Matrix<T,Eigen::Dynami
 
 // The Solving function, implementing the Goldfarb-Idnani method
 
-double solve_quadprog(Eigen::MatrixXd& G, Eigen::VectorXd& g0,
-                      const Eigen::MatrixXd& CE, const Eigen::VectorXd& ce0,
-                      const Eigen::MatrixXd& CI, const Eigen::VectorXd& ci0,
-                      Eigen::VectorXd& x)
+double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
+                      const ukfMatrixType& CE, const ukfVectorType& ce0,
+                      const ukfMatrixType& CI, const ukfVectorType& ci0,
+                      ukfVectorType& x)
 {
   std::ostringstream msg;
 
@@ -459,8 +459,8 @@ double solve_quadprog(Eigen::MatrixXd& G, Eigen::VectorXd& g0,
     throw std::logic_error(msg.str() );
     }
   x.resize(n);
-  Eigen::MatrixXd R(n, n), J(n, n);
-  Eigen::VectorXd s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
+  ukfMatrixType R(n, n), J(n, n);
+  ukfVectorType s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
 
   double             inf;
   if( std::numeric_limits<double>::has_infinity )

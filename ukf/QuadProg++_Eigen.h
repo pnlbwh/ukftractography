@@ -45,13 +45,13 @@ namespace QuadProgPP
 * \param[in]     ci0  Inequality constraint righthand side. Vnl vector of dimension n
 * \param[in,out] x  The vector to be constrained.
 */
-double solve_quadprog(Eigen::MatrixXd& G,         // nxn Matrix - Will be changed in the function!
-                      Eigen::VectorXd& g0,        // n
-                      const Eigen::MatrixXd& CE,  // nxp - Equality constraints, just a dummy
-                      const Eigen::VectorXd& ce0, // p   - Equality constraints, just a dummy
-                      const Eigen::MatrixXd& CI,  // nxm - Inequality constraints
-                      const Eigen::VectorXd& ci0, // m
-                      Eigen::VectorXd& x);        // n   - Solution of the QP problem
+double solve_quadprog(ukfMatrixType& G,         // nxn Matrix - Will be changed in the function!
+                      ukfVectorType& g0,        // n
+                      const ukfMatrixType& CE,  // nxp - Equality constraints, just a dummy
+                      const ukfVectorType& ce0, // p   - Equality constraints, just a dummy
+                      const ukfMatrixType& CI,  // nxm - Inequality constraints
+                      const ukfVectorType& ci0, // m
+                      ukfVectorType& x);        // n   - Solution of the QP problem
 
 }
 

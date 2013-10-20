@@ -5,10 +5,10 @@
 #include "vtkSmartPointer.h"
 #include "vtkPointData.h"
 #include "vtkFloatArray.h"
-#include "math.h"
 #include "fiber.h"
-#include <iostream>
 #include "itksys/SystemTools.hxx"
+#include <iostream>
+#include <cmath>
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1

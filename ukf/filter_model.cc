@@ -65,7 +65,7 @@ void Full1T::H(const  ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = std::exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
@@ -133,7 +133,7 @@ void Full2T::H(const  ukfMatrixType& X,
       const vec3_t& u = gradients[j];
       Y(j,
         i) =
-        exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
+        std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0] + std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
       }
     }
 }
@@ -227,9 +227,9 @@ void Full3T::H(const  ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
-        + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
+      Y(j, i) =  std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
+        + std::exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
       }
     }
 }
@@ -344,7 +344,7 @@ void Simple1T::H(const  ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
+      Y(j, i) = std::exp(-b[j] * u.dot(local_D * u) ) * weights_on_tensors_[0];
       }
     }
 }
@@ -448,8 +448,8 @@ void Simple2T::H(const  ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) = exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
+      Y(j, i) = std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
       }
     }
 }
@@ -589,9 +589,9 @@ void Simple3T::H(const  ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) =  exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
-        + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
-        + exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
+      Y(j, i) =  std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0]
+        + std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1]
+        + std::exp(-b[j] * u.dot(D3 * u) ) * weights_on_tensors_[2];
       }
     }
 }
@@ -732,8 +732,8 @@ void Simple1T_FW::H(const ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) =  (w) * exp(-b[j] * u.dot(local_D * u) )
-        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
+      Y(j, i) =  (w) * std::exp(-b[j] * u.dot(local_D * u) )
+        + (1 - w) * std::exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
@@ -812,8 +812,8 @@ void Full1T_FW::H(const ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
-        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
+      Y(j, i) =     (w) * std::exp(-b[j] * u.dot(local_D * u) )
+        + (1 - w) * std::exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }
@@ -934,9 +934,9 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
       const vec3_t& u = gradients[j];
       Y(j,
         i) = w
-        * (exp(-b[j]
-               * u.dot(D1 * u) ) * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
+        * (std::exp(-b[j]
+               * u.dot(D1 * u) ) * weights_on_tensors_[0] + std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1])
+        + (1 - w) * std::exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 
@@ -1041,10 +1041,10 @@ void Full2T_FW::H(const   ukfMatrixType& X,
       {
       const vec3_t& u = gradients[j];
       Y(j, i) = (w)
-        * (exp(-b[j] * u.dot(D1 * u) )
-           * weights_on_tensors_[0] + exp(-b[j] * u.dot(D2 * u) )
+        * (std::exp(-b[j] * u.dot(D1 * u) )
+           * weights_on_tensors_[0] + std::exp(-b[j] * u.dot(D2 * u) )
            * weights_on_tensors_[1])
-        + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
+        + (1 - w) * std::exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
 }

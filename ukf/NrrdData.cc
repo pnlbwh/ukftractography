@@ -81,7 +81,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
         const ukfPrecisionType dzz = dz * dz;
 
         // gaussian smoothing
-        const ukfPrecisionType w = exp(-(dxx + dyy + dzz) / _sigma_signal);
+        const ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_signal);
         // for each gradient direction
         for( int i = 0; i < _num_gradients; ++i )
           {
@@ -169,7 +169,7 @@ ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
             exit(1);
           }
 
-        ukfPrecisionType w = exp(-(dxx + dyy + dzz) / _sigma_mask);
+        ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_mask);
         if( value )
           {
           s += w;

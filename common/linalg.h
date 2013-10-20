@@ -23,12 +23,12 @@ inline mat33_t diag(const ukfPrecisionType a, const ukfPrecisionType b, const uk
 /** Assemble rotation matrix given the rotation angles */
 inline mat33_t rotation(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi)
 {
-  const ukfPrecisionType &c_th = cos(theta);
-  const ukfPrecisionType &s_th = sin(theta);
-  const ukfPrecisionType &c_ph = cos(phi);
-  const ukfPrecisionType &s_ph = sin(phi);
-  const ukfPrecisionType &c_ps = cos(psi);
-  const ukfPrecisionType &s_ps = sin(psi);
+  const ukfPrecisionType &c_th = std::cos(theta);
+  const ukfPrecisionType &s_th = std::sin(theta);
+  const ukfPrecisionType &c_ph = std::cos(phi);
+  const ukfPrecisionType &s_ph = std::sin(phi);
+  const ukfPrecisionType &c_ps = std::cos(psi);
+  const ukfPrecisionType &s_ps = std::sin(psi);
 
   const ukfPrecisionType &q11 = c_th * c_ph * c_ps - s_ph * s_ps;
   const ukfPrecisionType &q21 = c_th * c_ps * s_ph + c_ph * s_ps;
@@ -50,12 +50,12 @@ inline mat33_t rotation(const ukfPrecisionType theta, const ukfPrecisionType phi
 /** Calculate main direction of the diffusion from euler angles */
 inline vec3_t rotation_main_dir(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi)
 {
-  const ukfPrecisionType & c_th = cos(theta);
-  const ukfPrecisionType & s_th = sin(theta);
-  const ukfPrecisionType & c_ph = cos(phi);
-  const ukfPrecisionType & s_ph = sin(phi);
-  const ukfPrecisionType & c_ps = cos(psi);
-  const ukfPrecisionType & s_ps = sin(psi);
+  const ukfPrecisionType & c_th = std::cos(theta);
+  const ukfPrecisionType & s_th = std::sin(theta);
+  const ukfPrecisionType & c_ph = std::cos(phi);
+  const ukfPrecisionType & s_ph = std::sin(phi);
+  const ukfPrecisionType & c_ps = std::cos(psi);
+  const ukfPrecisionType & s_ps = std::sin(psi);
 
   const ukfPrecisionType & q11 = c_th * c_ph * c_ps - s_ph * s_ps;
   const ukfPrecisionType & q21 = c_th * c_ps * s_ph + c_ph * s_ps;

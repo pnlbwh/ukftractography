@@ -77,8 +77,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
     exit(1);
     }
 
-  _cos_theta_max = cos(_cos_theta_max * M_PI / 180.0);
-  _cos_theta_min = cos(_cos_theta_min * M_PI / 180.0);
+  _cos_theta_max = std::cos( DegToRad( _cos_theta_max ) );
+  _cos_theta_min = std::cos( DegToRad( _cos_theta_min ) );
 
   // Double check branching.
   _is_branching = _num_tensors > 1 && _cos_theta_max < ukfOne;  // The branching is enabled when the maximum branching
@@ -351,8 +351,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       tmp_info_inv_state[0] = param[3]; // Theta
       tmp_info_inv_state[1] = param[4]; // Phi
       // Switch psi angle.
-      // Careful here since M_PI is not standard c++.
-      tmp_info_inv_state[2] = (param[5] < ukfZero ? param[5] + M_PI : param[5] - M_PI);
+      tmp_info_inv_state[2] = (param[5] < ukfZero ? param[5] + UKF_PI : param[5] - UKF_PI);
       tmp_info_inv_state[5] = param[8]; // l3
 
       }
@@ -640,7 +639,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
 
     // Extract the three Euler Angles from the rotation matrix.
     ukfPrecisionType phi, psi;
-    const ukfPrecisionType theta = acos(Q(2, 2) );
+    const ukfPrecisionType theta = std::acos(Q(2, 2) );
     ukfPrecisionType epsilon = 1.0e-10;
     if( fabs(theta) > epsilon )
       {
@@ -743,19 +742,16 @@ void Tractography::Follow3T(const int thread_id,
         bool add_m3 = false;
 
         bool is_two = l2[0] > l2[1] && l2[0] > l2[2];
-        bool is_three = l3[0] > l3[1] && l3[0] > l3[2];
         is_two = is_two && l2fa(l2[0], l2[1], l2[2]) > _fa_min;
+        bool is_three = l3[0] > l3[1] && l3[0] > l3[2];
         is_three = is_three && l2fa(l3[0], l3[1], l3[2]) > _fa_min;
 
         ukfPrecisionType dotval = m1.dot(m2);
-        bool is_branch1 =
-          dotval < _cos_theta_min && dotval > _cos_theta_max;
+        const bool is_branch1 = dotval < _cos_theta_min && dotval > _cos_theta_max;
         dotval = m1.dot(m3);
-        bool is_branch2 =
-          dotval < _cos_theta_min && dotval > _cos_theta_max;
+        const bool is_branch2 = dotval < _cos_theta_min && dotval > _cos_theta_max;
         dotval = m2.dot(m3);
-        bool is_branch3 =
-          dotval < _cos_theta_min;
+        const bool is_branch3 = dotval < _cos_theta_min;
 
         int state_dim = _model->state_dim();
         // If there is a branch between m1 and m2.
@@ -770,7 +766,6 @@ void Tractography::Follow3T(const int thread_id,
               {
               add_m2 = true;
               add_m3 = true;
-
               }
             else
               {
@@ -1161,7 +1156,7 @@ void Tractography::Step2T(const int thread_id,
   const ukfPrecisionType fa_tensor_1 = l2fa(l1[0], l1[1], l1[2]);
   const ukfPrecisionType fa_tensor_2 = l2fa(l2[0], l2[1], l2[2]);
 
-  const ukfPrecisionType tensor_angle = std::acos(m1.dot(m2) ) * (180 / M_PI);
+  const ukfPrecisionType tensor_angle = RadToDeg( std::acos(m1.dot(m2) ) );
 
   if( m1.dot(old_dir) < m2.dot(old_dir) )
     {
@@ -1176,10 +1171,6 @@ void Tractography::Step2T(const int thread_id,
     ukfMatrixType old = covariance;
 
     SwapState2T(state, covariance);   // Swap the two tensors
-
-    // DEBUG:
-    // std::cout << "iHappened: " << std::acos(dot(m1,m2) )*(180/M_PI) << "\n";
-
     }
 
   if( tensor_angle <= 20 && std::min(fa_tensor_1, fa_tensor_2) <= 0.2 )
@@ -1202,9 +1193,6 @@ void Tractography::Step2T(const int thread_id,
       ukfMatrixType old = covariance;
 
       SwapState2T(state, covariance);   // Swap the two tensors
-
-      // DEBUG:
-      // std::cout << "iHappened: " << std::acos(dot(m1,m2) )*(180/M_PI) << "\n";
       }
     }
 

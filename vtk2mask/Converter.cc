@@ -8,7 +8,7 @@
 #include <numeric>
 #include <iterator>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <sstream>
 #include <fstream>
 #include <cassert>

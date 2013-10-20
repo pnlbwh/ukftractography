@@ -9,10 +9,11 @@
 typedef double ukfPrecisionType;
 
 /** Short hand for the state vector */
-#if 1
 #include <vector>
+#if 0
 typedef std::vector<ukfPrecisionType> State;
 #else
+typedef std::vector<ukfPrecisionType> stdVecState;
 typedef Eigen::VectorXd  State;
 #endif
 

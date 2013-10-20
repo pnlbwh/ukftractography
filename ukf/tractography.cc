@@ -323,6 +323,8 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
     // Create seed info for both directions;
     SeedPointInfo info;
+    stdVecState tmp_info_state;
+    stdVecState tmp_info_inv_state;
     SeedPointInfo info_inv;
 
     info.point = starting_points[i];
@@ -340,63 +342,63 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
     if( _is_full_model )
       {
-      info.state.resize(6);
-      info_inv.state.resize(6);
-      info.state[0] = param[3];     // Theta
-      info.state[1] = param[4];     // Phi
-      info.state[2] = param[5];     // Psi
-      info.state[5] = param[8];     // l3
-      info_inv.state[0] = param[3]; // Theta
-      info_inv.state[1] = param[4]; // Phi
+      tmp_info_state.resize(6);
+      tmp_info_inv_state.resize(6);
+      tmp_info_state[0] = param[3];     // Theta
+      tmp_info_state[1] = param[4];     // Phi
+      tmp_info_state[2] = param[5];     // Psi
+      tmp_info_state[5] = param[8];     // l3
+      tmp_info_inv_state[0] = param[3]; // Theta
+      tmp_info_inv_state[1] = param[4]; // Phi
       // Switch psi angle.
       // Careful here since M_PI is not standard c++.
-      info_inv.state[2] = (param[5] < 0.0 ? param[5] + M_PI : param[5] - M_PI);
-      info_inv.state[5] = param[8]; // l3
+      tmp_info_inv_state[2] = (param[5] < 0.0 ? param[5] + M_PI : param[5] - M_PI);
+      tmp_info_inv_state[5] = param[8]; // l3
 
       }
     else     // i.e. simple model
       { // Starting direction.
-      info.state.resize(5);
-      info_inv.state.resize(5);
-      info.state[0] = info.start_dir[0];
-      info.state[1] = info.start_dir[1];
-      info.state[2] = info.start_dir[2];
-      info_inv.state[0] = info_inv.start_dir[0];
-      info_inv.state[1] = info_inv.start_dir[1];
-      info_inv.state[2] = info_inv.start_dir[2];
+      tmp_info_state.resize(5);
+      tmp_info_inv_state.resize(5);
+      tmp_info_state[0] = info.start_dir[0];
+      tmp_info_state[1] = info.start_dir[1];
+      tmp_info_state[2] = info.start_dir[2];
+      tmp_info_inv_state[0] = info_inv.start_dir[0];
+      tmp_info_inv_state[1] = info_inv.start_dir[1];
+      tmp_info_inv_state[2] = info_inv.start_dir[2];
       }
 
-    info.state[3] = param[6];     // l1
-    info.state[4] = param[7];     // l2
-    info_inv.state[3] = param[6]; // l1
-    info_inv.state[4] = param[7]; // l2
+    tmp_info_state[3] = param[6];     // l1
+    tmp_info_state[4] = param[7];     // l2
+    tmp_info_inv_state[3] = param[6]; // l1
+    tmp_info_inv_state[4] = param[7]; // l2
 
     // Duplicate/tripple states if we have several tensors.
     if( _num_tensors > 1 )
       {
-      size_t size = info.state.size();
+      size_t size = tmp_info_state.size();
       for( size_t j = 0; j < size; ++j )
         {
-        info.state.push_back(info.state[j]);
-        info_inv.state.push_back(info.state[j]);
+        tmp_info_state.push_back(tmp_info_state[j]);
+        tmp_info_inv_state.push_back(tmp_info_state[j]);
         }
       if( _num_tensors > 2 )
         {
         for( size_t j = 0; j < size; ++j )
           {
-          info.state.push_back(info.state[j]);
-          info_inv.state.push_back(info.state[j]);
+          tmp_info_state.push_back(tmp_info_state[j]);
+          tmp_info_inv_state.push_back(tmp_info_state[j]);
           }
         }
       }
 
     if( _free_water )
       {
-      info.state.push_back(1);
-      info_inv.state.push_back(1); // add the weight to the state (well was sich rhymt das stiimt)
+      tmp_info_state.push_back(1);
+      tmp_info_inv_state.push_back(1); // add the weight to the state (well was sich rhymt das stiimt)
       }
 
-    int state_dim = info.state.size();
+    const int state_dim = tmp_info_state.size();
 
     info.covariance.resize(state_dim, state_dim);
     info_inv.covariance.resize(state_dim, state_dim);
@@ -409,7 +411,8 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       info.covariance(local_i, local_i) = _p0;
       info_inv.covariance(local_i, local_i) = _p0;
       }
-
+    info.state = ConvertVector<stdVecState,State>(tmp_info_state);
+    info_inv.state = ConvertVector<stdVecState,State>(tmp_info_inv_state);
     seed_infos.push_back(info);
     seed_infos.push_back(info_inv);   // NOTE that the seed in reverse direction is put directly after the seed in
                                       // original direction
@@ -670,7 +673,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
 
 void Tractography::Follow3T(const int thread_id,
                             const size_t seed_index,
-                            const SeedPointInfo& seed,
+                            const SeedPointInfo& fiberStartSeed,
                             UKFFiber& fiber,
                             bool is_branching,
                             std::vector<SeedPointInfo>& branching_seeds,
@@ -679,28 +682,27 @@ void Tractography::Follow3T(const int thread_id,
 
   assert(_model->signal_dim() == _signal_data->GetSignalDimension() * 2);
 
-  // Unpack the seed information.
-  vec_t              x = seed.point;
-  State              state = seed.state;
-  Eigen::MatrixXd p(seed.covariance);
-  double             fa = seed.fa;
-  double             fa2 = seed.fa2;
-  double             dNormMSE = 0; // no error at the seed
-  double             trace = seed.trace;
-  double             trace2 = seed.trace2;
+  // Unpack the fiberStartSeed information.
+  vec_t              x = fiberStartSeed.point;
+  State              state = fiberStartSeed.state;
+  Eigen::MatrixXd    p(fiberStartSeed.covariance);
+  double             fa = fiberStartSeed.fa;
+  double             fa2 = fiberStartSeed.fa2;
+  double             dNormMSE = 0; // no error at the fiberStartSeed
+  double             trace = fiberStartSeed.trace;
+  double             trace2 = fiberStartSeed.trace2;
 
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
-  vec_t m1, l1, m2, l2, m3, l3;
-  m1 = seed.start_dir;
+  vec_t m1 = fiberStartSeed.start_dir;
+  vec_t l1, m2, l2, m3, l3;
 
   // Tract the fiber.
   Eigen::MatrixXd signal_tmp(_model->signal_dim(), 1);
   Eigen::MatrixXd state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
-
   while( true )
     {
     ++stepnr;
@@ -710,14 +712,14 @@ void Tractography::Follow3T(const int thread_id,
     // Check if we should abort following this fiber. We abort if we reach the
     // CSF, if FA or GA get too small, if the curvature get's too high or if
     // the fiber gets too long.
-    bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1;
+    const bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1;
 
-    state_tmp.col(0) = ConvertVector<State,ukfVectorType>(state);
+    state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
 
-    double ga = s2ga(signal_tmp);
-    bool   in_csf = ga < _ga_min || fa < _fa_min;
-    bool   is_curving = curve_radius(fiber.position) < _min_radius;
+    const double ga = s2ga(signal_tmp);
+    const bool   in_csf = ga < _ga_min || fa < _fa_min;
+    const bool   is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain || in_csf
         || static_cast<int>(fiber.position.size() ) > _max_length  // Stop if the fiber is too long
@@ -850,30 +852,30 @@ void Tractography::Follow3T(const int thread_id,
 
 void Tractography::Follow2T(const int thread_id,
                             const size_t seed_index,
-                            const SeedPointInfo& seed,
+                            const SeedPointInfo& fiberStartSeed,
                             UKFFiber& fiber,
                             bool is_branching,
                             std::vector<SeedPointInfo>& branching_seeds,
                             std::vector<BranchingSeedAffiliation>& branching_seed_affiliation)
 {
 
-  // Unpack the seed information.
-  vec_t x = seed.point;   // NOTICE that the x here is in ijk coordinate system
-  State state = seed.state;
+  // Unpack the fiberStartSeed information.
+  vec_t x = fiberStartSeed.point;   // NOTICE that the x here is in ijk coordinate system
+  State state = fiberStartSeed.state;
 
-  Eigen::MatrixXd p(seed.covariance);
+  Eigen::MatrixXd p(fiberStartSeed.covariance);
 
-  double fa = seed.fa;
-  double fa2 = seed.fa2;
-  double dNormMSE = 0; // no error at the seed
-  double trace = seed.trace;
-  double trace2 = seed.trace2;
+  double fa = fiberStartSeed.fa;
+  double fa2 = fiberStartSeed.fa2;
+  double dNormMSE = 0; // no error at the fiberStartSeed
+  double trace = fiberStartSeed.trace;
+  double trace2 = fiberStartSeed.trace2;
 
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2); // writes state to fiber.state
 
   vec_t m1, l1, m2, l2;
-  m1 = seed.start_dir;
+  m1 = fiberStartSeed.start_dir;
 
   // Track the fiber.
   Eigen::MatrixXd signal_tmp(_model->signal_dim(), 1);
@@ -898,7 +900,7 @@ void Tractography::Follow2T(const int thread_id,
 
     // after here state doesnt change until next step.
 
-    state_tmp.col(0) = ConvertVector<State,ukfVectorType>(state);
+    state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
@@ -959,30 +961,30 @@ void Tractography::Follow2T(const int thread_id,
 // Also read the comments to Follow2T above, it's documented better than this
 // function here.
 void Tractography::Follow1T(const int thread_id,
-                            const SeedPointInfo& seed,
+                            const SeedPointInfo& fiberStartSeed,
                             UKFFiber& fiber)
 {
 
   assert(_model->signal_dim() == _signal_data->GetSignalDimension() * 2);
 
-  vec_t x = seed.point;
-  State state = seed.state;
+  vec_t x = fiberStartSeed.point;
+  State state = fiberStartSeed.state;
 
   // DEBUG
-//   std::cout << "seed state:\n";
+//   std::cout << "fiberStartSeed state:\n";
 //   for (int i=0;i<state.size();++i) {
 //     std::cout << state[i] << " ";
 //   }
 //   std::cout << std::endl;
 
-  Eigen::MatrixXd p(seed.covariance);
+  Eigen::MatrixXd p(fiberStartSeed.covariance);
 
-  double fa = seed.fa;
-  double fa2 = seed.fa2; // just needed for record
-  double trace = seed.trace;
-  double trace2 = seed.trace2;
+  double fa = fiberStartSeed.fa;
+  double fa2 = fiberStartSeed.fa2; // just needed for record
+  double trace = fiberStartSeed.trace;
+  double trace2 = fiberStartSeed.trace2;
 
-  double dNormMSE = 0; // no error at the seed
+  double dNormMSE = 0; // no error at the fiberStartSeed
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
@@ -991,7 +993,6 @@ void Tractography::Follow1T(const int thread_id,
   Eigen::MatrixXd state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
-
   while( true )
     {
     ++stepnr;
@@ -999,15 +1000,14 @@ void Tractography::Follow1T(const int thread_id,
     Step1T(thread_id, x, fa, state, p, dNormMSE, trace);
 
     // Terminate if off brain or in CSF.
-    bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
-
-    state_tmp.col(0) = ConvertVector<State,ukfVectorType>(state);
+    const bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
+    state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp);
 
-    double ga = s2ga(signal_tmp);
-    bool   in_csf = ga < _ga_min || fa < _fa_min;
-    bool   is_curving = curve_radius(fiber.position) < _min_radius;
+    const double ga = s2ga(signal_tmp);
+    const bool   in_csf = ga < _ga_min || fa < _fa_min;
+    const bool   is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
@@ -1323,12 +1323,9 @@ void Tractography::SwapState3T(State& state,
   covariance.block( 0, j,state_dim, state_dim) = tmp.block( i, j,state_dim, state_dim);
 
   // Swap the state.
-  const Eigen::VectorXd tmp_vec = ConvertVector<State,Eigen::VectorXd>(state);
-  Eigen::VectorXd tmp_vec2 = tmp_vec;
-  tmp_vec2.segment(i,state_dim) = tmp_vec.segment(0,state_dim);
-  tmp_vec2.segment(0,state_dim) = tmp_vec.segment(i,state_dim);
-  state = ConvertVector<Eigen::VectorXd,State>(tmp_vec2);
-
+  const Eigen::VectorXd tmp_vec = state;
+  state.segment(i,state_dim) = tmp_vec.segment(0,state_dim);
+  state.segment(0,state_dim) = tmp_vec.segment(i,state_dim);
 }
 
 void Tractography::SwapState2T( State& state,
@@ -1364,12 +1361,9 @@ void Tractography::SwapState2T( State& state,
     }
 
   // Swap the state.
-  const Eigen::VectorXd tmp_vec = ConvertVector<State,Eigen::VectorXd>(state);
-  Eigen::VectorXd tmp_vec2 = tmp_vec;
-  tmp_vec2.segment(state_dim,state_dim) = tmp_vec.segment(0,state_dim);
-  tmp_vec2.segment(0,state_dim) = tmp_vec.segment(state_dim, state_dim);
-  state = ConvertVector<Eigen::VectorXd,State>(tmp_vec2);
-
+  const Eigen::VectorXd tmp_vec = state;
+  state.segment(state_dim,state_dim) = tmp_vec.segment(0,state_dim);
+  state.segment(0,state_dim) = tmp_vec.segment(state_dim, state_dim);
 }
 
 void Tractography::Record(const vec_t& x, double fa, double fa2, const State& state,

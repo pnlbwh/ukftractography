@@ -15,7 +15,7 @@ void PrintSeedInfo(const std::vector<SeedPointInfo>& seed_infos)
     std::cout << "  Pos: (" << inf.point[0] << ", " << inf.point[1] << ", "
               << inf.point[2] << ")" << std::endl;
     std::cout << "  State:";
-    for( size_t j = 0; j < inf.state.size(); ++j )
+    for( unsigned int j = 0; j < inf.state.size(); ++j )
       {
       std::cout << " " << inf.state[j];
       }

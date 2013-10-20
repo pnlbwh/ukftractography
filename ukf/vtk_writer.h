@@ -118,7 +118,7 @@ protected:
   const Tractography::model_type _filter_model_type;
 
   /** Scaling of the glyphs */
-  const double _scale_glyphs;
+  const ukfPrecisionType _scale_glyphs;
 
   /** Whether to attach the tensors to the fiber */
   bool _write_tensors;
@@ -137,7 +137,7 @@ protected:
   bool _full;
 
   /** Additional scaling of the eigenvalues before writing */
-  const double _eigenScaleFactor;
+  const ukfPrecisionType _eigenScaleFactor;
 
   /** Transformation matrix from ijk-RAS with voxel size normalized out */
   mat33_t _sizeFreeI2R;

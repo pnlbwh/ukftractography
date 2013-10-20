@@ -264,9 +264,9 @@ private:
           for( int j = 0; j < nLineLength; ++j )
             {
 
-            double t11, t12, t13;
-            double t21, t22, t23;
-            double t31, t32, t33;
+            ukfPrecisionType t11, t12, t13;
+            ukfPrecisionType t21, t22, t23;
+            ukfPrecisionType t31, t32, t33;
 
             input >> t11; input >> t12; input >> t13;
             input >> t21; input >> t22; input >> t23;

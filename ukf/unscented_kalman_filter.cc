@@ -29,11 +29,11 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   m_Weights(0) = m_SigmaPointSpread / (dim + m_SigmaPointSpread);
   // Create diagonal matrix.
   m_WeightsRepeated.resize(2 * dim + 1,2 * dim + 1);
-  m_WeightsRepeated.setConstant(0.0);
+  m_WeightsRepeated.setConstant(ukfZero);
   m_WeightsRepeated(0, 0) = m_Weights[0];
   for(unsigned int i = 1; i < (2 * dim) + 1; ++i)
      {
-     m_Weights(i) = 0.5 / (dim + m_SigmaPointSpread);
+     m_Weights(i) = ukfHalf / (dim + m_SigmaPointSpread);
      m_WeightsRepeated(i, i) = m_Weights[i];
      }
 
@@ -43,9 +43,9 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
 
   //DUMMY VARIABLES TAHT ARE ALWAYS ZERO and not used.
   m_DummyZeroCE.resize(dim, 1);
-  m_DummyZeroCE.setConstant(0.0);
+  m_DummyZeroCE.setConstant(ukfZero);
   m_DummyZeroce0.resize(1);
-  m_DummyZeroce0.setConstant(0.0);
+  m_DummyZeroce0.setConstant(ukfZero);
 }
 
 void UnscentedKalmanFilter::SigmaPoints(const State& x,
@@ -84,13 +84,13 @@ void UnscentedKalmanFilter::Constrain(ukfVectorType& x, const ukfMatrixType& W)
   if( violatesContraints(x) )
     {
     const ukfMatrixType WTranspose = W.transpose();
-    ukfMatrixType W_tmp = (W + WTranspose) * 0.5;
-    ukfVectorType g0 = -1.0 * (W_tmp.transpose() ) * x;
+    ukfMatrixType W_tmp = (W + WTranspose) * ukfHalf;
+    ukfVectorType g0 = -ukfOne * (W_tmp.transpose() ) * x;
     const ukfVectorType d  = m_FilterModel->d(); // the inequality constraints
     const ukfMatrixType D  = m_FilterModel->D(); // -- " --
     // The equality constraints are just dummy variables. The solve_quadprog function has been changed
     // to ignore equality constraints.
-    const double error = solve_quadprog(W_tmp, g0, m_DummyZeroCE, m_DummyZeroce0, D, d, x);
+    const ukfPrecisionType error = solve_quadprog(W_tmp, g0, m_DummyZeroCE, m_DummyZeroce0, D, d, x);
     if( error > 0.01 )   // error usually much smaller than that, if solve_quadprog fails it returns inf
       {
       exit(1);
@@ -113,7 +113,7 @@ void UnscentedKalmanFilter::Constrain(ukfMatrixType& localX, const ukfMatrixType
 
 bool UnscentedKalmanFilter::violatesContraints(ukfVectorType & x)
 {
-  const ukfVectorType d_test = (-1.0) * ( m_FilterModel->D().transpose() ) * x; // -D'*x
+  const ukfVectorType d_test = (-ukfOne) * ( m_FilterModel->D().transpose() ) * x; // -D'*x
   for( unsigned int i = 0; i < d_test.size(); ++i )                              // if any(-D'*x > d) constraint is
                                                                                  // broken
     {
@@ -130,7 +130,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
                                    const ukfVectorType& z,
                                    State& x_new,
                                    ukfMatrixType& p_new,
-                                   double& dNormMSE )
+                                   ukfPrecisionType& dNormMSE )
 {
   // Force a const version of the m_FilterModel to be used to ensure that it is not modified.
   FilterModel const * const localConstFilterModel = m_FilterModel;
@@ -150,7 +150,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   /** The state spread out according to the unscented transform */
   ukfMatrixType X(dim, 2 * dim + 1);
-  X.setConstant(0.0);
+  X.setConstant(ukfZero);
   // Create sigma points.
   SigmaPoints(x, p, X); // doesnt change p, its const
 
@@ -172,7 +172,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   /** Used for the estimation of the new state */
   ukfMatrixType dim_dimext(dim, 2 * dim + 1);
-  dim_dimext.setConstant(0.0);
+  dim_dimext.setConstant(ukfZero);
   const ukfVectorType X_hat = X * this->m_Weights;
   for( unsigned int i = 0; i < dim_dimext.cols(); ++i )
     {
@@ -187,13 +187,13 @@ void UnscentedKalmanFilter::Filter(const State& x,
 
   /** The signal */
   ukfMatrixType Y(signal_dim, 2 * dim + 1);
-  Y.setConstant(0.0);
+  Y.setConstant(ukfZero);
   localConstFilterModel->H(X, Y);
 
   /** Used for the estimation of the signal */
 
   ukfMatrixType     signaldim_dimext(signal_dim, 2 * dim + 1);
-  signaldim_dimext.setConstant(0.0);
+  signaldim_dimext.setConstant(ukfZero);
   const ukfVectorType Y_hat = Y * this->m_Weights;
   for( unsigned int i = 0; i < signaldim_dimext.cols(); ++i )
     {

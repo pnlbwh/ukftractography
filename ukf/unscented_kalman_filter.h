@@ -39,7 +39,7 @@ public:
    * \param[out] The normalized mean squared reconstruction error
   */
   void Filter(const State& x, const ukfMatrixType& p, const ukfVectorType& z, // This is the signal
-              State& x_new, ukfMatrixType& p_new, double& dNormMSE);
+              State& x_new, ukfMatrixType& p_new, ukfPrecisionType& dNormMSE);
 
 private:
   /** Spreads the points around the current state using the covariance. */
@@ -70,7 +70,7 @@ private:
   // HACK REMOVE int _state_dim;
 
   /** for the distribution of the sigma ponts (:= sqrt(dim + m_SigmaPointSpread) ) */
-  double m_Scale;
+  ukfPrecisionType m_Scale;
 
   /** The weights for spreading the sigma points */
   ukfVectorType m_Weights;
@@ -79,7 +79,7 @@ private:
   ukfMatrixType m_WeightsRepeated;
 
   /** A fixed parameters used for spreading of the sigma points */
-  double m_SigmaPointSpread;
+  ukfPrecisionType m_SigmaPointSpread;
 
   //DUMMY VARIABLES TAHT ARE ALWAYS ZERO and not used.
   ukfMatrixType m_DummyZeroCE;

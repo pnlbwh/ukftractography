@@ -30,7 +30,7 @@ mat2DWInhdr('single_tensor_fw',nrrdStrct,'pnl');
 
 
 clear S;
-[S is_cross] = gen_2cross_w(u, 90, 0.5); %2-tensor
+[S is_cross] = gen_2cross_w(u, 90, ukfHalf); %2-tensor
 %make slices
 [nx ny dir]=size(S);
 S=cat(3,S0,S);
@@ -41,7 +41,7 @@ mat2DWInhdr('two_tensor',nrrdStrct,'pnl');
 
 
 clear S;
-[S is_cross] = gen_2cross_w(u, 90, 0.5,'fw'); %2-tensor+fw
+[S is_cross] = gen_2cross_w(u, 90, ukfHalf,'fw'); %2-tensor+fw
 %make slices
 [nx ny dir]=size(S);
 S=cat(3,S0,S);

@@ -181,7 +181,7 @@ void VtkWriter
           const State & state = fibers[i].state[j];
           mat33_t         D;
           State2Tensor(state, D, local_tensorNumber);
-          double tmp[9];
+          ukfPrecisionType tmp[9];
           for(unsigned ii = 0, v = 0; ii < 3; ++ii)
             {
             for(unsigned jj = 0; jj < 3; ++jj, ++v)
@@ -408,7 +408,7 @@ Write(const std::string& file_name,
 
   if(fibers[0].normMSE.size() > 0)
     {
-    double nmse_sum(0);
+    ukfPrecisionType nmse_sum(0);
     unsigned counter(0);
     vtkSmartPointer<vtkFloatArray> normMSE = vtkSmartPointer<vtkFloatArray>::New();
     normMSE->SetNumberOfComponents(1);
@@ -521,7 +521,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
 
   int num_tensors = fibers[0].state[0].size() / 5;
 
-  const double scale = 0.5 * _scale_glyphs;
+  const ukfPrecisionType scale = ukfHalf * _scale_glyphs;
 
 
   for( int i = 0; i < num_fibers; ++i )
@@ -544,7 +544,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
       else if( state.size() == 6 )
         {
         m1 = rotation_main_dir(state[0], state[1], state[2]);
-        const double tmp = m1[0];
+        const ukfPrecisionType tmp = m1[0];
         m1[0] = m1[2];
         m1[2] = tmp;
         m1 = state[3] / 100.0 * m1;
@@ -560,7 +560,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
         {
         m1 = rotation_main_dir(state[0], state[1], state[2]);
         m2 = rotation_main_dir(state[6], state[7], state[8]);
-        double tmp = m1[0];
+        ukfPrecisionType tmp = m1[0];
         m1[0] = m1[2];
         m1[2] = tmp;
         tmp = m2[0];
@@ -583,7 +583,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
         m1 = rotation_main_dir(state[0], state[1], state[2]);
         m2 = rotation_main_dir(state[6], state[7], state[8]);
         m3 = rotation_main_dir(state[12], state[13], state[14]);
-        double tmp = m1[0];
+        ukfPrecisionType tmp = m1[0];
         m1[0] = m1[2];
         m1[2] = tmp;
         tmp = m2[0];
@@ -666,7 +666,7 @@ PointConvert(const vec3_t& point)
 
   if( _transform_position )
     {
-    p[3] = 1.0;
+    p[3] = ukfOne;
     ukfVectorType p_new(4);
     p_new = _signal_data->i2r() * p;    // ijk->RAS transform
     rval[0] = p_new[0];

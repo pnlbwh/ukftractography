@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
     {
     const double *pt1 = input1->GetPoint(i);
     const double *pt2 = input2->GetPoint(i);
-    const double distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
+    const ukfPrecisionType distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
                             + ((pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
                             + ((pt1[2] - pt2[2]) * (pt1[2] - pt2[2])));
-    const double TOLERANCE=1.0E-1; // Allow for a cummulative 100th of a voxel error
+    const ukfPrecisionType TOLERANCE=1.0E-1; // Allow for a cummulative 100th of a voxel error
     if(distance > TOLERANCE)
       {
       std::cerr << "Difference in Points is above tolerance (" << TOLERANCE << "): " << distance << std::endl;

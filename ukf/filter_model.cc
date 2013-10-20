@@ -6,13 +6,13 @@
 #include "filter_model.h"
 #include <iostream>
 
-double FilterModel::CheckZero(const double & local_d) const
+ukfPrecisionType FilterModel::CheckZero(const ukfPrecisionType & local_d) const
 {
   if( local_d < 0 )
     {
     if( local_d >= -1.0e-4 ) // for small errors just round it to 0
       {
-      return 0.0;
+      return ukfZero;
       }
     else   // for errors too big exit with exception
       {
@@ -55,9 +55,9 @@ void Full1T::H(const  ukfMatrixType& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const double l1 = std::max(X(3, i), _lambda_min);
-    const double l2 = std::max(X(4, i), _lambda_min);
-    const double l3 = std::max(X(5, i), _lambda_min);
+    const ukfPrecisionType l1 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l2 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l3 = std::max(X(5, i), _lambda_min);
 
     // Calculate diffusion matrix.
     const mat33_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
@@ -116,12 +116,12 @@ void Full2T::H(const  ukfMatrixType& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const double l11 = std::max(X(3, i), _lambda_min);
-    const double l12 = std::max(X(4, i), _lambda_min);
-    const double l13 = std::max(X(5, i), _lambda_min);
-    const double l21 = std::max(X(9, i), _lambda_min);
-    const double l22 = std::max(X(10, i), _lambda_min);
-    const double l23 = std::max(X(11, i), _lambda_min);
+    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l13 = std::max(X(5, i), _lambda_min);
+    const ukfPrecisionType l21 = std::max(X(9, i), _lambda_min);
+    const ukfPrecisionType l22 = std::max(X(10, i), _lambda_min);
+    const ukfPrecisionType l23 = std::max(X(11, i), _lambda_min);
 
     // Calculate diffusion matrix.
     //HACK: TODO :%s/mat33_t *D/const mat33_t \&D/g
@@ -209,15 +209,15 @@ void Full3T::H(const  ukfMatrixType& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const double l11 = std::max(X(3, i), _lambda_min);
-    const double l12 = std::max(X(4, i), _lambda_min);
-    const double l13 = std::max(X(5, i), _lambda_min);
-    const double l21 = std::max(X(9, i), _lambda_min);
-    const double l22 = std::max(X(10, i), _lambda_min);
-    const double l23 = std::max(X(11, i), _lambda_min);
-    const double l31 = std::max(X(15, i), _lambda_min);
-    const double l32 = std::max(X(16, i), _lambda_min);
-    const double l33 = std::max(X(17, i), _lambda_min);
+    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l13 = std::max(X(5, i), _lambda_min);
+    const ukfPrecisionType l21 = std::max(X(9, i), _lambda_min);
+    const ukfPrecisionType l22 = std::max(X(10, i), _lambda_min);
+    const ukfPrecisionType l23 = std::max(X(11, i), _lambda_min);
+    const ukfPrecisionType l31 = std::max(X(15, i), _lambda_min);
+    const ukfPrecisionType l32 = std::max(X(16, i), _lambda_min);
+    const ukfPrecisionType l33 = std::max(X(17, i), _lambda_min);
 
     // Calculate diffusion matrix.
     const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
@@ -291,12 +291,12 @@ void Simple1T::F(ukfMatrixType& X) const
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vector.
-    double norm_inv = 0.0; // 1e-16;
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
     norm_inv += X(0, i) * X(0, i);
     norm_inv += X(1, i) * X(1, i);
     norm_inv += X(2, i) * X(2, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(0, i) *= norm_inv;
     X(1, i) *= norm_inv;
     X(2, i) *= norm_inv;
@@ -328,8 +328,8 @@ void Simple1T::H(const  ukfMatrixType& X,
     initNormalized(m, X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-    const double l1 = std::max(X(3, i), _lambda_min);
-    const double l2 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l1 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l2 = std::max(X(4, i), _lambda_min);
 
     // Flip if necessary.
     // Why is that???
@@ -354,7 +354,7 @@ void Simple1T::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
   // Orientation.
   m << x[0], x[1], x[2];
 
-  double n = m.norm();
+  ukfPrecisionType n = m.norm();
   m /= n;
 
   // Clamp lambdas.
@@ -373,22 +373,22 @@ void Simple2T::F(ukfMatrixType& X) const
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
-    double norm_inv = 0.0; // 1e-16;
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
     norm_inv += X(0, i) * X(0, i);
     norm_inv += X(1, i) * X(1, i);
     norm_inv += X(2, i) * X(2, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(0, i) *= norm_inv;
     X(1, i) *= norm_inv;
     X(2, i) *= norm_inv;
 
-    norm_inv = 0.0; // 1e-16;
+    norm_inv = ukfZero; // 1e-16;
     norm_inv += X(5, i) * X(5, i);
     norm_inv += X(6, i) * X(6, i);
     norm_inv += X(7, i) * X(7, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(5, i) *= norm_inv;
     X(6, i) *= norm_inv;
     X(7, i) *= norm_inv;
@@ -425,11 +425,11 @@ void Simple2T::H(const  ukfMatrixType& X,
     initNormalized(m2, X(5, i), X(6, i), X(7, i));
 
     // Clamp lambdas.
-    const double l11 = std::max(X(3, i), _lambda_min);
-    const double l12 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
 
-    const double l21 = std::max(X(8, i), _lambda_min);
-    const double l22 = std::max(X(9, i), _lambda_min);
+    const ukfPrecisionType l21 = std::max(X(8, i), _lambda_min);
+    const ukfPrecisionType l22 = std::max(X(9, i), _lambda_min);
 
     // Flip if necessary.
     if( m1[0] < 0 )
@@ -491,32 +491,32 @@ void Simple3T::F(ukfMatrixType& X) const
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
-    double norm_inv = 0.0; // 1e-16;
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
     norm_inv += X(0, i) * X(0, i);
     norm_inv += X(1, i) * X(1, i);
     norm_inv += X(2, i) * X(2, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(0, i) *= norm_inv;
     X(1, i) *= norm_inv;
     X(2, i) *= norm_inv;
 
-    norm_inv = 0.0; // 1e-16;
+    norm_inv = ukfZero; // 1e-16;
     norm_inv += X(5, i) * X(5, i);
     norm_inv += X(6, i) * X(6, i);
     norm_inv += X(7, i) * X(7, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(5, i) *= norm_inv;
     X(6, i) *= norm_inv;
     X(7, i) *= norm_inv;
 
-    norm_inv = 0.0; // 1e-16;
+    norm_inv = ukfZero; // 1e-16;
     norm_inv += X(10, i) * X(10, i);
     norm_inv += X(11, i) * X(11, i);
     norm_inv += X(12, i) * X(12, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(10, i) *= norm_inv;
     X(11, i) *= norm_inv;
     X(12, i) *= norm_inv;
@@ -558,14 +558,14 @@ void Simple3T::H(const  ukfMatrixType& X,
     initNormalized(m3,X(10, i), X(11, i), X(12, i));
 
     // Clamp lambdas.
-    const double l11 = std::max(X(3, i), _lambda_min);
-    const double l12 = std::max(X(4, i), _lambda_min);
+    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
+    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
 
-    const double l21 = std::max(X(8, i), _lambda_min);
-    const double l22 = std::max(X(9, i), _lambda_min);
+    const ukfPrecisionType l21 = std::max(X(8, i), _lambda_min);
+    const ukfPrecisionType l22 = std::max(X(9, i), _lambda_min);
 
-    const double l31 = std::max(X(13, i), _lambda_min);
-    const double l32 = std::max(X(14, i), _lambda_min);
+    const ukfPrecisionType l31 = std::max(X(13, i), _lambda_min);
+    const ukfPrecisionType l32 = std::max(X(14, i), _lambda_min);
 
     // flip if necessary
     if( m1[0] < 0 )
@@ -645,19 +645,19 @@ void Simple1T_FW::F(ukfMatrixType& X) const
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vector.
-    double norm_inv = 0.0; // 1e-16;
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
     norm_inv += X(0, i) * X(0, i);
     norm_inv += X(1, i) * X(1, i);
     norm_inv += X(2, i) * X(2, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(0, i) *= norm_inv;
     X(1, i) *= norm_inv;
     X(2, i) *= norm_inv;
 
     // Clamp lambdas.
-//     X(3, i) = std::max(X(3, i), 0.0); // 0 because for free water lambdas are constrained to be > 0
-//     X(4, i) = std::max(X(4, i), 0.0); // because imprecission of qp they are sometimes slightly negative on the order
+//     X(3, i) = std::max(X(3, i), ukfZero); // 0 because for free water lambdas are constrained to be > 0
+//     X(4, i) = std::max(X(4, i), ukfZero); // because imprecission of qp they are sometimes slightly negative on the order
 // of e-16
     X(3, i) = CheckZero(X(3, i) );
     X(4, i) = CheckZero(X(4, i) );
@@ -685,7 +685,7 @@ void Simple1T_FW::H(const ukfMatrixType& X,
   assert(_signal_data);
 
   const stdVec_t&   gradients = _signal_data->gradients();
-  const ukfVectorType & b       = _signal_data->GetBValues();
+  const ukfVectorType & b     = _signal_data->GetBValues();
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
@@ -693,28 +693,28 @@ void Simple1T_FW::H(const ukfMatrixType& X,
     initNormalized(m,X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-//     const double l1 = std::max(X(3, i), 0.0);
-//     const double l2 = std::max(X(4, i), 0.0);
+    //     const ukfPrecisionType l1 = std::max(X(3, i), ukfZero);
+    //     const ukfPrecisionType l2 = std::max(X(4, i), ukfZero);
 
-    const double l1 = CheckZero(X(3, i) );
-    const double l2 = CheckZero(X(4, i) );
+    const ukfPrecisionType l1 = CheckZero(X(3, i) );
+    const ukfPrecisionType l2 = CheckZero(X(4, i) );
     if( l1 < 0 || l2 < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative l1= " << l1 << "l2= " << l2  << std::endl;
       }
 
     // get weight from state
-    const double w = CheckZero(X(5, i) );
-    // FOR DEBUGGIN :
+    const ukfPrecisionType w = CheckZero( X(5, i) );
+    // FOR DEBUGGING :
     if( w < 0 - 1.0e-5 )
       {
-      std::cout << "Negative weight!\n";
+      std::cout << "Negative weight! w= " << w << "\n";
       std::cout << X << "\ni: " << i;
       exit(1);
       }
     if( w > 1 + 1.0e-5 )
       {
-      std::cout << "Weight > 1 => negative free water!\n";
+      std::cout << "Weight > 1 => negative free water! w= " << w << "\n";
       std::cout << X << "\ni: " << i;
       exit(1);
       }
@@ -732,7 +732,7 @@ void Simple1T_FW::H(const ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) =     (w) * exp(-b[j] * u.dot(local_D * u) )
+      Y(j, i) =  (w) * exp(-b[j] * u.dot(local_D * u) )
         + (1 - w) * exp(-b[j] * u.dot(m_D_iso * u) );
       }
     }
@@ -743,7 +743,7 @@ void Simple1T_FW::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
   // Orientation.
   initNormalized(m,x[0], x[1], x[2]);
 
-  l[1] = std::max(x[4], 0.0);
+  l[1] = std::max(x[4], ukfZero );
 
   l[0] = CheckZero(x[3]);
   l[1] = CheckZero(x[4]);
@@ -794,9 +794,9 @@ void Full1T_FW::H(const ukfMatrixType& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
 
-    const double l1 = CheckZero(X(3, i) );
-    const double l2 = CheckZero(X(4, i) );
-    const double l3 = CheckZero(X(5, i) );
+    const ukfPrecisionType l1 = CheckZero(X(3, i) );
+    const ukfPrecisionType l2 = CheckZero(X(4, i) );
+    const ukfPrecisionType l3 = CheckZero(X(5, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 || X(5, i) < 0 )
       {
@@ -804,7 +804,7 @@ void Full1T_FW::H(const ukfMatrixType& X,
       }
 
     // get weight from state
-    const double w = CheckZero(X(6, i) );
+    const ukfPrecisionType w = CheckZero(X(6, i) );
 
     // Calculate diffusion matrix.
     const mat33_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
@@ -842,22 +842,22 @@ void Simple2T_FW::F(ukfMatrixType& X) const
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize the direction vectors.
-    double norm_inv = 0.0; // 1e-16;
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
     norm_inv += X(0, i) * X(0, i);
     norm_inv += X(1, i) * X(1, i);
     norm_inv += X(2, i) * X(2, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(0, i) *= norm_inv;
     X(1, i) *= norm_inv;
     X(2, i) *= norm_inv;
 
-    norm_inv = 0.0; // 1e-16;
+    norm_inv = ukfZero; // 1e-16;
     norm_inv += X(5, i) * X(5, i);
     norm_inv += X(6, i) * X(6, i);
     norm_inv += X(7, i) * X(7, i);
 
-    norm_inv = 1.0 / sqrt(norm_inv);
+    norm_inv = ukfOne / sqrt(norm_inv);
     X(5, i) *= norm_inv;
     X(6, i) *= norm_inv;
     X(7, i) *= norm_inv;
@@ -900,11 +900,11 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
     vec3_t m2;
     initNormalized(m2,X(5, i), X(6, i), X(7, i) );
 
-    const double l11 = CheckZero(X(3, i) );
-    const double l12 = CheckZero(X(4, i) );
+    const ukfPrecisionType l11 = CheckZero(X(3, i) );
+    const ukfPrecisionType l12 = CheckZero(X(4, i) );
 
-    const double l21 = CheckZero(X(8, i) );
-    const double l22 = CheckZero(X(9, i) );
+    const ukfPrecisionType l21 = CheckZero(X(8, i) );
+    const ukfPrecisionType l22 = CheckZero(X(9, i) );
 
     if( l11 < 0 || l12 < 0 || l21 < 0 || l22 < 0 )
       {
@@ -923,7 +923,7 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
       }
 
     // get weight from state
-    const double w = CheckZero(X(10, i) );
+    const ukfPrecisionType w = CheckZero(X(10, i) );
 
     // Calculate diffusion matrix.
     const mat33_t &D1 = diffusion(m1, l11, l12);
@@ -1018,12 +1018,12 @@ void Full2T_FW::H(const   ukfMatrixType& X,
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
 
-    const double l11 = CheckZero(X(3, i) );
-    const double l12 = CheckZero(X(4, i) );
-    const double l13 = CheckZero(X(5, i) );
-    const double l21 = CheckZero(X(9, i) );
-    const double l22 = CheckZero(X(10, i) );
-    const double l23 = CheckZero(X(11, i) );
+    const ukfPrecisionType l11 = CheckZero(X(3, i) );
+    const ukfPrecisionType l12 = CheckZero(X(4, i) );
+    const ukfPrecisionType l13 = CheckZero(X(5, i) );
+    const ukfPrecisionType l21 = CheckZero(X(9, i) );
+    const ukfPrecisionType l22 = CheckZero(X(10, i) );
+    const ukfPrecisionType l23 = CheckZero(X(11, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 ||  X(5, i) < 0 || X(9, i) < 0 || X(10, i) < 0 ||  X(11, i) < 0 )
       {
@@ -1031,7 +1031,7 @@ void Full2T_FW::H(const   ukfMatrixType& X,
       }
 
     // get weight from state
-    const double w = CheckZero(X(12, i) );
+    const ukfPrecisionType w = CheckZero(X(12, i) );
 
     // Calculate diffusion matrix.
     const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);

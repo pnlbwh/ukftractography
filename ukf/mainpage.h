@@ -134,12 +134,12 @@
  * <p><b>Stopping Criteria</b></p>
  * <p><table border=0 width=100%>
  * <tr>
- *   <td width=33%>--minFA <double></td>
+ *   <td width=33%>--minFA <ukfPrecisionType></td>
  *   <td width=67%>Abort the tractography when the Fractional Anisotropy is less than
  *   this value (default: 0.15)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--minGA <double></td>
+ *   <td width=33%>--minGA <ukfPrecisionType></td>
  *   <td width=67%>Abort the tractography when the Generalized Anisotropy is less than
  *   this value (default: 0.1)</td>
  * </tr>
@@ -194,44 +194,44 @@
  *   <td width=67%>Whether the DWI input data is already normalized</td>
  * </tr>
  * <tr>
- *   <td width=33%>--stepLength <double></td>
+ *   <td width=33%>--stepLength <ukfPrecisionType></td>
  *   <td width=67%>Step length of tractography, in millimeters. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--weightsOnTensors <std::vector<double>></td>
+ *   <td width=33%>--weightsOnTensors <std::vector<ukfPrecisionType>></td>
  *   <td width=67%>Weights on different tensors when using multiple tensors. There must be one weight for each tensor, and the weights must sum up to 1. Defaults to equally weighted.</td>
  * </tr>
  * <tr>
- *   <td width=33%>--maxHalfFiberLength <double></td>
+ *   <td width=33%>--maxHalfFiberLength <ukfPrecisionType></td>
  *   <td width=67%>The max length limit of the half fibers generated during tractography. Here the fiber is "half" because the tractography goes in only one direction from one seed point at a time (default: 10000)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--seedFALimit <double></td>
+ *   <td width=33%>--seedFALimit <ukfPrecisionType></td>
  *   <td width=67%>Seed points whose FA are below this value are excluded. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--Qm <double></td>
+ *   <td width=33%>--Qm <ukfPrecisionType></td>
  *   <td width=67%>Process noise for angles/direction. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--Ql <double></td>
+ *   <td width=33%>--Ql <ukfPrecisionType></td>
  *   <td width=67%>Process noise for eigenvalues. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--Qw <double></td>
+ *   <td width=33%>--Qw <ukfPrecisionType></td>
  *   <td width=67%>Process noise for free water weights, ignored if no free water estimation. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--Rs <double></td>
+ *   <td width=33%>--Rs <ukfPrecisionType></td>
  *   <td width=67%>Measurement noise. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
- *   <td width=33%>--maxBranchingAngle <double></td>
+ *   <td width=33%>--maxBranchingAngle <ukfPrecisionType></td>
  *   <td width=67%>Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions
  *   form an angle between (minBranchingAngle, maxBranchingAngle). Branching is supressed     when this maxBranchingAngle is set to 0.0</td>
  * </tr>
  * <tr>
- *   <td width=33%>--minBranchingAngle <double></td>
+ *   <td width=33%>--minBranchingAngle <ukfPrecisionType></td>
  *   <td width=67%>Minimum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle)</td>
  * </tr>
  * </table></p>

@@ -32,15 +32,15 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const bool record_cov, const bool record_free_water,  const bool record_tensors,
                            const bool transform_position, const bool store_glyphs, const bool branchesOnly,
 
-                           const double fa_min, const double ga_min, const double seedFALimit,
+                           const ukfPrecisionType fa_min, const ukfPrecisionType ga_min, const ukfPrecisionType seedFALimit,
                            const int num_tensors, const int seeds_per_voxel,
-                           const double minBranchingAngle, const double maxBranchingAngle,
+                           const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                            const bool is_full_model, const bool free_water,
-                           const double stepLength, const double maxHalfFiberLength,
+                           const ukfPrecisionType stepLength, const ukfPrecisionType maxHalfFiberLength,
                            const std::vector<int>& labels,
 
-                           double p0, double sigma_signal, double sigma_mask,
-                           double min_radius, double full_brain_ga_min,
+                           ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
+                           ukfPrecisionType min_radius, ukfPrecisionType full_brain_ga_min,
 
                            const int num_threads
                            ) :
@@ -65,7 +65,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _writeCompressed(true),
   _num_threads(num_threads)
 {
-  if( _cos_theta_max != 0.0 && _cos_theta_max <= _cos_theta_min )
+  if( _cos_theta_max != ukfZero && _cos_theta_max <= _cos_theta_min )
     {
     std::cout << "Maximum branching angle must be greater than " << minBranchingAngle << " degrees." << std::endl;
     exit(1);
@@ -81,7 +81,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _cos_theta_min = cos(_cos_theta_min * M_PI / 180.0);
 
   // Double check branching.
-  _is_branching = _num_tensors > 1 && _cos_theta_max < 1.0;  // The branching is enabled when the maximum branching
+  _is_branching = _num_tensors > 1 && _cos_theta_max < ukfOne;  // The branching is enabled when the maximum branching
                                                              // angle is not 0
   std::cout << "Branching " << (_is_branching ? "enabled" : "disabled") << std::endl << std::endl;
   if( !_is_branching )
@@ -201,9 +201,9 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     {
     for( int i = 0; i < _seeds_per_voxel; ++i )
       {
-      vec3_t dir(static_cast<double>( (rand() % 10001) - 5000),
-                static_cast<double>( (rand() % 10001) - 5000),
-                static_cast<double>( (rand() % 10001) - 5000) );
+      vec3_t dir(static_cast<ukfPrecisionType>( (rand() % 10001) - 5000),
+                static_cast<ukfPrecisionType>( (rand() % 10001) - 5000),
+                static_cast<ukfPrecisionType>( (rand() % 10001) - 5000) );
 
       // CB: those directions are to compare against the matlab output
       // dir._[2] = 0.439598093988175;
@@ -211,7 +211,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       // dir._[0] = 0.028331682419209;
 
       dir = dir.normalized();
-      dir *= 0.5;
+      dir *= ukfHalf;
 
       rand_dirs.push_back(dir);
       }
@@ -304,10 +304,10 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     assert(param.size() == 9);
 
     // Filter out seeds whose FA is too low.
-    double fa = l2fa(param[6], param[7], param[8]);
-    double trace = param[6] + param[7] + param[8];
-    double fa2 = -1;
-    double trace2 = -1;
+    ukfPrecisionType fa = l2fa(param[6], param[7], param[8]);
+    ukfPrecisionType trace = param[6] + param[7] + param[8];
+    ukfPrecisionType fa2 = -1;
+    ukfPrecisionType trace2 = -1;
 
     if( _num_tensors >= 2 )
       {
@@ -352,7 +352,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       tmp_info_inv_state[1] = param[4]; // Phi
       // Switch psi angle.
       // Careful here since M_PI is not standard c++.
-      tmp_info_inv_state[2] = (param[5] < 0.0 ? param[5] + M_PI : param[5] - M_PI);
+      tmp_info_inv_state[2] = (param[5] < ukfZero ? param[5] + M_PI : param[5] - M_PI);
       tmp_info_inv_state[5] = param[8]; // l3
 
       }
@@ -404,8 +404,8 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     info_inv.covariance.resize(state_dim, state_dim);
 
     // make sure covariances are really empty
-    info.covariance.setConstant(0.0);
-    info_inv.covariance.setConstant(0.0);
+    info.covariance.setConstant(ukfZero);
+    info_inv.covariance.setConstant(ukfZero);
     for( int local_i = 0; local_i < state_dim; ++local_i )
       {
       info.covariance(local_i, local_i) = _p0;
@@ -574,7 +574,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
   *  Only used in tractography.cc
   */
   typedef Eigen::Matrix<ukfPrecisionType, Eigen::Dynamic, 6>  BMatrixType;
-  BMatrixType B(signal_dim * 2, 6); //HACK: Eigen::Matrix<double, DYNAMIC, 6> ??
+  BMatrixType B(signal_dim * 2, 6); //HACK: Eigen::Matrix<ukfPrecisionType, DYNAMIC, 6> ??
 
   for( int i = 0; i < signal_dim * 2; ++i )
     {
@@ -632,16 +632,16 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
    vec3_t sigma = svd_decomp.singularValues(); // diagonal() returns elements of a diag matrix as a vector.
 
     assert(sigma[0] >= sigma[1] && sigma[1] >= sigma[2]);
-    if( Q.determinant()  < 0 )
+    if( Q.determinant()  < ukfZero )
       {
-      Q = Q * (-1.0);
+      Q = Q * (-ukfOne);
       }
-    assert(Q.determinant() > 0);
+    assert(Q.determinant() > ukfZero);
 
     // Extract the three Euler Angles from the rotation matrix.
-    double phi, psi;
-    const double theta = acos(Q(2, 2) );
-    double epsilon = 1.0e-10;
+    ukfPrecisionType phi, psi;
+    const ukfPrecisionType theta = acos(Q(2, 2) );
+    ukfPrecisionType epsilon = 1.0e-10;
     if( fabs(theta) > epsilon )
       {
       phi = atan2(Q(1, 2), Q(0, 2) );
@@ -650,7 +650,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     else
       {
       phi = atan2(-Q(0, 1), Q(1, 1) );
-      psi = 0.0;
+      psi = ukfZero;
       }
 
     ret[i].resize(9);
@@ -686,11 +686,11 @@ void Tractography::Follow3T(const int thread_id,
   vec3_t              x = fiberStartSeed.point;
   State              state = fiberStartSeed.state;
   ukfMatrixType    p(fiberStartSeed.covariance);
-  double             fa = fiberStartSeed.fa;
-  double             fa2 = fiberStartSeed.fa2;
-  double             dNormMSE = 0; // no error at the fiberStartSeed
-  double             trace = fiberStartSeed.trace;
-  double             trace2 = fiberStartSeed.trace2;
+  ukfPrecisionType             fa = fiberStartSeed.fa;
+  ukfPrecisionType             fa2 = fiberStartSeed.fa2;
+  ukfPrecisionType             dNormMSE = 0; // no error at the fiberStartSeed
+  ukfPrecisionType             trace = fiberStartSeed.trace;
+  ukfPrecisionType             trace2 = fiberStartSeed.trace2;
 
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
@@ -717,7 +717,7 @@ void Tractography::Follow3T(const int thread_id,
     state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
 
-    const double ga = s2ga(signal_tmp);
+    const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
     const bool   is_curving = curve_radius(fiber.position) < _min_radius;
 
@@ -747,7 +747,7 @@ void Tractography::Follow3T(const int thread_id,
         is_two = is_two && l2fa(l2[0], l2[1], l2[2]) > _fa_min;
         is_three = is_three && l2fa(l3[0], l3[1], l3[2]) > _fa_min;
 
-        double dotval = m1.dot(m2);
+        ukfPrecisionType dotval = m1.dot(m2);
         bool is_branch1 =
           dotval < _cos_theta_min && dotval > _cos_theta_max;
         dotval = m1.dot(m3);
@@ -865,11 +865,11 @@ void Tractography::Follow2T(const int thread_id,
 
   ukfMatrixType p(fiberStartSeed.covariance);
 
-  double fa = fiberStartSeed.fa;
-  double fa2 = fiberStartSeed.fa2;
-  double dNormMSE = 0; // no error at the fiberStartSeed
-  double trace = fiberStartSeed.trace;
-  double trace2 = fiberStartSeed.trace2;
+  ukfPrecisionType fa = fiberStartSeed.fa;
+  ukfPrecisionType fa2 = fiberStartSeed.fa2;
+  ukfPrecisionType dNormMSE = 0; // no error at the fiberStartSeed
+  ukfPrecisionType trace = fiberStartSeed.trace;
+  ukfPrecisionType trace2 = fiberStartSeed.trace2;
 
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2); // writes state to fiber.state
@@ -904,7 +904,7 @@ void Tractography::Follow2T(const int thread_id,
 
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
-    double ga = s2ga(signal_tmp);
+    ukfPrecisionType ga = s2ga(signal_tmp);
     bool   in_csf = ga < _ga_min || fa < _fa_min;
     // bool in_csf = ga < _ga_min || fa < _fa_min ;
     bool is_curving = curve_radius(fiber.position) < _min_radius;
@@ -926,7 +926,7 @@ void Tractography::Follow2T(const int thread_id,
         l2[0] > l2[1] && l2[0] > l2[2];
       is_two = is_two && l2fa(l1[0], l1[1], l1[2]) > _fa_min &&
         l2fa(l2[0], l2[1], l2[2]) > _fa_min;
-      double theta = m1.dot(m2);
+      ukfPrecisionType theta = m1.dot(m2);
       bool   is_branch = theta<_cos_theta_min && theta> _cos_theta_max;
 
       // If we have two tensors and the angle between them is large enough we
@@ -979,12 +979,12 @@ void Tractography::Follow1T(const int thread_id,
 
   ukfMatrixType p(fiberStartSeed.covariance);
 
-  double fa = fiberStartSeed.fa;
-  double fa2 = fiberStartSeed.fa2; // just needed for record
-  double trace = fiberStartSeed.trace;
-  double trace2 = fiberStartSeed.trace2;
+  ukfPrecisionType fa = fiberStartSeed.fa;
+  ukfPrecisionType fa2 = fiberStartSeed.fa2; // just needed for record
+  ukfPrecisionType trace = fiberStartSeed.trace;
+  ukfPrecisionType trace2 = fiberStartSeed.trace2;
 
-  double dNormMSE = 0; // no error at the fiberStartSeed
+  ukfPrecisionType dNormMSE = 0; // no error at the fiberStartSeed
   // Record start point.
   Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
@@ -1005,7 +1005,7 @@ void Tractography::Follow1T(const int thread_id,
 
     _model->H(state_tmp, signal_tmp);
 
-    const double ga = s2ga(signal_tmp);
+    const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
     const bool   is_curving = curve_radius(fiber.position) < _min_radius;
 
@@ -1033,13 +1033,13 @@ void Tractography::Step3T(const int thread_id,
                           vec3_t& l2,
                           vec3_t& m3,
                           vec3_t& l3,
-                          double& fa,
-                          double& fa2,
+                          ukfPrecisionType& fa,
+                          ukfPrecisionType& fa2,
                           State& state,
                           ukfMatrixType& covariance,
-                          double& dNormMSE,
-                          double& trace,
-                          double& trace2
+                          ukfPrecisionType& dNormMSE,
+                          ukfPrecisionType& trace,
+                          ukfPrecisionType& trace2
                           )
 {
 
@@ -1064,9 +1064,9 @@ void Tractography::Step3T(const int thread_id,
   trace = l1[0] + l1[1] + l1[2];
   trace2 = l2[0] + l2[1] + l2[2];
 
-  double dot1 = m1.dot(old_dir);
-  double dot2 = m2.dot(old_dir);
-  double dot3 = m3.dot(old_dir);
+  ukfPrecisionType dot1 = m1.dot(old_dir);
+  ukfPrecisionType dot2 = m2.dot(old_dir);
+  ukfPrecisionType dot3 = m3.dot(old_dir);
   if( dot1 < dot2 && dot3 < dot2 )
     {
     // Switch dirs and lambdas.
@@ -1100,7 +1100,7 @@ void Tractography::Step3T(const int thread_id,
   // 0 what will lead to abortion in the tractography loop.
   if( l1[0] < l1[1] || l1[0] < l1[2] )
     {
-    fa = 0.0;
+    fa = ukfZero;
     }
   else
     {
@@ -1125,13 +1125,13 @@ void Tractography::Step2T(const int thread_id,
                           vec3_t& l1,
                           vec3_t& m2,
                           vec3_t& l2,
-                          double& fa,
-                          double& fa2,
+                          ukfPrecisionType& fa,
+                          ukfPrecisionType& fa2,
                           State& state,
                           ukfMatrixType& covariance,
-                          double& dNormMSE,
-                          double& trace,
-                          double& trace2
+                          ukfPrecisionType& dNormMSE,
+                          ukfPrecisionType& trace,
+                          ukfPrecisionType& trace2
                           )
 {
 
@@ -1141,7 +1141,7 @@ void Tractography::Step2T(const int thread_id,
 
   State              state_new(_model->state_dim() );
   ukfMatrixType covariance_new(_model->state_dim(), _model->state_dim() );
-  covariance_new.setConstant(0.0);
+  covariance_new.setConstant(ukfZero);
 
   // Use the Unscented Kalman Filter to get the next estimate.
   ukfVectorType signal(_signal_data->GetSignalDimension() * 2);
@@ -1158,10 +1158,10 @@ void Tractography::Step2T(const int thread_id,
   trace = l1[0] + l1[1] + l1[2];
   trace2 = l2[0] + l2[1] + l2[2];
 
-  const double fa_tensor_1 = l2fa(l1[0], l1[1], l1[2]);
-  const double fa_tensor_2 = l2fa(l2[0], l2[1], l2[2]);
+  const ukfPrecisionType fa_tensor_1 = l2fa(l1[0], l1[1], l1[2]);
+  const ukfPrecisionType fa_tensor_2 = l2fa(l2[0], l2[1], l2[2]);
 
-  const double tensor_angle = std::acos(m1.dot(m2) ) * (180 / M_PI);
+  const ukfPrecisionType tensor_angle = std::acos(m1.dot(m2) ) * (180 / M_PI);
 
   if( m1.dot(old_dir) < m2.dot(old_dir) )
     {
@@ -1212,8 +1212,8 @@ void Tractography::Step2T(const int thread_id,
   // 0 what will lead to abortion in the tractography loop.
   if( l1[0] < l1[1] || l1[0] < l1[2] )
     {
-    fa = 0.0;
-    fa2 = 0.0;
+    fa = ukfZero;
+    fa2 = ukfZero;
     }
   else
     {
@@ -1244,11 +1244,11 @@ void Tractography::Step2T(const int thread_id,
 
 void Tractography::Step1T(const int thread_id,
                           vec3_t& x,
-                          double& fa,
+                          ukfPrecisionType& fa,
                           State& state,
                           ukfMatrixType& covariance,
-                          double& dNormMSE,
-                          double& trace
+                          ukfPrecisionType& dNormMSE,
+                          ukfPrecisionType& trace
                           )
 {
 
@@ -1275,7 +1275,7 @@ void Tractography::Step1T(const int thread_id,
   // 0 what will lead to abortion in the tractography loop.
   if( l[0] < l[1] || l[0] < l[2] )
     {
-    fa = 0.0;
+    fa = ukfZero;
     }
   else
     {
@@ -1310,7 +1310,7 @@ void Tractography::SwapState3T(State& state,
   i *= state_dim;
   j *= state_dim;
 
-  tmp.setConstant(0.0);
+  tmp.setConstant(ukfZero);
   tmp = covariance;
   covariance.block( i, i,state_dim, state_dim) = tmp.block( 0, 0,state_dim, state_dim);
   covariance.block( 0, 0,state_dim, state_dim) = tmp.block( i, i,state_dim, state_dim);
@@ -1343,7 +1343,7 @@ void Tractography::SwapState2T( State& state,
     }
   state_dim = state_dim >> 1; // for uneven state (fw) rounds down, thats good
 
-  tmp.setConstant(0.0);
+  tmp.setConstant(ukfZero);
   tmp = covariance;
 
   covariance.block( state_dim, state_dim,state_dim, state_dim) = tmp.block( 0, 0,state_dim, state_dim);
@@ -1366,9 +1366,9 @@ void Tractography::SwapState2T( State& state,
   state.segment(0,state_dim) = tmp_vec.segment(state_dim, state_dim);
 }
 
-void Tractography::Record(const vec3_t& x, double fa, double fa2, const State& state,
+void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state,
                           const ukfMatrixType p,
-                          UKFFiber& fiber, double dNormMSE, double trace, double trace2)
+                          UKFFiber& fiber, ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2)
 {
 
   assert(_model->state_dim() == static_cast<int>(state.size() ) );
@@ -1405,7 +1405,7 @@ void Tractography::Record(const vec3_t& x, double fa, double fa2, const State& s
 
   if( _record_free_water )
     {
-    double fw = 1 - state[_nPosFreeWater];
+    ukfPrecisionType fw = 1 - state[_nPosFreeWater];
     // sometimes QP produces slightly negative results due to numerical errors in Quadratic Programming, the weight is
     // clipped in F() and H() but its still possible that
     // a slightly negative weight gets here, because the filter ends with a constrain step.

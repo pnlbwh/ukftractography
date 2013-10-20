@@ -34,7 +34,7 @@ inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorT
   /* compute d = H^T * np */
   for( int c = 0; c < n; ++c )
     {
-    double sum = 0.0;
+    ukfPrecisionType sum = ukfZero;
     for( int r = 0; r < n; ++r )
       {
       sum += J(r,c) * np[r];
@@ -50,7 +50,7 @@ inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorTy
   /* setting of z = H * d */
   for( int i = 0; i < n; ++i )
     {
-    z[i] = 0.0;
+    z[i] = ukfZero;
     for( int j = iq; j < n; ++j )
       {
       z[i] += J(i,j) * d[j];
@@ -63,7 +63,7 @@ inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorTy
   /* setting of r = R^-1 d */
   for( int i = iq - 1; i >= 0; i-- )
     {
-    double sum = 0.0;
+    ukfPrecisionType sum = ukfZero;
     for( int j = i + 1; j < iq; ++j )
       {
       sum += R(i,j) * r[j];
@@ -72,24 +72,24 @@ inline void update_r(const ukfMatrixType& R, ukfVectorType& r, const ukfVectorTy
     }
 }
 
-inline double distance(double a, double b)
+inline ukfPrecisionType distance(ukfPrecisionType a, ukfPrecisionType b)
 {
-  const double a1 = fabs(a);
-  const double b1 = fabs(b);
+  const ukfPrecisionType a1 = fabs(a);
+  const ukfPrecisionType b1 = fabs(b);
   if( a1 > b1 )
     {
-    double t = (b1 / a1);
-    return a1 * ::std::sqrt(1.0 + t * t);
+    ukfPrecisionType t = (b1 / a1);
+    return a1 * ::std::sqrt(ukfOne + t * t);
     }
   else if( b1 > a1 )
     {
-    double t = (a1 / b1);
-    return b1 * ::std::sqrt(1.0 + t * t);
+    ukfPrecisionType t = (a1 / b1);
+    return b1 * ::std::sqrt(ukfOne + t * t);
     }
   return a1 * ::std::sqrt(2.0);
 }
 
-bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, double& R_norm)
+bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, ukfPrecisionType& R_norm)
 {
   const int n = d.size();
 
@@ -110,17 +110,17 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
      *    update d depending on the sign of gs.
      *    Otherwise we have to apply the Givens rotation to these columns.
      *    The i - 1 element of d has to be updated to h. */
-    double cc = d[j - 1];
-    double ss = d[j];
-    double h = distance(cc, ss);
-    if( fabs(h) < std::numeric_limits<double>::epsilon() ) // h == 0
+    ukfPrecisionType cc = d[j - 1];
+    ukfPrecisionType ss = d[j];
+    ukfPrecisionType h = distance(cc, ss);
+    if( fabs(h) < std::numeric_limits<ukfPrecisionType>::epsilon() ) // h == 0
       {
       continue;
       }
-    d[j] = 0.0;
+    d[j] = ukfZero;
     ss = ss / h;
     cc = cc / h;
-    if( cc < 0.0 )
+    if( cc < ukfZero )
       {
       cc = -cc;
       ss = -ss;
@@ -130,11 +130,11 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
       {
       d[j - 1] = h;
       }
-    double xny = ss / (1.0 + cc);
+    ukfPrecisionType xny = ss / (ukfOne + cc);
     for( int k = 0; k < n; k++ )
       {
-      double t1 = J(k,j - 1);
-      double t2 = J(k,j);
+      ukfPrecisionType t1 = J(k,j - 1);
+      ukfPrecisionType t2 = J(k,j);
       J(k,j - 1) = t1 * cc + t2 * ss;
       J(k,j) = xny * (t1 + J(k,j - 1)) - t2;
       }
@@ -155,12 +155,12 @@ bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& i
   print_vector("d", d, iq);
 #endif
 
-  if( fabs(d[iq - 1]) <= std::numeric_limits<double>::epsilon() * R_norm )
+  if( fabs(d[iq - 1]) <= std::numeric_limits<ukfPrecisionType>::epsilon() * R_norm )
     {
     // problem degenerate
     return false;
     }
-  R_norm = std::max<double>(R_norm, fabs(d[iq - 1]) );
+  R_norm = std::max<ukfPrecisionType>(R_norm, fabs(d[iq - 1]) );
   return true;
 }
 
@@ -194,10 +194,10 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, Eigen::VectorXi& A, u
   A[iq - 1] = A[iq];
   u[iq - 1] = u[iq];
   A[iq] = 0;
-  u[iq] = 0.0;
+  u[iq] = ukfZero;
   for( int j = 0; j < iq; ++j )
     {
-    R(j,iq - 1) = 0.0;
+    R(j,iq - 1) = ukfZero;
     }
   /* constraint has been fully removed */
   iq--;
@@ -211,17 +211,17 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, Eigen::VectorXi& A, u
     }
   for( int j = qq; j < iq; ++j )
     {
-    double cc = R(j,j);
-    double ss = R(j + 1,j);
-    double h = distance(cc, ss);
-    if( fabs(h) < std::numeric_limits<double>::epsilon() ) // h == 0
+    ukfPrecisionType cc = R(j,j);
+    ukfPrecisionType ss = R(j + 1,j);
+    ukfPrecisionType h = distance(cc, ss);
+    if( fabs(h) < std::numeric_limits<ukfPrecisionType>::epsilon() ) // h == 0
       {
       continue;
       }
     cc = cc / h;
     ss = ss / h;
-    R(j + 1,j) = 0.0;
-    if( cc < 0.0 )
+    R(j + 1,j) = ukfZero;
+    if( cc < ukfZero )
       {
       R(j,j) = -h;
       cc = -cc;
@@ -232,18 +232,18 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, Eigen::VectorXi& A, u
       R(j,j) = h;
       }
 
-    double xny = ss / (1.0 + cc);
+    ukfPrecisionType xny = ss / (ukfOne + cc);
     for( int k =j + 1; k < iq; ++k )
       {
-      double t1 = R(j,k);
-      double t2 = R(j + 1,2);
+      ukfPrecisionType t1 = R(j,k);
+      ukfPrecisionType t2 = R(j + 1,2);
       R(j,k) = t1 * cc + t2 * ss;
       R(j + 1,2) = xny * (t1 + R(j,k)) - t2;
       }
     for( int k = 0; k < n; ++k )
       {
-      double t1 = J(k,j);
-      double t2 = J(k,j + 1);
+      ukfPrecisionType t1 = J(k,j);
+      ukfPrecisionType t2 = J(k,j + 1);
       J(k,j) = t1 * cc + t2 * ss;
       J(k,j + 1) = xny * (J(k,j) + t1) - t2;
       }
@@ -258,14 +258,14 @@ void cholesky_decomposition(ukfMatrixType& A)
     {
     for( int j = i; j < n; ++j )
       {
-      double sum = A(i,j);
+      ukfPrecisionType sum = A(i,j);
       for( int k =i - 1; k >= 0; k-- )
         {
         sum -= A(i,k) * A(j,k);
         }
       if( i == j )
         {
-        if( sum <= 0.0 )
+        if( sum <= ukfZero )
           {
           std::ostringstream os;
           // raise error
@@ -333,12 +333,12 @@ void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorTyp
 }
 
 
-inline double dot_product(const ukfVectorType& x, const ukfVectorType& y)
+inline ukfPrecisionType dot_product(const ukfVectorType& x, const ukfVectorType& y)
 {
   int    n = x.size();
-  double sum;
+  ukfPrecisionType sum;
 
-  sum = 0.0;
+  sum = ukfZero;
   for( int i = 0; i < n; ++i )
     {
     sum += x[i] * y[i];
@@ -402,7 +402,7 @@ void print_vector(const char* name, const typename Eigen::Matrix<T,Eigen::Dynami
 
 // The Solving function, implementing the Goldfarb-Idnani method
 
-double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
+ukfPrecisionType solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
                       const ukfMatrixType& CE, const ukfVectorType& ce0,
                       const ukfMatrixType& CI, const ukfVectorType& ci0,
                       ukfVectorType& x)
@@ -462,10 +462,10 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
   ukfMatrixType R(n, n), J(n, n);
   ukfVectorType s(m + p), z(n), r(m + p), d(n), np(n), u(m + p), x_old(n), u_old(m + p);
 
-  double             inf;
-  if( std::numeric_limits<double>::has_infinity )
+  ukfPrecisionType             inf;
+  if( std::numeric_limits<ukfPrecisionType>::has_infinity )
     {
-    inf = std::numeric_limits<double>::infinity();
+    inf = std::numeric_limits<ukfPrecisionType>::infinity();
     }
   else
     {
@@ -492,7 +492,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
    */
 
   /* compute the trace of the original matrix G */
-  double c1 = 0.0;
+  ukfPrecisionType c1 = ukfZero;
   for(int i = 0; i < n; ++i )
     {
     c1 += G(i,i);
@@ -505,26 +505,26 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
   /* initialize the matrix R */
   for( int i = 0; i < n; ++i )
     {
-    d[i] = 0.0;
+    d[i] = ukfZero;
     for( int j = 0; j < n; ++j )
       {
-      R(i,j) = 0.0;
+      R(i,j) = ukfZero;
       }
     }
-  double R_norm = 1.0; /* this variable will hold the norm of the matrix R */
+  ukfPrecisionType R_norm = ukfOne; /* this variable will hold the norm of the matrix R */
 
   /* compute the inverse of the factorized matrix G^-1, this is the initial value for H */
-  double c2 = 0.0;
+  ukfPrecisionType c2 = ukfZero;
   for( int i = 0; i < n; ++i )
     {
-    d[i] = 1.0;
+    d[i] = ukfOne;
     forward_elimination(G, z, d);
     for( int j = 0; j < n; ++j )
       {
       J(i,j) = z[j];
       }
     c2 += z[i];
-    d[i] = 0.0;
+    d[i] = ukfZero;
     }
 #ifdef TRACE_SOLVER
   print_matrix("J", J);
@@ -533,7 +533,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
   /* c1 * c2 is an estimate for cond(G) */
 
   /*
-   * Find the unconstrained minimizer of the quadratic form 0.5 * x G x + g0 x
+   * Find the unconstrained minimizer of the quadratic form ukfHalf * x G x + g0 x
    * this is a feasible point in the dual space
    * x = G^-1 * g0
    */
@@ -543,7 +543,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
     x[i] = -x[i];
     }
   /* and compute the current solution value */
-  double f_value = 0.5 * dot_product(g0, x);
+  ukfPrecisionType f_value = ukfHalf * dot_product(g0, x);
 #ifdef TRACE_SOLVER
   std::cout << "Unconstrained solution: " << f_value << std::endl;
   print_vector("x", x);
@@ -569,8 +569,8 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
 
     /* compute full step length t2: i.e., the minimum step in primal space s.t. the contraint
      *      becomes feasible */
-    double t2 = 0.0;
-    if( fabs(dot_product(z, z) ) > std::numeric_limits<double>::epsilon() ) // i.e. z != 0
+    ukfPrecisionType t2 = ukfZero;
+    if( fabs(dot_product(z, z) ) > std::numeric_limits<ukfPrecisionType>::epsilon() ) // i.e. z != 0
       {
       t2 = (-dot_product(np, x) - ce0[i]) / dot_product(z, np);
       }
@@ -588,7 +588,7 @@ double solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
       }
 
     /* compute the new solution value */
-    f_value += 0.5 * (t2 * t2) * dot_product(z, np);
+    f_value += ukfHalf * (t2 * t2) * dot_product(z, np);
     A[i] = -i - 1;
 
     // NOTE: Removed by CB, its okay not to add an equality constraint!
@@ -618,26 +618,26 @@ l1:
     }
 
   /* compute s[x] = ci^T * x + ci0 for all elements of K \ A */
-  double ss = 0.0;
-  double psi = 0.0; /* this value will contain the sum of all infeasibilities */
+  ukfPrecisionType ss = ukfZero;
+  ukfPrecisionType psi = ukfZero; /* this value will contain the sum of all infeasibilities */
   int ip = 0; /* ip will be the index of the chosen violated constraint */
   for( int i = 0; i < m; ++i )
     {
     iaexcl[i] = true;
-    double sum = 0.0;
+    ukfPrecisionType sum = ukfZero;
     for( int j = 0; j < n; ++j )
       {
       sum += CI(j,i) * x[j];
       }
     sum += ci0[i];
     s[i] = sum;
-    psi += std::min(0.0, sum);
+    psi += std::min(ukfZero, sum);
     }
 #ifdef TRACE_SOLVER
   print_vector("s", s, m);
 #endif
 
-  if( fabs(psi) <= m * std::numeric_limits<double>::epsilon() * c1 * c2 * 100.0 )
+  if( fabs(psi) <= m * std::numeric_limits<ukfPrecisionType>::epsilon() * c1 * c2 * 100.0 )
     {
     /* numerically there are not infeasibilities anymore */
     return f_value;
@@ -663,7 +663,7 @@ l2: /* Step 2: check for feasibility and determine a new S-pair */
       ip = i;
       }
     }
-  if( ss >= 0.0 )
+  if( ss >= ukfZero )
     {
     return f_value;
     }
@@ -673,7 +673,7 @@ l2: /* Step 2: check for feasibility and determine a new S-pair */
     np[i] = CI(i,ip);
     }
   /* set u = [u 0]^T */
-  u[iq] = 0.0;
+  u[iq] = ukfZero;
   /* add ip to the active set A */
   A[iq] = ip;
 
@@ -700,11 +700,11 @@ l2a: /* Step 2a: determine step direction */
   /* Step 2b: compute step length */
   unsigned int l = 0;
   /* Compute t1: partial step length (maximum step in dual space without violating dual feasibility */
-  double t1 = inf; /* +inf */
+  ukfPrecisionType t1 = inf; /* +inf */
   /* find the index l s.t. it reaches the minimum of u+[x] / r */
   for( int k = p; k < iq; k++ )
     {
-    if( r[k] > 0.0 )
+    if( r[k] > ukfZero )
       {
       if( u[k] / r[k] < t1 )
         {
@@ -713,15 +713,15 @@ l2a: /* Step 2a: determine step direction */
         }
       }
     }
-  double t2 = inf;
+  ukfPrecisionType t2 = inf;
   /* Compute t2: full step length (minimum step in primal space such that the constraint ip becomes feasible */
-  if( fabs(dot_product(z, z) )  > std::numeric_limits<double>::epsilon() ) // i.e. z != 0
+  if( fabs(dot_product(z, z) )  > std::numeric_limits<ukfPrecisionType>::epsilon() ) // i.e. z != 0
     {
     t2 = -s[ip] / dot_product(z, np);
     }
 
   /* the step is chosen as the minimum of t1 and t2 */
-  double t = std::min(t1, t2);
+  ukfPrecisionType t = std::min(t1, t2);
 #ifdef TRACE_SOLVER
   std::cout << "Step sizes: " << t << " (t1 = " << t1 << ", t2 = " << t2 << ") ";
 #endif
@@ -762,7 +762,7 @@ l2a: /* Step 2a: determine step direction */
     x[k] += t * z[k];
     }
   /* update the solution value */
-  f_value += t * dot_product(z, np) * (0.5 * t + u[iq]);
+  f_value += t * dot_product(z, np) * (ukfHalf * t + u[iq]);
   /* u = u + t * [-r 1] */
   for( int k = 0; k < iq; k++ )
     {
@@ -778,7 +778,7 @@ l2a: /* Step 2a: determine step direction */
   print_vector("A", A, iq + 1);
 #endif
 
-  if( fabs(t - t2) < std::numeric_limits<double>::epsilon() )
+  if( fabs(t - t2) < std::numeric_limits<ukfPrecisionType>::epsilon() )
     {
 #ifdef TRACE_SOLVER
     std::cout << "Full step has taken " << t << std::endl;
@@ -837,7 +837,7 @@ l2a: /* Step 2a: determine step direction */
 #endif
 
   /* update s[ip] = CI * x + ci0 */
-  double sum = 0.0;
+  ukfPrecisionType sum = ukfZero;
   for( int k = 0; k < n; k++ )
     {
     sum += CI(k,ip) * x[k];

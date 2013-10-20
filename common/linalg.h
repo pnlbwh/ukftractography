@@ -15,30 +15,30 @@
 #include "ukf_types.h"
 
 /** Make a diagonal matrix */
-inline mat33_t diag(const double a, const double b, const double c)
+inline mat33_t diag(const ukfPrecisionType a, const ukfPrecisionType b, const ukfPrecisionType c)
 {
   return mat33_t(vec3_t(a,b,c).asDiagonal());
 }
 
 /** Assemble rotation matrix given the rotation angles */
-inline mat33_t rotation(const double theta, const double phi, const double psi)
+inline mat33_t rotation(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi)
 {
-  const double &c_th = cos(theta);
-  const double &s_th = sin(theta);
-  const double &c_ph = cos(phi);
-  const double &s_ph = sin(phi);
-  const double &c_ps = cos(psi);
-  const double &s_ps = sin(psi);
+  const ukfPrecisionType &c_th = cos(theta);
+  const ukfPrecisionType &s_th = sin(theta);
+  const ukfPrecisionType &c_ph = cos(phi);
+  const ukfPrecisionType &s_ph = sin(phi);
+  const ukfPrecisionType &c_ps = cos(psi);
+  const ukfPrecisionType &s_ps = sin(psi);
 
-  const double &q11 = c_th * c_ph * c_ps - s_ph * s_ps;
-  const double &q21 = c_th * c_ps * s_ph + c_ph * s_ps;
-  const double &q31 = -c_ps * s_th;
-  const double &q12 = -c_ps * s_ph - c_th * c_ph * s_ps;
-  const double &q22 = c_ph * c_ps - c_th * s_ph * s_ps;
-  const double &q32 = s_th * s_ps;
-  const double &q13 = c_ph * s_th;
-  const double &q23 = s_th * s_ph;
-  const double &q33 = c_th;
+  const ukfPrecisionType &q11 = c_th * c_ph * c_ps - s_ph * s_ps;
+  const ukfPrecisionType &q21 = c_th * c_ps * s_ph + c_ph * s_ps;
+  const ukfPrecisionType &q31 = -c_ps * s_th;
+  const ukfPrecisionType &q12 = -c_ps * s_ph - c_th * c_ph * s_ps;
+  const ukfPrecisionType &q22 = c_ph * c_ps - c_th * s_ph * s_ps;
+  const ukfPrecisionType &q32 = s_th * s_ps;
+  const ukfPrecisionType &q13 = c_ph * s_th;
+  const ukfPrecisionType &q23 = s_th * s_ph;
+  const ukfPrecisionType &q33 = c_th;
 
   mat33_t Q;
   Q << q11, q12, q13,
@@ -48,33 +48,33 @@ inline mat33_t rotation(const double theta, const double phi, const double psi)
 }
 
 /** Calculate main direction of the diffusion from euler angles */
-inline vec3_t rotation_main_dir(const double theta, const double phi, const double psi)
+inline vec3_t rotation_main_dir(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi)
 {
-  const double & c_th = cos(theta);
-  const double & s_th = sin(theta);
-  const double & c_ph = cos(phi);
-  const double & s_ph = sin(phi);
-  const double & c_ps = cos(psi);
-  const double & s_ps = sin(psi);
+  const ukfPrecisionType & c_th = cos(theta);
+  const ukfPrecisionType & s_th = sin(theta);
+  const ukfPrecisionType & c_ph = cos(phi);
+  const ukfPrecisionType & s_ph = sin(phi);
+  const ukfPrecisionType & c_ps = cos(psi);
+  const ukfPrecisionType & s_ps = sin(psi);
 
-  const double & q11 = c_th * c_ph * c_ps - s_ph * s_ps;
-  const double & q21 = c_th * c_ps * s_ph + c_ph * s_ps;
-  const double & q31 = -c_ps * s_th;
+  const ukfPrecisionType & q11 = c_th * c_ph * c_ps - s_ph * s_ps;
+  const ukfPrecisionType & q21 = c_th * c_ps * s_ph + c_ph * s_ps;
+  const ukfPrecisionType & q31 = -c_ps * s_th;
   vec3_t rval;
   rval << q11, q21, q31;
   return rval;
 }
 
 /** Calculate a diffusion matrix from euler angles */
-inline mat33_t diffusion_euler(const double theta, const double phi, const double psi,
-                             const double l1, const double l2, const double l3)
+inline mat33_t diffusion_euler(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi,
+                             const ukfPrecisionType l1, const ukfPrecisionType l2, const ukfPrecisionType l3)
 {
   const mat33_t & Q = rotation(theta, phi, psi);
   return Q * diag(l1, l2, l3) * Q.transpose() * 1e-6;
 }
 
 /** Make a diffusion tensor matrix from one principal direction, and major and minor EV */
-inline mat33_t diffusion(const vec3_t &m, const double l1, const double l2)
+inline mat33_t diffusion(const vec3_t &m, const ukfPrecisionType l1, const ukfPrecisionType l2)
 {
   mat33_t  R;
   R << m[0], m[1], m[2],
@@ -84,7 +84,7 @@ inline mat33_t diffusion(const vec3_t &m, const double l1, const double l2)
   return R * diag(l1, l2, l2) * R.transpose() * 1e-6;
 }
 
-inline void initNormalized(vec3_t &m, const double &a, const double &b, const double &c)
+inline void initNormalized(vec3_t &m, const ukfPrecisionType &a, const ukfPrecisionType &b, const ukfPrecisionType &c)
 {
   m << a, b, c;
   m.normalize();

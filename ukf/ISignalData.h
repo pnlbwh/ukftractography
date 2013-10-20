@@ -30,7 +30,7 @@ public:
    * \param[in] sigma_signal the interpolation 'factor' for the signal
    * \param[in] sigma_mask the interpolation 'factor' for the mask
   */
-  ISignalData(double sigma_signal, double sigma_mask)
+  ISignalData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
     : _sigma_signal(sigma_signal), _sigma_mask(sigma_mask)
   {
 
@@ -45,7 +45,7 @@ public:
   virtual void Interp3Signal(const vec3_t& pos, ukfVectorType & signal) const = 0;
 
   /** Checks if a certian position is still within the brain mask. */
-  virtual double Interp3ScalarMask(const vec3_t& pos) const = 0;
+  virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const = 0;
 
   /** Get all the seed points. */
   virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
@@ -102,9 +102,9 @@ public:
 protected:
 
   /** sigma for gaussian interpolation of signal */
-  const double _sigma_signal;
+  const ukfPrecisionType _sigma_signal;
   /** sigma for gaussian interpolation of mask */
-  const double _sigma_mask;
+  const ukfPrecisionType _sigma_mask;
 
   /** voxel size */
   vec3_t _voxel;

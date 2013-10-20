@@ -9,7 +9,7 @@
 #include <iostream>
 #include <cassert>
 
-NrrdData::NrrdData(double sigma_signal, double sigma_mask)
+NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
   : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
 {
 
@@ -38,14 +38,14 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
   const int ny = static_cast<const int>(_dim[1]);
   const int nz = static_cast<const int>(_dim[2]);
 
-  double w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
+  ukfPrecisionType w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
   assert(signal.size() == static_cast<unsigned int>(_num_gradients * 2) );
   assert(_data);
   // Is this really necessary?
   for( int i = 0; i < 2 * _num_gradients; ++i )
     {
-    signal[i] = 0.0;
+    signal[i] = ukfZero;
     }
 
   const int step1 = nz * ny * _num_gradients;
@@ -58,8 +58,8 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
       {
       continue;
       }
-    const double dx = (x - pos[0]) * _voxel[0];
-    const double dxx = dx * dx;
+    const ukfPrecisionType dx = (x - pos[0]) * _voxel[0];
+    const ukfPrecisionType dxx = dx * dx;
     for( int yy = -1; yy <= 1; ++yy )
       {
       const int y = static_cast<const int>(round(pos[1]) + yy);
@@ -68,8 +68,8 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
         continue;
         }
 
-      const double dy = (y - pos[1]) * _voxel[1];
-      const double dyy = dy * dy;
+      const ukfPrecisionType dy = (y - pos[1]) * _voxel[1];
+      const ukfPrecisionType dyy = dy * dy;
       for( int zz = -1; zz <= 1; ++zz )
         {
         const int z = static_cast<const int>(round(pos[2]) + zz);
@@ -77,11 +77,11 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
           {
           continue;
           }
-        const double dz = (z - pos[2]) * _voxel[2];
-        const double dzz = dz * dz;
+        const ukfPrecisionType dz = (z - pos[2]) * _voxel[2];
+        const ukfPrecisionType dzz = dz * dz;
 
         // gaussian smoothing
-        const double w = exp(-(dxx + dyy + dzz) / _sigma_signal);
+        const ukfPrecisionType w = exp(-(dxx + dyy + dzz) / _sigma_signal);
         // for each gradient direction
         for( int i = 0; i < _num_gradients; ++i )
           {
@@ -95,7 +95,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
     }
 
   // Deleted by Wendy
-  // signal shouldn't be halved due to double occurance of the gradients
+  // signal shouldn't be halved due to ukfPrecisionType occurance of the gradients
   // reinserted by CB, in order to match the MATLAB code.
   // CB: needs to removed in order to interpolate the signal correctly.
   w_sum *= 2; // Double each occurance.
@@ -109,17 +109,17 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
 
 }
 
-double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
+ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
 {
   const int nx = static_cast<const int>(_dim[0]);
   const int ny = static_cast<const int>(_dim[1]);
   const int nz = static_cast<const int>(_dim[2]);
 
   unsigned int index;
-  double       value;
+  ukfPrecisionType       value;
 
-  double w_sum = 1e-16;
-  double s = 0.0;
+  ukfPrecisionType w_sum = 1e-16;
+  ukfPrecisionType s = ukfZero;
 
   for( int xx = -1; xx <= 1; xx++ )
     {
@@ -128,8 +128,8 @@ double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
       {
       continue;
       }
-    double dx = (x - pos[0]) * _voxel[0];
-    double dxx = dx * dx;
+    ukfPrecisionType dx = (x - pos[0]) * _voxel[0];
+    ukfPrecisionType dxx = dx * dx;
     for( int yy = -1; yy <= 1; yy++ )
       {
       const int y = static_cast<const int>(round(pos[1]) + yy);
@@ -137,8 +137,8 @@ double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
         {
         continue;
         }
-      double dy = (y - pos[1]) * _voxel[1];
-      double dyy = dy * dy;
+      ukfPrecisionType dy = (y - pos[1]) * _voxel[1];
+      ukfPrecisionType dyy = dy * dy;
       for( int zz = -1; zz <= 1; zz++ )
         {
         const int z = static_cast<const int>(round(pos[2]) + zz);
@@ -146,8 +146,8 @@ double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
           {
           continue;
           }
-        double dz = (z - pos[2]) * _voxel[2];
-        double dzz = dz * dz;
+        ukfPrecisionType dz = (z - pos[2]) * _voxel[2];
+        ukfPrecisionType dzz = dz * dz;
 
         index = nz * ny * x + nz * y + z;
 
@@ -169,7 +169,7 @@ double NrrdData::Interp3ScalarMask(const vec3_t& pos) const
             exit(1);
           }
 
-        double w = exp(-(dxx + dyy + dzz) / _sigma_mask);
+        ukfPrecisionType w = exp(-(dxx + dyy + dzz) / _sigma_mask);
         if( value )
           {
           s += w;
@@ -369,7 +369,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
   assert(size == 2);
 
-  double              bValue = 0.0;
+  ukfPrecisionType              bValue = ukfZero;
 
   assert(_gradients.size() == 0);
   // Read key value pairs.
@@ -410,8 +410,8 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   _b_values.resize(gradientCount * 2 );
   for( unsigned int i = 0; i < gradientCount; ++i )
     {
-    const double gradientNorm = _gradients[i].norm();
-    const double effectiveBvalue = (fabs( gradientNorm - 1.0 ) > 1e-4 ) ? gradientNorm * bValue: bValue;
+    const ukfPrecisionType gradientNorm = _gradients[i].norm();
+    const ukfPrecisionType effectiveBvalue = (fabs( gradientNorm - ukfOne ) > 1e-4 ) ? gradientNorm * bValue: bValue;
     //http://www.na-mic.org/Wiki/index.php/NAMIC_Wiki:DTI:Nrrd_format
     //It is after this magnitude rescaling that the nominal bValue (given via "DWMRI_b-value:=bValue") applies.
     _b_values[i] = effectiveBvalue;
@@ -466,7 +466,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
   // Get the ijk->RAS transform matrix
   _i2r.resize(4, 4);
-  _i2r.setConstant(0.0);
+  _i2r.setConstant(ukfZero);
 
   _i2r(0, 0) = _data_nrrd->axis[1].spaceDirection[0];
   _i2r(1, 0) = _data_nrrd->axis[1].spaceDirection[1];
@@ -480,7 +480,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   _i2r(0, 3) = _data_nrrd->spaceOrigin[0];
   _i2r(1, 3) = _data_nrrd->spaceOrigin[1];
   _i2r(2, 3) = _data_nrrd->spaceOrigin[2];
-  _i2r(3, 3) = 1.0;
+  _i2r(3, 3) = ukfOne;
 
   // RAS->ijk.
   _r2i = _i2r.inverse();
@@ -491,9 +491,9 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
   // The gradient should not be affected by voxel size, so factor out the voxel sizes
   // This is equivalent to normalizing the space directions
-  const double vox_x_inv = 1.0 / _voxel[2];
-  const double vox_y_inv = 1.0 / _voxel[1];
-  const double vox_z_inv = 1.0 / _voxel[0];
+  const ukfPrecisionType vox_x_inv = ukfOne / _voxel[2];
+  const ukfPrecisionType vox_y_inv = ukfOne / _voxel[1];
+  const ukfPrecisionType vox_z_inv = ukfOne / _voxel[0];
 
   R(0, 0) *=  vox_x_inv;
   R(1, 0) *=  vox_x_inv;
@@ -518,7 +518,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     u[2] = _gradients[i][2];
 
     u_new = tmp_mat * u;
-    const double dNorm_inv = 1.0 / u_new.norm();
+    const ukfPrecisionType dNorm_inv = ukfOne / u_new.norm();
 
     // No need to worry about the divison by zero here, since the normalized dwi data has no zero gradient
     _gradients[i][0] = u_new[0] * dNorm_inv;

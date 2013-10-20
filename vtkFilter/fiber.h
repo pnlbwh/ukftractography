@@ -6,7 +6,7 @@
 #include <iostream>
 #include <map>
 
-typedef std::map<std::string, std::vector<std::vector<double> > > FieldMapType;
+typedef std::map<std::string, std::vector<std::vector<ukfPrecisionType> > > FieldMapType;
 
 struct Fiber
   {

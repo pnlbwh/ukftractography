@@ -27,14 +27,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Constructor */
-  FilterModel(const int local_state_dim, const double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  FilterModel(const int local_state_dim, const ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : _state_dim(local_state_dim),
       _rs(rs), _signal_dim(0), _signal_data(NULL), weights_on_tensors_(weights_on_tensors),
     _constrained(constrained)
   {
 
     _Q.resize(_state_dim, _state_dim);
-    _Q.setConstant(0.0); // necessary because otherwise there is memory left overs in the matrix
+    _Q.setConstant(ukfZero); // necessary because otherwise there is memory left overs in the matrix
 
     if( constrained )
       {
@@ -95,7 +95,7 @@ public:
     _signal_dim = dim;
 
     _R.resize(_signal_dim, _signal_dim);
-    _R.setConstant(0.0); // necessary because otherwise there is memory leftovers in the matrix
+    _R.setConstant(ukfZero); // necessary because otherwise there is memory leftovers in the matrix
     for( int i = 0; i < _signal_dim; ++i )
       {
       _R(i, i) = _rs;
@@ -149,15 +149,15 @@ public:
 
 protected:
 
-  /** Checks if d is smaller than a small negative threshold. If yes an error is returned. Otherwise d is rounded to 0.0
+  /** Checks if d is smaller than a small negative threshold. If yes an error is returned. Otherwise d is rounded to ukfZero
     */
-  double CheckZero(const double & d) const;
+  ukfPrecisionType CheckZero(const ukfPrecisionType & d) const;
 
   /** The dimension of the state */
   const int _state_dim;
 
   /** The constant signal noise for each signal component */
-  double _rs;
+  ukfPrecisionType _rs;
 
   /** The dimension of the signal */
   int _signal_dim;
@@ -194,8 +194,8 @@ protected:
 class Full1T_FW : public FilterModel
   {
 public:
-  Full1T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors, bool constrained,
-            const double diff_fw)
+  Full1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
+            const ukfPrecisionType diff_fw)
     : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     m_D_iso << diff_fw, 0, 0,
@@ -207,7 +207,7 @@ public:
     _Q(6, 6) = qw;
 
     _D.resize(7, 5);
-    _D.setConstant(0.0);
+    _D.setConstant(ukfZero);
 
     _d.resize(5);
 
@@ -236,7 +236,7 @@ public:
   virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
   mat33_t m_D_iso;
@@ -253,7 +253,7 @@ public:
 class Full1T : public FilterModel
   {
 public:
-  Full1T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Full1T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -271,7 +271,7 @@ public:
   virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -284,7 +284,7 @@ public:
 class Full2T : public FilterModel
   {
 public:
-  Full2T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Full2T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(12, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
@@ -302,7 +302,7 @@ public:
   virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -315,8 +315,8 @@ public:
 class Full2T_FW : public FilterModel
   {
 public:
-  Full2T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors, bool constrained,
-            const double diff_fw)
+  Full2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
+            const ukfPrecisionType diff_fw)
     : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     m_D_iso << diff_fw, 0, 0,
@@ -328,7 +328,7 @@ public:
     _Q(12, 12) = qw; // noise for weights
 
     _D.resize(13, 8);
-    _D.setConstant(0.0);
+    _D.setConstant(ukfZero);
 
     _d.resize(8);
 
@@ -362,7 +362,7 @@ public:
   virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
   mat33_t m_D_iso;
@@ -378,7 +378,7 @@ public:
 class Full3T : public FilterModel
   {
 public:
-  Full3T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Full3T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(18, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -402,7 +402,7 @@ public:
                             vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 
@@ -416,8 +416,8 @@ public:
 class Simple1T_FW : public FilterModel
   {
 public:
-  Simple1T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors,
-              bool constrained, const double diff_fw)
+  Simple1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
+              bool constrained, const ukfPrecisionType diff_fw)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     m_D_iso << diff_fw, 0, 0,
@@ -429,7 +429,7 @@ public:
     _Q(5, 5) = qw; // noise for weights
 
     _D.resize(6, 4);
-    _D.setConstant(0.0);
+    _D.setConstant(ukfZero);
 
     _d.resize(4);
 
@@ -456,7 +456,7 @@ public:
   virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
   mat33_t m_D_iso;
@@ -472,7 +472,7 @@ public:
 class Simple1T : public FilterModel
   {
 public:
-  Simple1T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Simple1T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(5, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -489,7 +489,7 @@ public:
 
   virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -501,7 +501,7 @@ public:
 class Simple2T : public FilterModel
   {
 public:
-  Simple2T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Simple2T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(10, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
@@ -519,7 +519,7 @@ public:
   virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 
@@ -533,8 +533,8 @@ public:
 class Simple2T_FW : public FilterModel
   {
 public:
-  Simple2T_FW(double qs, double ql, double qw, double rs, const ukfVectorType& weights_on_tensors,
-              bool constrained, const double diff_fw)
+  Simple2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
+              bool constrained, const ukfPrecisionType diff_fw)
     : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     m_D_iso << diff_fw, 0, 0,
@@ -546,7 +546,7 @@ public:
     _Q(10, 10) = qw; // noise for weights
 
     _D.resize(11, 6);
-    _D.setConstant(0.0);
+    _D.setConstant(ukfZero);
 
     _d.resize(6);
 
@@ -576,7 +576,7 @@ public:
   virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
   mat33_t m_D_iso;
@@ -591,7 +591,7 @@ public:
 class Simple3T : public FilterModel
   {
 public:
-  Simple3T(double qs, double ql, double rs, const ukfVectorType& weights_on_tensors, bool constrained)
+  Simple3T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(15, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -613,7 +613,7 @@ public:
                             vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 

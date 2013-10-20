@@ -26,23 +26,23 @@ struct UKFFiber
   /** vector of 3D points defining the fiber path */
   stdVec_t position;
   /** FA of tensor 1 */
-  std::vector<double> fa;
+  std::vector<ukfPrecisionType> fa;
   /** FA of tensor 2 */
-  std::vector<double> fa2;
+  std::vector<ukfPrecisionType> fa2;
   /** Array 2 norm of the covariance matrix */
-  std::vector<double> norm;
+  std::vector<ukfPrecisionType> norm;
   /** State of the current model at the current position*/
   std::vector<State> state;
   /** dim(state) x dim(state) matrix */
   std::vector<ukfMatrixType > covariance;
   /** Percentage of free water i.e. 1-w */
-  std::vector<double> free_water;
+  std::vector<ukfPrecisionType> free_water;
   /** Normalized mean squared error of the signal reconstruction to the signal */
-  std::vector<double> normMSE;
+  std::vector<ukfPrecisionType> normMSE;
   /** Trace of tensor 1 */
-  std::vector<double> trace;
+  std::vector<ukfPrecisionType> trace;
   /** Trace of tensor 2 */
-  std::vector<double> trace2;
+  std::vector<ukfPrecisionType> trace2;
   };
 
 /**

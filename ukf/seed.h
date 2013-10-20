@@ -30,13 +30,13 @@ public:
   /** The starting direction for the simple model */
   vec3_t start_dir;
   /** Fractional Anisotropy of the first tensor */
-  double fa;
+  ukfPrecisionType fa;
   /** Fractional Anisotropy of the second tensor */
-  double fa2;
+  ukfPrecisionType fa2;
   /** Trace of the first tensor */
-  double trace;
+  ukfPrecisionType trace;
   /** Trace of the second tensor */
-  double trace2;
+  ukfPrecisionType trace2;
   };
 
 /** Writes debug information about seeds to stdout. */

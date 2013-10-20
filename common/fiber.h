@@ -25,7 +25,7 @@ public:
          Eigen::aligned_allocator<std::pair<const std::string, stdMat_t> > > TensorMapType;
 
 
-  /** A map with the fieldname as key and a 2D double vector for the field contents */
+  /** A map with the fieldname as key and a 2D ukfPrecisionType vector for the field contents */
   typedef std::map<std::string, std::vector<float> > FieldMapType;
 
   /** The points in RAS space of the fiber */

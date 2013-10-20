@@ -25,7 +25,7 @@ class NrrdData : public ISignalData
 public:
 
   /** Constructor */
-  NrrdData(double sigma_signal, double sigma_mask);
+  NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask);
 
   /** Destructor */
   ~NrrdData();
@@ -34,7 +34,7 @@ public:
   virtual void Interp3Signal(const vec3_t& pos, ukfVectorType& signal) const;
 
   /** Interpolates the brain mask at a certain position */
-  virtual double Interp3ScalarMask(const vec3_t& pos) const;
+  virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const;
 
   /**
    * \brief Get the seed points from the nrrd file

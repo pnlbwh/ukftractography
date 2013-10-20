@@ -14,8 +14,6 @@
 #include <teem/nrrd.h>
 #include "linalg.h"
 
-#include <vnl/vnl_matrix.h>
-
 /**
  * \class NrrdData
  * \implements ISignalData

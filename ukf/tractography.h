@@ -11,9 +11,6 @@
 #include "ukffiber.h"
 #include "seed.h"
 #include "ukf_types.h"
-#include <vnl/algo/vnl_determinant.h>
-#include <vnl/algo/vnl_svd.h>
-#include <vnl/algo/vnl_qr.h>
 
 class ISignalData;
 

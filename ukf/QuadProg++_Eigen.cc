@@ -4,7 +4,7 @@
  *
  * This file was adapted from QuadProg++ an open project available on
  * sourceforge.net (see http://sourceforge.net/projects/quadprog/). The major change
- * is that the file now works entirely with vnl, and is not dependant on the
+ * is that the file now works entirely with Eigen, and is not dependant on the
  * helper classes Vector and Matrix in Array.hh. Furthermore the equality constraints
  * have been removed. The ce0 and CE variables passed are simply dummy variables.
  * If you need equality constraints change it back in the code. See the bottom of
@@ -20,6 +20,8 @@
 #include <sstream>
 #include <stdexcept>
 #include "QuadProg++_Eigen.h"
+
+#include "Eigen/Dense"
 
 // #define TRACE_SOLVER
 namespace QuadProgPP
@@ -162,7 +164,7 @@ bool add_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXd& d, 
   return true;
 }
 
-void delete_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, vnl_vector<int>& A, Eigen::VectorXd& u, int n,
+void delete_constraint(Eigen::MatrixXd& R, Eigen::MatrixXd& J, Eigen::VectorXi& A, Eigen::VectorXd& u, int n,
                        int p, int& iq, int l)
 {
 #ifdef TRACE_SOLVER
@@ -376,7 +378,7 @@ void print_matrix(const char* name, const Eigen::MatrixXd& A, int n, int m)
 }
 
 template <typename T>
-void print_vector(const char* name, const vnl_vector<T>& v, int n)
+void print_vector(const char* name, const typename Eigen::Matrix<T,Eigen::Dynamic, 1> & v, int n)
 {
   std::ostringstream s;
   std::string        t;
@@ -469,9 +471,9 @@ double solve_quadprog(Eigen::MatrixXd& G, Eigen::VectorXd& g0,
     {
     inf = 1.0E300;
     }
-  vnl_vector<int>          A(m + p), A_old(m + p), iai(m + p);
+  Eigen::VectorXi          A(m + p), A_old(m + p), iai(m + p);
   int                      iq, iter = 0;
-  vnl_vector<unsigned int> iaexcl(m + p);
+  Eigen::Matrix<unsigned int, Eigen::Dynamic,1> iaexcl(m + p);
 
   /* p is the number of equality constraints */
   /* m is the number of inequality constraints */

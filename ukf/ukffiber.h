@@ -12,8 +12,6 @@
 #include "unscented_kalman_filter.h"
 #include "linalg.h"
 
-#include <vnl/vnl_matrix.h>
-
 /**
  * \struct UKFFiber
  * \brief Points of a fiber, and scalars corresponding to the points

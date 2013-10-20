@@ -296,7 +296,7 @@
  * The input data of type NRRD.
  * \par ITK
  * Insight Segmentation and Registration Toolkit (ITK).  ITK is an open-source, cross-platform system that provides developers
- * with an extensive suite of software tools for image analysis. In this application we only use the underlying vnl libraries for most of the linear algebra processing.
+ * with an extensive suite of software tools for image analysis. In this application we only use the underlying Eigen libraries for most of the linear algebra processing.
  * It replaces functionality that was done with LAPACK before.
  * \par "Slicer Execution Model"
  * The Execution Model provides a simple mechanism for incorporating command line programs as Slicer modules. These command line modules

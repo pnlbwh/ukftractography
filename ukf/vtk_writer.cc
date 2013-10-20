@@ -23,8 +23,6 @@
 #include "vtkXMLPolyDataWriter.h"
 #include "vtkPolyDataWriter.h"
 #include "vtkDataObject.h"
-#include <vnl/vnl_matrix.h>
-#include <vnl/vnl_vector.h>
 
 VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type, bool write_tensors) :
   _signal_data(signal_data),

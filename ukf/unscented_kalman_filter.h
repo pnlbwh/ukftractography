@@ -9,11 +9,6 @@
 #define UNSCENTED_KALMAN_FILTER_H_
 
 #include <vector>
-#include <vnl/vnl_matrix.h>
-#include <vnl/vnl_vector.h>
-#include <vnl/vnl_vector_ref.h>
-#include <vnl/algo/vnl_cholesky.h>
-#include <vnl/algo/vnl_solve_qp.h>
 #include "ukf_types.h"
 
 class FilterModel;

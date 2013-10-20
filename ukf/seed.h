@@ -9,8 +9,6 @@
 #include "unscented_kalman_filter.h"
 #include "linalg.h"
 
-#include <vnl/vnl_matrix.h>
-
 /**
  * \class SeedPointInfo
  * \brief Describes a seed point

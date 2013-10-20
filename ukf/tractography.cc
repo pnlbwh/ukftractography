@@ -18,7 +18,6 @@
 #include "itkMultiThreader.h"
 #include "math_utilities.h"
 
-#include <vnl/algo/vnl_determinant.h>
 #include <fstream>
 #include <iostream>
 
@@ -567,7 +566,12 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
 
   // Build B matrix.
   const int signal_dim = _signal_data->GetSignalDimension();
-  Eigen::MatrixXd B(signal_dim * 2, 6); //HACK: Eigen::Matrix<double, DYNAMIC, 6> ??
+/**
+  * A special type for holding 6 elements of tensor for each signal
+  *  Only used in tractography.cc
+  */
+  typedef Eigen::Matrix<ukfPrecisionType, Eigen::Dynamic, 6>  BMatrixType;
+  BMatrixType B(signal_dim * 2, 6); //HACK: Eigen::Matrix<double, DYNAMIC, 6> ??
 
   for( int i = 0; i < signal_dim * 2; ++i )
     {
@@ -579,9 +583,9 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     B(i, 4) = (-b[i]) * (2.0 * g[1] * g[2]);
     B(i, 5) = (-b[i]) * (g[2] * g[2]);
     }
-    // Use QR decomposition to find the matrix representation of the tensor at the
-    // seed point of the fiber. Raplacement of the gmm function gmm::least_squares_cg(..)
-    Eigen::HouseholderQR<Eigen::MatrixXd> qr(B);
+  // Use QR decomposition to find the matrix representation of the tensor at the
+  // seed point of the fiber. Raplacement of the gmm function gmm::least_squares_cg(..)
+  Eigen::HouseholderQR<BMatrixType> qr(B);
 
   // Temporary variables.
   mat_t D;
@@ -620,16 +624,9 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     // NOTE that svd can be used here only because D is a normal matrix
 
     // std::cout << "Tensor test: " << std::endl << D << std::endl;
-#if 0
-    vnl_svd<double> svd_decomp(D);
-    Q = svd_decomp.U();
-    sigma = svd_decomp.W().diagonal(); // diagonal() returns elements of a diag matrix as a vector.
-#else
-   //Eigen::JacobiSVD<Eigen::MatrixXd> svd_decomp(D,Eigen::ComputeThinU | Eigen::ComputeThinV);
    Eigen::JacobiSVD<Eigen::MatrixXd> svd_decomp(D,Eigen::ComputeThinU );
    mat_t Q = svd_decomp.matrixU();
    vec_t sigma = svd_decomp.singularValues(); // diagonal() returns elements of a diag matrix as a vector.
-#endif
 
     assert(sigma[0] >= sigma[1] && sigma[1] >= sigma[2]);
     if( Q.determinant()  < 0 )
@@ -1338,9 +1335,6 @@ void Tractography::SwapState2T( State& state,
                                 Eigen::MatrixXd& covariance)
 {
   // This function is only for 2T.
-
-  vnl_vector_ref<double> state_vnl(state.size(), &state.front() );
-
   int state_dim = _model->state_dim();
 
   Eigen::MatrixXd tmp(state_dim, state_dim);

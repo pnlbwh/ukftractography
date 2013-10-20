@@ -4,7 +4,7 @@
 *
 * This file was adapted from QuadProg++ an open project available on
 * sourceforge.net (see http://sourceforge.net/projects/quadprog/). The major change
-* is that the file now works entirely with vnl, and is not dependant on the
+* is that the file now works entirely with Eigen, and is not dependant on the
 * helper classes Vector and Matrix in Array.hh. Furthermore the equality constraints
 * have been removed. The ce0 and CE variables passed are simply dummy variables.
 * If you need equality constraints change it back in the code. See the bottom of

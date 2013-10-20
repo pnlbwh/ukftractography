@@ -12,8 +12,6 @@
 
 #include <limits>
 #include <algorithm>
-#include <vnl/algo/vnl_determinant.h>
-#include <vnl/algo/vnl_cholesky.h>
 
 #include "QuadProg++_Eigen.h"
 using namespace QuadProgPP;
@@ -39,8 +37,8 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
      m_WeightsRepeated(i, i) = m_Weights[i];
      }
 
-  assert(static_cast<int>( (m_FilterModel->Q() ).rows() ) == dim &&
-         static_cast<int>( (m_FilterModel->Q() ).cols() ) == dim);
+  assert(static_cast<unsigned int>( (m_FilterModel->Q() ).rows() ) == dim &&
+         static_cast<unsigned int>( (m_FilterModel->Q() ).cols() ) == dim);
 }
 
 void UnscentedKalmanFilter::SigmaPoints(const State& x,
@@ -55,20 +53,20 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
   assert(p.rows() == dim &&
          p.cols() == dim );
 
-  const Eigen::VectorXd x_vnl = ConvertVector<State,Eigen::VectorXd >(x);
+  const Eigen::VectorXd x_Eigen = ConvertVector<State,Eigen::VectorXd >(x);
 
   // Horizontally stack x to the X_tmp matrix.
   Eigen::MatrixXd X_tmp(dim, dim); // CB: X changed to X_tmp to avoid notation confusion with member var X
   for( unsigned int c = 0; c < dim; ++c )
     {
-    X_tmp.col(c) = x_vnl;
+    X_tmp.col(c) = x_Eigen;
     }
   Eigen::LLT<Eigen::MatrixXd> lltOfA(p); // compute the Cholesky decomposition of A
   Eigen::MatrixXd NewM = ( lltOfA.matrixL() ); // retrieve factor L  in the decomposition
   NewM *= m_Scale;
 
   // Create dim x (2 * dim + 1) matrix (x, x + m, x - m).
-  x_spread.col(0) = x_vnl;
+  x_spread.col(0) = x_Eigen;
   x_spread.block(0,    1,dim,dim) = X_tmp + NewM;
   x_spread.block(0,dim+1,dim,dim) = X_tmp - NewM;
 }
@@ -167,10 +165,10 @@ void UnscentedKalmanFilter::Filter(const State& x,
   localConstFilterModel->F(X); // slightly negative fw is fixed here
   }
   // copy step needed because z is a const variable and can't be referenced
-  Eigen::VectorXd z_vnl(z.size());
+  Eigen::VectorXd z_Eigen(z.size());
   for( unsigned int i = 0; i < z.size(); ++i)
   {
-    z_vnl[i]=z[i];
+    z_Eigen[i]=z[i];
   }
 
   /** Used for the estimation of the new state */
@@ -222,16 +220,11 @@ void UnscentedKalmanFilter::Filter(const State& x,
   //x = A.ldlt().solve(b));
   const Eigen::MatrixXd KalmanGainMatrix = Pyy.ldlt().solve(Pxy.transpose());
 
-  dNormMSE = ( (z_vnl - Y_hat).squaredNorm() ) / (z_vnl.squaredNorm() );
+  dNormMSE = ( (z_Eigen - Y_hat).squaredNorm() ) / (z_Eigen.squaredNorm() );
 
   p_new = p_new - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
-  const Eigen::VectorXd Y_hat2 = z_vnl - Y_hat; // z is the real signal
+  const Eigen::VectorXd Y_hat2 = z_Eigen - Y_hat; // z is the real signal
 
-  // HANS NOTE -- the original code (through the vector_ref)
-  // over_wrote x_new with the following expression's result, then
-  // optionally called Constrain on it. So this code doesn't bother
-  // copying the old value of x_new into x_new_vnl before doing this
-  // computation, it just copies the resut in afterwards.
   Eigen::VectorXd x_new_Eigen = KalmanGainMatrix.transpose() * Y_hat2 + X_hat;
   if( localConstFilterModel->isConstrained() )
     {

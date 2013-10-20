@@ -39,6 +39,13 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
 
   assert(static_cast<unsigned int>( (m_FilterModel->Q() ).rows() ) == dim &&
          static_cast<unsigned int>( (m_FilterModel->Q() ).cols() ) == dim);
+
+
+  //DUMMY VARIABLES TAHT ARE ALWAYS ZERO and not used.
+  m_DummyZeroCE.resize(dim, 1);
+  m_DummyZeroCE.setConstant(0.0);
+  m_DummyZeroce0.resize(1);
+  m_DummyZeroce0.setConstant(0.0);
 }
 
 void UnscentedKalmanFilter::SigmaPoints(const State& x,
@@ -76,22 +83,14 @@ void UnscentedKalmanFilter::Constrain(Eigen::VectorXd& x, const Eigen::MatrixXd&
 {
   if( violatesContraints(x) )
     {
-    const int    dim_state = x.size();
-    // The equality constraints are just dummy variables. The solve_quadprog function has been changed
-    // to ignore equality constraints.
-    Eigen::MatrixXd CE(dim_state, 1);
-    CE.setConstant(0.0);
-    Eigen::VectorXd ce0(1);
-    ce0.setConstant(0.0);
-
     const Eigen::MatrixXd WTranspose = W.transpose();
-    //TODO:  review solve_quadprog to determine if any of these are const parameters.
     Eigen::MatrixXd W_tmp = (W + WTranspose) * 0.5;
-
     Eigen::VectorXd g0 = -1.0 * (W_tmp.transpose() ) * x;
     const Eigen::VectorXd d  = m_FilterModel->d(); // the inequality constraints
     const Eigen::MatrixXd D  = m_FilterModel->D(); // -- " --
-    const double error = solve_quadprog(W_tmp, g0, CE, ce0, D, d, x);
+    // The equality constraints are just dummy variables. The solve_quadprog function has been changed
+    // to ignore equality constraints.
+    const double error = solve_quadprog(W_tmp, g0, m_DummyZeroCE, m_DummyZeroce0, D, d, x);
     if( error > 0.01 )   // error usually much smaller than that, if solve_quadprog fails it returns inf
       {
       exit(1);

@@ -6,6 +6,7 @@
  * Also the model choice happens here
 */
 
+unsigned int countH=0;
 #include <cassert>
 #include <string>
 #include <iostream>
@@ -343,5 +344,6 @@ int main(int argc, char **argv)
   delete tract;
   delete filter_model;
 
+  std::cout << "H count = " << countH << std::endl;
   return writeStatus;
 }

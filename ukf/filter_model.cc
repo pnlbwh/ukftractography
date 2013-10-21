@@ -667,7 +667,7 @@ void Simple1T_FW::F(ukfMatrixType& X) const
     // DEBUGGING
     if( X(3, i) < 0 || X(4, i) < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
       }
     }
 }
@@ -749,7 +749,7 @@ void Simple1T_FW::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
   l[1] = CheckZero(x[4]);
   if( l[0] < 0 || l[1] < 0 )
     {
-    std::cout << "Warning: eigenvalues became negative" << std::endl;
+    std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
     }
   l[2] = l[1];
 }
@@ -772,7 +772,7 @@ void Full1T_FW::F(ukfMatrixType& X) const
 
     if( X(3, i) < 0 || X(4, i) < 0 || X(5, i) < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
       }
     }
 }
@@ -800,7 +800,7 @@ void Full1T_FW::H(const ukfMatrixType& X,
 
     if( X(3, i) < 0 || X(4, i) < 0 || X(5, i) < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
       }
 
     // get weight from state
@@ -828,7 +828,7 @@ void Full1T_FW::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
   l[2] = CheckZero(x[5]);
   if( l[0] < 0 || l[1] < 0 || l[2] < 0 )
     {
-    std::cout << "Warning: eigenvalues became negative" << std::endl;
+    std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
     }
 }
 
@@ -996,14 +996,16 @@ void Full2T_FW::F(ukfMatrixType& X) const
 
     if( X(3, i) < 0 || X(4, i) < 0 ||  X(5, i) < 0 || X(9, i) < 0 || X(10, i) < 0 ||  X(11, i) < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
       }
     }
 }
 
+extern unsigned int countH;
 void Full2T_FW::H(const   ukfMatrixType& X,
                   ukfMatrixType& Y) const
 {
+  countH++;
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          (X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
@@ -1027,7 +1029,7 @@ void Full2T_FW::H(const   ukfMatrixType& X,
 
     if( X(3, i) < 0 || X(4, i) < 0 ||  X(5, i) < 0 || X(9, i) < 0 || X(10, i) < 0 ||  X(11, i) < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative" << std::endl;
+      std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
       }
 
     // get weight from state
@@ -1040,11 +1042,12 @@ void Full2T_FW::H(const   ukfMatrixType& X,
     for( int j = 0; j < _signal_dim; ++j )
       {
       const vec3_t& u = gradients[j];
-      Y(j, i) = (w)
-        * (std::exp(-b[j] * u.dot(D1 * u) )
-           * weights_on_tensors_[0] + std::exp(-b[j] * u.dot(D2 * u) )
-           * weights_on_tensors_[1])
-        + (1 - w) * std::exp(-b[j] * u.dot(m_D_iso * u) );
+      const ukfPrecisionType part1a = std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0];
+      const ukfPrecisionType part1b = std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
+      const ukfPrecisionType part1 = part1a + part1b;
+      const ukfPrecisionType part2 = std::exp(-b[j] * u.dot(m_D_iso * u));
+
+      Y(j, i) = (w) * part1 + ( ukfOne - w) * part2;
       }
     }
 }
@@ -1081,6 +1084,6 @@ void Full2T_FW::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
 
   if( l1[0] < 0 || l1[1] < 0 ||  l1[2] < 0 || l2[0] < 0 || l2[1] < 0 ||  l2[2] < 0 )
     {
-    std::cout << "Warning: eigenvalues became negative" << std::endl;
+    std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
     }
 }

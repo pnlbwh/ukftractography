@@ -60,20 +60,18 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
   assert(p.rows() == dim &&
          p.cols() == dim );
 
-  const ukfVectorType x_Eigen = ConvertVector<State,ukfVectorType >(x);
-
   // Horizontally stack x to the X_tmp matrix.
   ukfMatrixType X_tmp(dim, dim); // CB: X changed to X_tmp to avoid notation confusion with member var X
   for( unsigned int c = 0; c < dim; ++c )
     {
-    X_tmp.col(c) = x_Eigen;
+    X_tmp.col(c) = x;
     }
   Eigen::LLT<ukfMatrixType> lltOfA(p); // compute the Cholesky decomposition of A
   ukfMatrixType NewM = ( lltOfA.matrixL() ); // retrieve factor L  in the decomposition
   NewM *= m_Scale;
 
   // Create dim x (2 * dim + 1) matrix (x, x + m, x - m).
-  x_spread.col(0) = x_Eigen;
+  x_spread.col(0) = x;
   x_spread.block(0,    1,dim,dim) = X_tmp + NewM;
   x_spread.block(0,dim+1,dim,dim) = X_tmp - NewM;
 }
@@ -229,5 +227,5 @@ void UnscentedKalmanFilter::Filter(const State& x,
     {
     Constrain(x_new_Eigen, p_new);
     }
-  x_new = ConvertVector<ukfVectorType,State>(x_new_Eigen);
+  x_new = x_new_Eigen;
 }

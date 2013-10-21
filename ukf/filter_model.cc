@@ -1038,14 +1038,23 @@ void Full2T_FW::H(const   ukfMatrixType& X,
     // Calculate diffusion matrix.
     const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
     const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+
     // Reconstruct signal.
+    ukfMatrixType valMatrix(_signal_dim,3);
+    for( int j = 0; j < _signal_dim; ++j )
+    {
+       const vec3_t& u = gradients[j];
+       valMatrix(j,0)=-b[j] * u.dot(D1 * u);
+       valMatrix(j,1)=-b[j] * u.dot(D2 * u);
+       valMatrix(j,2)=-b[j] * u.dot(m_D_iso * u);
+    }
+    const ukfMatrixType expMatrix = valMatrix.array().exp();
     for( int j = 0; j < _signal_dim; ++j )
       {
-      const vec3_t& u = gradients[j];
-      const ukfPrecisionType part1a = std::exp(-b[j] * u.dot(D1 * u) ) * weights_on_tensors_[0];
-      const ukfPrecisionType part1b = std::exp(-b[j] * u.dot(D2 * u) ) * weights_on_tensors_[1];
+      const ukfPrecisionType part1a = expMatrix(j,0) * weights_on_tensors_[0];
+      const ukfPrecisionType part1b = expMatrix(j,1) * weights_on_tensors_[1];
       const ukfPrecisionType part1 = part1a + part1b;
-      const ukfPrecisionType part2 = std::exp(-b[j] * u.dot(m_D_iso * u));
+      const ukfPrecisionType part2 = expMatrix(j,2);
 
       Y(j, i) = (w) * part1 + ( ukfOne - w) * part2;
       }

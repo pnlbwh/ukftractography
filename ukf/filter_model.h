@@ -184,6 +184,14 @@ protected:
   bool _constrained;
   };
 
+inline mat33_t SetIdentityScaled(double diff_fw)
+{
+   mat33_t tmp;
+   tmp.setIdentity();
+   tmp*= diff_fw;
+   return tmp;
+}
+
 /**
  * \struct Full1T_FW
  * \brief Full 1-Tensor model with free water
@@ -196,11 +204,13 @@ class Full1T_FW : public FilterModel
 public:
   Full1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
             const ukfPrecisionType diff_fw)
-    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0)
+    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
     m_D_iso << diff_fw, 0, 0,
       0, diff_fw, 0,
       0, 0, diff_fw;
+#endif
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = ql;
@@ -317,11 +327,13 @@ class Full2T_FW : public FilterModel
 public:
   Full2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
             const ukfPrecisionType diff_fw)
-    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0)
+    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
     m_D_iso << diff_fw, 0, 0,
       0, diff_fw, 0,
       0, 0, diff_fw;
+#endif
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = _Q(9, 9) = _Q(10, 10) = _Q(11, 11) = ql;
@@ -365,7 +377,7 @@ public:
   const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  mat33_t m_D_iso;
+  const mat33_t m_D_iso;
   };
 
 /**
@@ -418,11 +430,13 @@ class Simple1T_FW : public FilterModel
 public:
   Simple1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
               bool constrained, const ukfPrecisionType diff_fw)
-    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
+    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
     m_D_iso << diff_fw, 0, 0,
       0, diff_fw, 0,
       0, 0, diff_fw;
+#endif
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = ql;
@@ -535,11 +549,13 @@ class Simple2T_FW : public FilterModel
 public:
   Simple2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
               bool constrained, const ukfPrecisionType diff_fw)
-    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0)
+    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
     m_D_iso << diff_fw, 0, 0,
       0, diff_fw, 0,
       0, 0, diff_fw;
+#endif
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(8, 8) = _Q(9, 9) = ql;

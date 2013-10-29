@@ -40,14 +40,15 @@ is more of a test than anything).
 #### a) Standalone Superbuild
 
     cd <build-dir>
-    cmake <path-to-source>/superbuild
+    cmake <path-to-source>
     make
     make test
 
 #### b) Build with Slicer4
 
     cd <build-dir>
-    cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
+    cmake -DUKFTractography_SUPERBUILD:BOOL=OFF \
+      -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
     make
     make test
 
@@ -58,7 +59,10 @@ successfully)
 
     mkdir s4ext_build
     cd s4ext_build
-    ccmake -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild/Slicer-build -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography  $soft/slicer/Slicer4/Extensions/CMake
+    ccmake -DUKFTractography_SUPERBUILD:BOOL=OFF \
+           -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild/Slicer-build \
+           -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography \
+            $soft/slicer/Slicer4/Extensions/CMake
     make
 
 Extension build, test, package and upload using ExperimentalUpload target

@@ -1,2 +1,19 @@
-.svn
-ukf/config.h
+# ignore the entire tree for ExternalSources
+*ExternalSources*
+
+# Ignore git merge temporaries.
+*.orig
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a

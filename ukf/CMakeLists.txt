@@ -10,23 +10,30 @@ if(NOT Slicer_SOURCE_DIR AND NOT UKFTractography_SuperBuild)
   include(${Slicer_USE_FILE})
 endif()
 
-if (UKFTractography_SuperBuild)
-    find_package(SlicerExecutionModel REQUIRED)
-    include(${SlicerExecutionModel_USE_FILE})
-
-    find_package(Teem REQUIRED)
-    include(${Teem_USE_FILE})
-
-    find_package(ITK REQUIRED)
-    include(${ITK_USE_FILE})
-
-    find_package(GenerateCLP REQUIRED)
-    include(${GenerateCLP_USE_FILE})
-
-    find_package(VTK REQUIRED)
-    include(${VTK_USE_FILE})
+if(NOT SlicerExecutionModel_FOUND)
+find_package(SlicerExecutionModel REQUIRED)
+include(${SlicerExecutionModel_USE_FILE})
 endif()
 
+if(NOT Teem_FOUND)
+find_package(Teem REQUIRED)
+include(${Teem_USE_FILE})
+endif()
+
+if(NOT ITK_FOUND)
+find_package(ITK REQUIRED)
+include(${ITK_USE_FILE})
+endif()
+
+if(NOT GenerateCLP_FOUND)
+find_package(GenerateCLP REQUIRED)
+include(${GenerateCLP_USE_FILE})
+endif()
+
+if(NOT VTK_FOUND)
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+endif()
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES

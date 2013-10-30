@@ -25,7 +25,7 @@ mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 #-----------------------------------------------------------------------------
 # Superbuild script
 #-----------------------------------------------------------------------------
-if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
+if(${PRIMARY_PROJECT_NAME}_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   project(SuperBuild_${PRIMARY_PROJECT_NAME})  # <- NOTE: Project name for pre-requisites is different form main project
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()

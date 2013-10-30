@@ -39,12 +39,6 @@ endif()
 include(${ITK_USE_FILE})
 
 #-----------------------------------------------------------------------------
-find_package(SlicerExecutionModel REQUIRED GenerateCLP)
-include(${GenerateCLP_USE_FILE})
-include(${SlicerExecutionModel_USE_FILE})
-include(${SlicerExecutionModel_CMAKE_DIR}/SEMMacroBuildCLI.cmake)
-
-#-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)

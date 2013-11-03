@@ -31,25 +31,4 @@ inline double RadToDeg(const double rad) {
    return rad * RAD_TO_DEG;
 }
 
-/**
-* \brief Returns true for a variable of every type that has infinity defined in
-* std and is larger than its maximal value.
-* \param value A variable of any of the template types.
-*/
-template <typename T>
-inline bool isinf(T value)
-{
-  return std::numeric_limits<T>::has_infinity && value == std::numeric_limits<T>::infinity();
-}
-
-/**
-* \brief Returns true if the given value is not a number (NaN).
-* \param value A value of any of the template types.
-*/
-template <typename T>
-inline bool isnan(T value)
-{
-  return value != value;
-}
-
 #endif  // MATH_UTILITIES_H_

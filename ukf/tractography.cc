@@ -252,7 +252,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
           break;
           }
 
-        if( isnan(signal[k]) || isinf(signal[k]) )
+        if( std::isnan(signal[k]) || std::isinf(signal[k]) )
           {
           keep = false;
           ++num_invalid;

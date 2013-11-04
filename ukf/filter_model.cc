@@ -353,9 +353,7 @@ void Simple1T::State2Tensor1T(const State& x, vec3_t& m, vec3_t& l)
 {
   // Orientation.
   m << x[0], x[1], x[2];
-
-  ukfPrecisionType n = m.norm();
-  m /= n;
+  m.normalize();
 
   // Clamp lambdas.
   l[0] = std::max(x[3], _lambda_min);

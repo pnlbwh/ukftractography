@@ -64,11 +64,9 @@ ukfPrecisionType curve_radius(const stdVec_t& fiber)
   v2.normalize();
   ukfPrecisionType n1 = v1.norm();
   ukfPrecisionType n2 = v2.norm();
-  v1 /= n1;
-  v2 /= n2;
 
   ukfPrecisionType curv = ( (v2 - v1) / (n2 + n1) ).norm();
-  if( isnan(curv) )
+  if( std::isnan(curv) )
     {
     return ukfZero;
     }

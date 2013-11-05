@@ -51,37 +51,35 @@ if(PLATFORM_CHECK)
   endif()
 endif()
 
+#
+# if you're building as a Slicer extension, this stuff
+# overrides the defaults being set up for the Extension.
+if(UKFTractography_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  #-----------------------------------------------------------------------------
+  if(NOT COMMAND SETIFEMPTY)
+    macro(SETIFEMPTY)
+      set(KEY ${ARGV0})
+      set(VALUE ${ARGV1})
+      if(NOT ${KEY})
+        set(${ARGV})
+      endif()
+    endmacro()
+  endif()
 
-#-----------------------------------------------------------------------------
-if(NOT COMMAND SETIFEMPTY)
-  macro(SETIFEMPTY)
-    set(KEY ${ARGV0})
-    set(VALUE ${ARGV1})
-    if(NOT ${KEY})
-      set(${ARGV})
-    endif()
-  endmacro()
+  #-----------------------------------------------------------------------------
+  SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  SETIFEMPTY(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+  SETIFEMPTY(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+
+  #-----------------------------------------------------------------------------
+  SETIFEMPTY(CMAKE_INSTALL_LIBRARY_DESTINATION lib)
+  SETIFEMPTY(CMAKE_INSTALL_ARCHIVE_DESTINATION lib)
+  SETIFEMPTY(CMAKE_INSTALL_RUNTIME_DESTINATION bin)
+
+  set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_RUNTIME_DESTINATION})
+  set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_LIBRARY_DESTINATION})
+  set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_ARCHIVE_DESTINATION})
 endif()
-
-#-----------------------------------------------------------------------------
-SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-SETIFEMPTY(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-SETIFEMPTY(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
-
-#-----------------------------------------------------------------------------
-SETIFEMPTY(CMAKE_INSTALL_LIBRARY_DESTINATION lib)
-SETIFEMPTY(CMAKE_INSTALL_ARCHIVE_DESTINATION lib)
-SETIFEMPTY(CMAKE_INSTALL_RUNTIME_DESTINATION bin)
-
-#-------------------------------------------------------------------------
-SETIFEMPTY(BRAINSTools_CLI_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-SETIFEMPTY(BRAINSTools_CLI_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-SETIFEMPTY(BRAINSTools_CLI_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
-#-------------------------------------------------------------------------
-SETIFEMPTY(BRAINSTools_CLI_INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_LIBRARY_DESTINATION})
-SETIFEMPTY(BRAINSTools_CLI_INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_ARCHIVE_DESTINATION})
-SETIFEMPTY(BRAINSTools_CLI_INSTALL_RUNTIME_DESTINATION ${CMAKE_INSTALL_RUNTIME_DESTINATION})
 
 #-------------------------------------------------------------------------
 # Augment compiler flags

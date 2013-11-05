@@ -84,6 +84,7 @@ set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   ${ITK_EXTERNAL_NAME}
   VTK
   teem
+  Eigen
   )
 
 #-----------------------------------------------------------------------------
@@ -216,6 +217,7 @@ list(APPEND ${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_VARS
   ITK_DIR:PATH
   VTK_DIR:PATH
   Teem_dir:PATH
+  Eigen_INCLUDE_DIR:PATH
   SlicerExecutionModel_DIR:PATH
   ${PRIMARY_PROJECT_NAME}_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH
   ${PRIMARY_PROJECT_NAME}_CLI_ARCHIVE_OUTPUT_DIRECTORY:PATH

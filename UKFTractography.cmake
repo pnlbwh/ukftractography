@@ -38,6 +38,7 @@ if(Slicer_BUILD_${PROJECT_NAME})
 endif()
 include(${ITK_USE_FILE})
 
+include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)

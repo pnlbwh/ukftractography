@@ -455,6 +455,19 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   nrrdSpacingCalculate(this->_data_nrrd, 3, &spacing3, space_dir);
   _voxel = make_vec(spacing3, spacing2, spacing1);  // NOTE that the _voxel here is in reverse axis order!
 
+  // make sure something computable is in spacing.
+  for(unsigned int i = 0; i < this->_data_nrrd->dim; ++i)
+    {
+    if(!AIR_EXISTS(space_dir[i]))
+      {
+      space_dir[i] = 1.0;
+      }
+    if(!AIR_EXISTS(this->_data_nrrd->spaceOrigin[i]))
+      {
+      this->_data_nrrd->spaceOrigin[i] = -( (_data_nrrd->axis[i].size / 2) * space_dir[i]);
+      }
+    }
+
   // DEBUGING
   // std::cout << "Voxel: " << _voxel._[0] << " " << _voxel._[1] << " " << _voxel._[2] << std::endl;
 

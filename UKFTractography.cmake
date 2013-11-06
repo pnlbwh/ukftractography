@@ -38,6 +38,14 @@ if(Slicer_BUILD_${PROJECT_NAME})
 endif()
 include(${ITK_USE_FILE})
 
+if(NOT Eigen_INCLUDE_DIR)
+  if(NOT Eigen_DIR)
+    message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
+  endif()
+  set(Eigen_INCLUDE_DIR
+    ${Eigen_DIR}/../Eigen)
+endif()
+
 include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------
 add_subdirectory(common)

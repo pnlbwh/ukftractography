@@ -6,6 +6,7 @@
  * Also the model choice happens here
 */
 
+unsigned int countH=0;
 #include <cassert>
 #include <string>
 #include <iostream>
@@ -20,7 +21,7 @@
 
 static const bool verbose = true;
 
-void setAndTell(double & x, const double y, std::string name)
+void setAndTell(ukfPrecisionType & x, const ukfPrecisionType y, const std::string & name)
 {
   if (verbose) {
     x = y;
@@ -28,7 +29,7 @@ void setAndTell(double & x, const double y, std::string name)
   }
 }
 
-void tell(double & x, std::string name)
+void tell(const ukfPrecisionType & x, const std::string &name)
 {
   if (verbose) {
     std::cout << "* " << name << ": " << x << std::endl;
@@ -39,17 +40,28 @@ int main(int argc, char **argv)
 {
 
   PARSE_ARGS ;
+  ukfPrecisionType l_minFA = minFA;
+  ukfPrecisionType l_minGA = minGA;
+  ukfPrecisionType l_stepLength = stepLength;
+  ukfPrecisionType l_maxHalfFiberLength = maxHalfFiberLength;
+  ukfPrecisionType l_seedFALimit = seedFALimit;
+  ukfPrecisionType l_Qm = Qm;
+  ukfPrecisionType l_Ql = Ql;
+  ukfPrecisionType l_Qw = Qw;
+  ukfPrecisionType l_Rs = Rs;
+  ukfPrecisionType l_maxBranchingAngle = maxBranchingAngle;
+  ukfPrecisionType l_minBranchingAngle = minBranchingAngle;
+
 
   std::cout << std::endl;
 
   // CONSTANTS
-  bool FULL_BRAIN                 = false;
-  const double SIGMA_SIGNAL       = 1.66;
-  const double SIGMA_MASK 	      = 0.5;
-  const double P0 			          = 0.01;
-  const double MIN_RADIUS 		    = 0.87;
-  const double FULL_BRAIN_GA_MIN	= 0.18;
-  const double D_ISO			        = 0.003; // Diffusion coefficient of free water
+  const ukfPrecisionType SIGMA_SIGNAL       = 1.66;
+  const ukfPrecisionType SIGMA_MASK 	      = 0.5;
+  const ukfPrecisionType P0 			          = 0.01;
+  const ukfPrecisionType MIN_RADIUS 		    = 0.87;
+  const ukfPrecisionType FULL_BRAIN_GA_MIN	= 0.18;
+  const ukfPrecisionType D_ISO			        = 0.003; // Diffusion coefficient of free water
 
   // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
   //        for entire program (i.e. when used as a slicer modules.
@@ -81,17 +93,17 @@ int main(int argc, char **argv)
     return 1 ;
   }
 
-  if (maxHalfFiberLength <= 0) {
+  if (l_maxHalfFiberLength <= 0) {
     std::cout << "Invalid maximum half fiber length!" << std::endl ;
     return 1 ;
   }
 
-//   if (stepLength <= 0){
+//   if (l_stepLength <= 0){
 //     std::cout << "Invalid step length!" << std::endl ;
 //     return 1 ;
 //   }
 
-  if (std::ceil(maxHalfFiberLength / stepLength) <= 1) {
+  if (std::ceil(l_maxHalfFiberLength / l_stepLength) <= 1) {
     std::cout << "Too large step length or too small fiber cutoff limit!" << std::endl ;
     return 1 ;
   }
@@ -117,93 +129,92 @@ int main(int argc, char **argv)
   std::cout << "\"-\": default setting\n";
 
   if (seedsFile.empty()) {
-    FULL_BRAIN = true;
-    maxBranchingAngle = 0.0;
+    l_maxBranchingAngle = 0.0;
   }
 
   if (labels.size() == 0) {
     labels.push_back(1) ;	//Default to use label 1
   }
 
-  if (minFA == 0.15) {
-    setAndTell(minFA, minFA, "minFA");
+  if (l_minFA == 0.15) {
+    setAndTell(l_minFA, l_minFA, "minFA");
   } else {
-    tell(minFA, "minFA");
+    tell(l_minFA, "minFA");
   }
 
-  if (seedFALimit == 0.0) {
-    setAndTell(seedFALimit, minFA, "seedFALimit");  // Used to default to 2 times the FA threshold.
+  if (l_seedFALimit == 0.0) {
+    setAndTell(l_seedFALimit, l_minFA, "seedFALimit");  // Used to default to 2 times the FA threshold.
   } else {
-    tell(seedFALimit, "seedFALimit");
+    tell(l_seedFALimit, "seedFALimit");
   }
 
-  if (Qm == 0.0) {
+  if (l_Qm == 0.0) {
     if (numTensor == 1) {
-      setAndTell(Qm, 0.005, "Qm");//Qm = 0.0015;
+      setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
       if (!simpleTensorModel) {
-        setAndTell(Qm, 0.002, "Qm");//Qm = 0.002;
+        setAndTell(l_Qm, 0.002, "Qm");//l_Qm = 0.002;
       } else {
-        setAndTell(Qm, 0.003, "Qm");//Qm = 0.003;
+        setAndTell(l_Qm, 0.003, "Qm");//l_Qm = 0.003;
       }
     }
   } else {
-    tell(Qm, "Qm");
+    tell(l_Qm, "Qm");
   }
 
 
-  if (Ql == 0.0) {
+  if (l_Ql == 0.0) {
     if (numTensor == 1) {
-      setAndTell(Ql, 300.0, "Ql");//Ql = 25.0;
+      setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
     } else if (numTensor == 2) {
-      setAndTell(Ql, 100.0, "Ql");//Ql = 100.0;
+      setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 100.0;
     } else if (numTensor == 3) {
-      setAndTell(Ql, 100.0, "Ql");//Ql = 150.0;
+      setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 150.0;
     }
   } else {
-    tell(Ql, "Ql");
+    tell(l_Ql, "Ql");
   }
 
 
-  if (Rs == 0.0) {
+  if (l_Rs == 0.0) {
     if (numTensor == 1) {
-      setAndTell(Rs, 0.01, "Rs");//Rs = 0.02;
+      setAndTell(l_Rs, 0.01, "Rs");//l_Rs = 0.02;
     } else {
       if (!simpleTensorModel) {
-        setAndTell(Rs, 0.01, "Rs");// = 0.01;
+        setAndTell(l_Rs, 0.01, "Rs");// = 0.01;
       } else {
-        setAndTell(Rs, 0.015, "Rs");//Rs = 0.015;
+        setAndTell(l_Rs, 0.015, "Rs");//l_Rs = 0.015;
       }
     }
   } else {
-    tell(Rs, "Rs");
+    tell(l_Rs, "Rs");
   }
 
-  if (stepLength == 0.0) {
+  if (l_stepLength == 0.0) {
     if (numTensor == 1) {
-      setAndTell(stepLength, 0.3, "stepLength");
+      setAndTell(l_stepLength, 0.3, "stepLength");
     } else if (numTensor == 2) {
-      setAndTell(stepLength, 0.2, "stepLength");
+      setAndTell(l_stepLength, 0.2, "stepLength");
     } else { // 3T
-      setAndTell(stepLength, 0.15, "stepLength");
+      setAndTell(l_stepLength, 0.15, "stepLength");
     }
   } else {
-    tell(stepLength, "stepLength");
+    tell(l_stepLength, "stepLength");
   }
 
   if (freeWater) {
-    if (Qw == 0.0) {
+    if (l_Qw == 0.0) {
       if (numTensor == 1) {
-        setAndTell(Qw, 0.0025, "Qw"); // estimated in a paramsearch // 0.0025
+        setAndTell(l_Qw, 0.0025, "Qw"); // estimated in a paramsearch // 0.0025
       } else if (numTensor == 2) {
-        setAndTell(Qw, 0.0015, "Qw"); // 0.0015
+        setAndTell(l_Qw, 0.0015, "Qw"); // 0.0015
       }
     } else {
-      tell(Qw, "Qw");
+      tell(l_Qw, "Qw");
     }
   }
 
-  tell(minGA, "minGA");
+  tell(l_minGA, "minGA");
 
   if (seedsPerVoxel == 1) {
     std::cout << "- seedsPerVoxel: " << seedsPerVoxel << std::endl;
@@ -216,28 +227,29 @@ int main(int argc, char **argv)
     //outputNormalizedDWIData = false ;
   //}
   bool normalizedDWIData = false;
-  bool outputNormalizedDWIData = false; 
+  bool outputNormalizedDWIData = false;
 
-  std::vector<double> weightsOnTensors;
-  if (weightsOnTensors.empty()) {
-    for (int i = 0; i < numTensor; i++) {
-      weightsOnTensors.push_back(1.0 / numTensor) ;
-    }
-  } else {
-    if (static_cast<int>(weightsOnTensors.size()) != numTensor) {
-      std::cout << "Wrong number of weights on tensors!" << std::endl << std::endl ;
-      exit(1) ;
+  ukfVectorType weightsOnTensors(numTensor);
+  for (int i = 0; i < numTensor; i++)
+    {
+    weightsOnTensors[i]=(1.0 / numTensor) ;
     }
 
-    double weight_accumu = 0 ;
-    for (int i = 0; i < numTensor; i++) {
-      weight_accumu += weightsOnTensors[i] ;
+  ukfPrecisionType weight_accumu = 0 ;
+  for (int i = 0; i < numTensor; i++)
+    {
+    weight_accumu += weightsOnTensors[i] ;
     }
-    if (std::abs(weight_accumu - 1.0) > 0.000001) {
-      std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
-      exit(1) ;
+  if (std::abs(weight_accumu - 1.0) > 0.000001)
+    {
+    std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
+    exit(1) ;
     }
-  }
+  else
+    {
+    weightsOnTensors.norm(); // Normilize for all to add up to 1.
+    }
+
 
   // Initialize the tractography object.
   FilterModel *filter_model = NULL; //Silence warnings.  This will cause segfault if it ever reaches this point.
@@ -246,47 +258,47 @@ int main(int argc, char **argv)
   if (numTensor == 1) {
     if (simpleTensorModel && !freeWater) {
       std::cout << "Using 1-tensor simple model." << std::endl;
-      filter_model = new Simple1T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Simple1T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_1T;
     } else if (simpleTensorModel && freeWater) {
       std::cout << "Using 1-tensor simple model with free water estimation." << std::endl;
-      filter_model = new Simple1T_FW(Qm, Ql, Qw, Rs, weightsOnTensors, freeWater, D_ISO);
+      filter_model = new Simple1T_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO);
       filter_model_type = Tractography::_1T_FW;
     } else if (!simpleTensorModel && !freeWater) {
       std::cout << "Using 1-tensor full model." << std::endl;
-      filter_model = new Full1T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Full1T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_1T_FULL;
     } else if (!simpleTensorModel && freeWater) {
       std::cout << "Using 1-tensor full model with free water estimation." << std::endl;
-      filter_model = new Full1T_FW(Qm, Ql, Qw, Rs, weightsOnTensors, freeWater, D_ISO);
+      filter_model = new Full1T_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO);
       filter_model_type = Tractography::_1T_FW_FULL;
     }
   } else if (numTensor == 2) {
     if (simpleTensorModel && !freeWater) {
       std::cout << "Using 2-tensor simple model." << std::endl;
-      filter_model = new Simple2T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Simple2T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_2T;
     } else if (simpleTensorModel && freeWater) {
       std::cout << "Using 2-tensor simple model with free water estimation." << std::endl;
-      filter_model = new Simple2T_FW(Qm, Ql, Qw, Rs, weightsOnTensors, freeWater, D_ISO);
+      filter_model = new Simple2T_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO);
       filter_model_type = Tractography::_2T_FW;
     } else if (!simpleTensorModel && !freeWater) {
       std::cout << "Using 2-tensor full model." << std::endl;
-      filter_model = new Full2T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Full2T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_2T_FULL;
     } else if (!simpleTensorModel && freeWater) {
       std::cout << "Using 2-tensor full model with free water estimation." << std::endl;
-      filter_model = new Full2T_FW(Qm, Ql, Qw, Rs, weightsOnTensors, freeWater, D_ISO);
+      filter_model = new Full2T_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO);
       filter_model_type = Tractography::_2T_FW_FULL;
     }
   } else if (numTensor == 3) {
     if (simpleTensorModel) {
       std::cout << "Using 3-tensor simple model." << std::endl;
-      filter_model = new Simple3T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Simple3T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_3T;
     } else {
       std::cout << "Using 3-tensor full model." << std::endl;
-      filter_model = new Full3T(Qm, Ql, Rs, weightsOnTensors, freeWater);
+      filter_model = new Full3T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
       filter_model_type = Tractography::_3T_FULL;
     }
   }
@@ -301,12 +313,12 @@ int main(int argc, char **argv)
                                          recordCovariance, recordFreeWater, recordTensors,
                                          !noTransformPosition, storeGlyphs, branchesOnly,
 
-                                         minFA, minGA, seedFALimit,
+                                         l_minFA, l_minGA, l_seedFALimit,
                                          numTensor, seedsPerVoxel,
-                                         minBranchingAngle, maxBranchingAngle,
+                                         l_minBranchingAngle, l_maxBranchingAngle,
                                          !simpleTensorModel, freeWater,
 
-                                         stepLength, maxHalfFiberLength,
+                                         l_stepLength, l_maxHalfFiberLength,
                                          labels,
 
                                          P0,  SIGMA_SIGNAL, SIGMA_MASK,
@@ -326,11 +338,12 @@ int main(int argc, char **argv)
   }
 
   // Run the tractography.
-  tract->Run();
+  const int writeStatus = tract->Run();
 
   // Clean up.
   delete tract;
   delete filter_model;
 
-  return 0;
+  std::cout << "H count = " << countH << std::endl;
+  return writeStatus;
 }

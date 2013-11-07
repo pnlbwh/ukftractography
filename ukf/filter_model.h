@@ -21,18 +21,20 @@
  * A generic class that defines the transition function and the observation
  * model to be used in the Kalman filter.
 */
-struct FilterModel
+class FilterModel
   {
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Constructor */
-  FilterModel(const int local_state_dim, const double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+  FilterModel(const int local_state_dim, const ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : _state_dim(local_state_dim),
       _rs(rs), _signal_dim(0), _signal_data(NULL), weights_on_tensors_(weights_on_tensors),
     _constrained(constrained)
   {
 
-    _Q.set_size(_state_dim, _state_dim);
-    _Q.fill(0); // necessary because otherwise there is memory left overs in the matrix
+    _Q.resize(_state_dim, _state_dim);
+    _Q.setConstant(ukfZero); // necessary because otherwise there is memory left overs in the matrix
 
     if( constrained )
       {
@@ -51,32 +53,32 @@ struct FilterModel
   }
 
   /** state transition function */
-  virtual void F(vnl_matrix<double>& X) const = 0;
+  virtual void F(ukfMatrixType& X) const = 0;
 
   /** observation, i.e. signal reconstruction */
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const = 0;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const = 0;
 
   // Functions that convert the state into a tensor representation that can be
   // used for tractography (meaning the main direction and all the eigenvalues/
   // lambdas).
 
   /** Extracts principal diffusion direction and eigen values from the state for the 1T cases */
-  virtual void State2Tensor1T(const State &, vec_t &, vec_t & )
+  virtual void State2Tensor1T(const State &, vec3_t &, vec3_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 2T cases */
-  virtual void State2Tensor2T(const State &, const vec_t &, vec_t &,
-                            vec_t &, vec_t &, vec_t & )
+  virtual void State2Tensor2T(const State &, const vec3_t &, vec3_t &,
+                            vec3_t &, vec3_t &, vec3_t & )
   {
     assert(!"Not implemented");
   }
 
   /** Extracts principal diffusion direction and eigen values from the state for the 3T cases */
-  virtual void State2Tensor3T(const State &, const vec_t &, vec_t &,
-                            vec_t &, vec_t &, vec_t &, vec_t &,
-                            vec_t & )
+  virtual void State2Tensor3T(const State &, const vec3_t &, vec3_t &,
+                            vec3_t &, vec3_t &, vec3_t &, vec3_t &,
+                            vec3_t & )
   {
     assert(!"Not implemented");
   }
@@ -92,8 +94,8 @@ struct FilterModel
   {
     _signal_dim = dim;
 
-    _R.set_size(_signal_dim, _signal_dim);
-    _R.fill(0); // necessary because otherwise there is memory leftovers in the matrix
+    _R.resize(_signal_dim, _signal_dim);
+    _R.setConstant(ukfZero); // necessary because otherwise there is memory leftovers in the matrix
     for( int i = 0; i < _signal_dim; ++i )
       {
       _R(i, i) = _rs;
@@ -108,13 +110,13 @@ struct FilterModel
   }
 
   /** The noise in the state transfer function used by the UKF. */
-  const vnl_matrix<double> & Q() const
+  const ukfMatrixType & Q() const
   {
     return _Q;
   }
 
   /** The noise in the signal reconstruction used by the UKF. */
-  const vnl_matrix<double> & R() const
+  const ukfMatrixType & R() const
   {
     return _R;
   }
@@ -122,13 +124,13 @@ struct FilterModel
   // The next two functions are only used for the constrained case
 
   /** The inequality constraint matrix for the constrained UKF */
-  const vnl_matrix<double> & D() const
+  const ukfMatrixType & D() const
   {
     return _D;
   }
 
   /** The inequality constraint right hand side for the constrained UKF */
-  const vnl_vector<double> & d() const
+  const ukfVectorType & d() const
   {
     return _d;
   }
@@ -147,15 +149,15 @@ struct FilterModel
 
 protected:
 
-  /** Checks if d is smaller than a small negative threshold. If yes an error is returned. Otherwise d is rounded to 0.0
+  /** Checks if d is smaller than a small negative threshold. If yes an error is returned. Otherwise d is rounded to ukfZero
     */
-  double CheckZero(const double & d) const;
+  ukfPrecisionType CheckZero(const ukfPrecisionType & d) const;
 
   /** The dimension of the state */
   const int _state_dim;
 
   /** The constant signal noise for each signal component */
-  double _rs;
+  ukfPrecisionType _rs;
 
   /** The dimension of the signal */
   int _signal_dim;
@@ -164,23 +166,31 @@ protected:
   ISignalData *_signal_data;
 
   /** Process noise */
-  vnl_matrix<double> _Q;
+  ukfMatrixType _Q;
 
   /** Signal reconstruction noise */
-  vnl_matrix<double> _R;
+  ukfMatrixType _R;
 
   /** Inequality constraint matrix, only used for constrained UKF */
-  vnl_matrix<double> _D;
+  ukfMatrixType _D;
 
   /** Inequality right hand side, only used for constrained UKF */
-  vnl_vector<double> _d;
+  ukfVectorType _d;
 
   /** The weights of each tensor. (Most commonly equal all are equal) */
-  const std::vector<double> weights_on_tensors_;
+  const ukfVectorType weights_on_tensors_;
 
   /** Are we using the constrained filter */
   bool _constrained;
   };
+
+inline mat33_t SetIdentityScaled(double diff_fw)
+{
+   mat33_t tmp;
+   tmp.setIdentity();
+   tmp*= diff_fw;
+   return tmp;
+}
 
 /**
  * \struct Full1T_FW
@@ -189,20 +199,27 @@ protected:
  * Model describing 1-tensor tractography with the full tensor representation (3 angles, 3 eigenvalues)
  * and free water estimation.
 */
-struct Full1T_FW : public FilterModel
+class Full1T_FW : public FilterModel
   {
-  Full1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
-            const double diff_fw)
-    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+public:
+  Full1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
+            const ukfPrecisionType diff_fw)
+    : FilterModel(7, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+#endif
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = ql;
     _Q(6, 6) = qw;
 
-    _D.set_size(7, 5);
-    _D.fill(0);
+    _D.resize(7, 5);
+    _D.setConstant(ukfZero);
 
-    _d.set_size(5);
+    _d.resize(5);
 
     // Setting the constraints according to D'*x >= -d
     _D(6, 0) = -1;
@@ -222,17 +239,17 @@ struct Full1T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat33_t m_D_iso;
 
   };
 
@@ -243,9 +260,10 @@ struct Full1T_FW : public FilterModel
  * Model describing 1-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full1T : public FilterModel
+class Full1T : public FilterModel
   {
-  Full1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Full1T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -256,14 +274,14 @@ struct Full1T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -273,9 +291,10 @@ struct Full1T : public FilterModel
  * Model describing 2-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full2T : public FilterModel
+class Full2T : public FilterModel
   {
-  Full2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Full2T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(12, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
@@ -286,14 +305,14 @@ struct Full2T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -303,20 +322,27 @@ struct Full2T : public FilterModel
  * Model describing 2-tensor tractography with the full tensor representation (3 angles, 3 eigenvalues)
  * and free water estimation.
 */
-struct Full2T_FW : public FilterModel
+class Full2T_FW : public FilterModel
   {
-  Full2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors, bool constrained,
-            const double diff_fw)
-    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+public:
+  Full2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained,
+            const ukfPrecisionType diff_fw)
+    : FilterModel(13, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+#endif
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(6, 6) = _Q(7, 7) = _Q(8, 8) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(5, 5) = _Q(9, 9) = _Q(10, 10) = _Q(11, 11) = ql;
     _Q(12, 12) = qw; // noise for weights
 
-    _D.set_size(13, 8);
-    _D.fill(0);
+    _D.resize(13, 8);
+    _D.setConstant(ukfZero);
 
-    _d.set_size(8);
+    _d.resize(8);
 
     // Setting the constraints according to D'*x >= -d
     _D(12, 0) = -1;
@@ -341,18 +367,17 @@ struct Full2T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
-
+  const mat33_t m_D_iso;
   };
 
 /**
@@ -362,9 +387,10 @@ struct Full2T_FW : public FilterModel
  * Model describing 3-tensor tractography with the full tensor representation
  * (3 angles, 3 eigenvalues).
 */
-struct Full3T : public FilterModel
+class Full3T : public FilterModel
   {
-  Full3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Full3T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(18, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -380,15 +406,15 @@ struct Full3T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                            vec_t& l3);
+  virtual void State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                            vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 
@@ -399,21 +425,27 @@ struct Full3T : public FilterModel
  * Model describing 1-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
  * and free water estimation
 */
-struct Simple1T_FW : public FilterModel
+class Simple1T_FW : public FilterModel
   {
-  Simple1T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
-              bool constrained, const double diff_fw)
-    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+public:
+  Simple1T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
+              bool constrained, const ukfPrecisionType diff_fw)
+    : FilterModel(6, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+#endif
 
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
     _Q(3, 3) = _Q(4, 4) = ql;
     _Q(5, 5) = qw; // noise for weights
 
-    _D.set_size(6, 4);
-    _D.fill(0);
+    _D.resize(6, 4);
+    _D.setConstant(ukfZero);
 
-    _d.set_size(4);
+    _d.resize(4);
 
     // Setting the constraints according to D'*x >= -d
     _D(5, 0) = -1;
@@ -431,17 +463,17 @@ struct Simple1T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat33_t m_D_iso;
 
   };
 
@@ -451,9 +483,10 @@ struct Simple1T_FW : public FilterModel
  *
  * Model describing 1-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
 */
-struct Simple1T : public FilterModel
+class Simple1T : public FilterModel
   {
-  Simple1T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Simple1T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(5, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -464,13 +497,13 @@ struct Simple1T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor1T(const State& x, vec_t& m, vec_t& l);
+  virtual void State2Tensor1T(const State& x, vec3_t& m, vec3_t& l);
 
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
   };
 
 /**
@@ -479,9 +512,10 @@ struct Simple1T : public FilterModel
  *
  * Model describing 2-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal).
 */
-struct Simple2T : public FilterModel
+class Simple2T : public FilterModel
   {
-  Simple2T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Simple2T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(10, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
@@ -492,14 +526,14 @@ struct Simple2T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 
@@ -510,20 +544,27 @@ struct Simple2T : public FilterModel
  * Model describing 2-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
  * and free water estimation
 */
-struct Simple2T_FW : public FilterModel
+class Simple2T_FW : public FilterModel
   {
-  Simple2T_FW(double qs, double ql, double qw, double rs, const std::vector<double>& weights_on_tensors,
-              bool constrained, const double diff_fw)
-    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0), _d_iso(diff_fw)
+public:
+  Simple2T_FW(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType qw, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors,
+              bool constrained, const ukfPrecisionType diff_fw)
+    : FilterModel(11, rs, weights_on_tensors, constrained), _lambda_min(100.0), m_D_iso(SetIdentityScaled(diff_fw))
   {
+#if 0
+    m_D_iso << diff_fw, 0, 0,
+      0, diff_fw, 0,
+      0, 0, diff_fw;
+#endif
+
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = _Q(5, 5) = _Q(6, 6) = _Q(7, 7) = qs;
     _Q(3, 3) = _Q(4, 4) = _Q(8, 8) = _Q(9, 9) = ql;
     _Q(10, 10) = qw; // noise for weights
 
-    _D.set_size(11, 6);
-    _D.fill(0);
+    _D.resize(11, 6);
+    _D.setConstant(ukfZero);
 
-    _d.set_size(6);
+    _d.resize(6);
 
     // Setting the constraints according to D'*x >= -d
     _D(10, 0) = -1;
@@ -544,17 +585,17 @@ struct Simple2T_FW : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor2T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2);
+  virtual void State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   /** apparent diffusion coefficient of free water */
-  const double _d_iso;
+  mat33_t m_D_iso;
   };
 
 /**
@@ -563,9 +604,10 @@ struct Simple2T_FW : public FilterModel
  *
  * Model describing 3-tensor tractography with the simplified tensor representation (two minor eigenvalues are equal)
 */
-struct Simple3T : public FilterModel
+class Simple3T : public FilterModel
   {
-  Simple3T(double qs, double ql, double rs, const std::vector<double>& weights_on_tensors, bool constrained)
+public:
+  Simple3T(ukfPrecisionType qs, ukfPrecisionType ql, ukfPrecisionType rs, const ukfVectorType& weights_on_tensors, bool constrained)
     : FilterModel(15, rs, weights_on_tensors, constrained), _lambda_min(100.0)
   {
     _Q(0, 0) = _Q(1, 1) = _Q(2, 2) = qs;
@@ -579,15 +621,15 @@ struct Simple3T : public FilterModel
   {
   }
 
-  virtual void F(vnl_matrix<double>& X) const;
+  virtual void F(ukfMatrixType& X) const;
 
-  virtual void H(const  vnl_matrix<double>& X, vnl_matrix<double>& Y) const;
+  virtual void H(const  ukfMatrixType& X, ukfMatrixType& Y) const;
 
-  virtual void State2Tensor3T(const State& x, const vec_t& old_m, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3,
-                            vec_t& l3);
+  virtual void State2Tensor3T(const State& x, const vec3_t& old_m, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3,
+                            vec3_t& l3);
 
   /** The minimum value of the eigenvalues. Clamped in each step */
-  const double _lambda_min;
+  const ukfPrecisionType _lambda_min;
 
   };
 

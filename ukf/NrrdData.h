@@ -14,8 +14,6 @@
 #include <teem/nrrd.h>
 #include "linalg.h"
 
-#include <vnl/vnl_matrix.h>
-
 /**
  * \class NrrdData
  * \implements ISignalData
@@ -27,16 +25,16 @@ class NrrdData : public ISignalData
 public:
 
   /** Constructor */
-  NrrdData(double sigma_signal, double sigma_mask);
+  NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask);
 
   /** Destructor */
   ~NrrdData();
 
   /** Interpolates the DWI signal at a certain position */
-  virtual void Interp3Signal(const vec_t& pos, std::vector<double>& signal) const;
+  virtual void Interp3Signal(const vec3_t& pos, ukfVectorType& signal) const;
 
   /** Interpolates the brain mask at a certain position */
-  virtual double Interp3ScalarMask(const vec_t& pos) const;
+  virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const;
 
   /**
    * \brief Get the seed points from the nrrd file
@@ -46,10 +44,10 @@ public:
    * \param[in]  labels  a vector of labels that define the seed region
    * \param[out] seeds   a vector containing the positions in ijk-space of the seeds
   */
-  virtual void GetSeeds(const std::vector<int>& labels, std::vector<vec_t>& seeds) const;
+  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const;
 
   /** returns the gradients of the diffusion image */
-  virtual const std::vector<vec_t> & gradients() const
+  virtual const stdVec_t & gradients() const
   {
     return _gradients;
   }
@@ -59,7 +57,7 @@ public:
    * Note: Except for cases recorded with multiple b-values it
    *       contains identical values
   */
-  virtual const std::vector<double> & GetBValues() const
+  virtual const ukfVectorType & GetBValues() const
   {
     return _b_values;
   }
@@ -93,7 +91,7 @@ public:
   virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData);
 
   /** Returns the dimensions of the signal in each directions as a vector */
-  virtual vec_t dim() const
+  virtual vec3_t dim() const
   {
     return _dim;
   }
@@ -101,15 +99,15 @@ public:
 private:
 
   /** The volume dimensions */
-  vec_t _dim;
+  vec3_t _dim;
 
   int _num_gradients;
 
   /** gradient directions of the diffusion image */
-  std::vector<vec_t> _gradients;
+  stdVec_t _gradients;
 
   /** b-values of the diffusion image */
-  std::vector<double> _b_values;
+  ukfVectorType _b_values;
 
   /** pointer diffusion data as float */
   float *_data;

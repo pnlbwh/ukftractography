@@ -10,12 +10,7 @@
 #include <vector>
 #include "ukffiber.h"
 #include "seed.h"
-
-#include <vnl/vnl_matrix.h>
-#include <vnl/algo/vnl_determinant.h>
-#include <vnl/vnl_vector_ref.h>
-#include <vnl/algo/vnl_svd.h>
-#include <vnl/algo/vnl_qr.h>
+#include "ukf_types.h"
 
 class ISignalData;
 
@@ -25,8 +20,8 @@ class ISignalData;
 */
 class Tractography
 {
-
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   /** Defines a type to specify the model */
   enum model_type { _1T,
@@ -48,15 +43,15 @@ public:
                const bool record_state, const bool record_cov, const bool record_free_water, const bool record_tensors,
                const bool transform_position, const bool store_glyphs, const bool branchesOnly,
 
-               const double fa_min, const double ga_min, const double seedFALimit,
+               const ukfPrecisionType fa_min, const ukfPrecisionType ga_min, const ukfPrecisionType seedFALimit,
                const int num_tensors, const int seeds_per_voxel,
-               const double minBranchingAngle, const double maxBranchingAngle,
+               const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                const bool is_full_model, const bool free_water,
-               const double stepLength, const double maxHalfFiberLength,
+               const ukfPrecisionType stepLength, const ukfPrecisionType maxHalfFiberLength,
                const std::vector<int>& labels,
 
-               double p0, double sigma_signal, double sigma_mask,
-               double min_radius, double full_brain_ga_min,
+               ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
+               ukfPrecisionType min_radius, ukfPrecisionType full_brain_ga_min,
 
                const int num_threads
                );
@@ -78,8 +73,10 @@ public:
   */
   void Init(std::vector<SeedPointInfo>& seed_infos);
 
-  /** Performs the tractography */
-  void Run();
+  /** \breif Performs the tractography
+      \return true if files written successfully, else false
+  */
+  bool Run();
 
   /**
    * Follows one seed point for the 3 Tensor case
@@ -107,40 +104,40 @@ private:
    * Calculate six tensor coefficients by solving B * d = log(s), where d are
    * tensor coefficients, B is gradient weighting, s is signal.
   */
-  void UnpackTensor(const std::vector<double>& b, const std::vector<vec_t>& u, std::vector<std::vector<double> >& s,
-                    std::vector<std::vector<double> >& ret);
+  void UnpackTensor(const ukfVectorType& b, const stdVec_t& u, stdEigVec_t& s,
+                    stdEigVec_t& ret);
 
   /** One step along the fiber for the 3-tensor case. */
-  void Step3T(const int thread_id, vec_t& x, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, vec_t& m3, vec_t& l3,
-              double& fa, double& fa2, State& state, vnl_matrix<double>& covariance, double& dNormMSE, double& trace,
-              double& trace2);
+  void Step3T(const int thread_id, vec3_t& x, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3, vec3_t& l3,
+              ukfPrecisionType& fa, ukfPrecisionType& fa2, State& state, ukfMatrixType& covariance, ukfPrecisionType& dNormMSE, ukfPrecisionType& trace,
+              ukfPrecisionType& trace2);
 
   /** One step along the fiber for the 2-tensor case. */
-  void Step2T(const int thread_id, vec_t& x, vec_t& m1, vec_t& l1, vec_t& m2, vec_t& l2, double& fa, double& fa2,
-              State& state, vnl_matrix<double>& covariance, double& dNormMSE, double& trace, double& trace2);
+  void Step2T(const int thread_id, vec3_t& x, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, ukfPrecisionType& fa, ukfPrecisionType& fa2,
+              State& state, ukfMatrixType& covariance, ukfPrecisionType& dNormMSE, ukfPrecisionType& trace, ukfPrecisionType& trace2);
 
   /** One step along the fiber for the 1-tensor case. */
-  void Step1T(const int thread_id, vec_t& x, double& fa, State& state, vnl_matrix<double>& covariance, double& dNormMSE,
-              double& trace);
+  void Step1T(const int thread_id, vec3_t& x, ukfPrecisionType& fa, State& state, ukfMatrixType& covariance, ukfPrecisionType& dNormMSE,
+              ukfPrecisionType& trace);
 
   /**
    * Swaps the first tensor with the i-th tensor in state and covariance matrix for the 3 Tensor case.
    * This is used when the main direction of the tractography 'switches' tensor.
   */
-  void SwapState3T(State& state, vnl_matrix<double>& covariance, int i);
+  void SwapState3T(State& state, ukfMatrixType& covariance, int i);
 
   /**
    * Swap the tensors in the state and covariance matrix for the 2-tensor case. This is used when the
    * principal direction of the minor tensor has more weight than the one of the current tensor.
   */
-  void SwapState2T(State& state, vnl_matrix<double>& covariance);
+  void SwapState2T(State& state, ukfMatrixType& covariance);
 
   /**
    * Saves one point along the fiber so that everything can be written to a
    * file at the end.
   */
-  void Record(const vec_t& x, double fa, double fa2, const State& state, const vnl_matrix<double> p, UKFFiber& fiber,
-              double dNormMSE, double trace, double trace2);
+  void Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state, const ukfMatrixType p, UKFFiber& fiber,
+              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2);
 
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
@@ -188,11 +185,11 @@ private:
 
   // Internal parameters
   bool         _is_branching;
-  const double _p0;
-  const double _sigma_signal;
-  const double _sigma_mask;
-  const double _min_radius;
-  const double _full_brain_ga_min;
+  const ukfPrecisionType _p0;
+  const ukfPrecisionType _sigma_signal;
+  const ukfPrecisionType _sigma_mask;
+  const ukfPrecisionType _min_radius;
+  const ukfPrecisionType _full_brain_ga_min;
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;
@@ -200,16 +197,16 @@ private:
   int _nPosFreeWater;
 
   // Parameters for the tractography
-  const double           _fa_min;
-  const double           _ga_min;
-  const double           _seedFALimit;
+  const ukfPrecisionType           _fa_min;
+  const ukfPrecisionType           _ga_min;
+  const ukfPrecisionType           _seedFALimit;
   const int              _num_tensors;
   const int              _seeds_per_voxel;
-  double                 _cos_theta_min;
-  double                 _cos_theta_max;
+  ukfPrecisionType                 _cos_theta_min;
+  ukfPrecisionType                 _cos_theta_max;
   const bool             _is_full_model;
   const bool             _free_water;
-  const double           _stepLength;
+  const ukfPrecisionType           _stepLength;
   const std::vector<int> _labels;
 
   bool _writeBinary;

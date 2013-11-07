@@ -5,10 +5,10 @@
 #include "vtkSmartPointer.h"
 #include "vtkPointData.h"
 #include "vtkFloatArray.h"
-#include "math.h"
 #include "fiber.h"
-#include <iostream>
 #include "itksys/SystemTools.hxx"
+#include <iostream>
+#include <cmath>
 
 #ifndef EXIT_FAILURE
 #define EXIT_FAILURE 1
@@ -64,9 +64,15 @@ int main(int argc, char *argv[])
             << " Strips " << input2->GetNumberOfStrips()
             << std::endl;
 
-  vtkIdType size1 = input1->GetNumberOfPoints();
-  vtkIdType size2 = input2->GetNumberOfPoints();
-  if(size1 != size2)
+  const vtkIdType size1 = input1->GetNumberOfPoints();
+  if(size1 == 0 )
+    {
+    std::cerr << "first file fiber has " << size1
+              << " points " << std::endl;
+    return EXIT_FAILURE;
+    }
+  const vtkIdType size2 = input2->GetNumberOfPoints();
+  if(size1 != size2 || size1 == 0 )
     {
     std::cerr << "first file fiber has " << size1
               << " points, second file has " << size2
@@ -78,12 +84,13 @@ int main(int argc, char *argv[])
     {
     const double *pt1 = input1->GetPoint(i);
     const double *pt2 = input2->GetPoint(i);
-    double distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
+    const ukfPrecisionType distance = sqrt( ((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]))
                             + ((pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
                             + ((pt1[2] - pt2[2]) * (pt1[2] - pt2[2])));
-    if(distance > 1.0E-3)
+    const ukfPrecisionType TOLERANCE=1.0E-1; // Allow for a cummulative 100th of a voxel error
+    if(distance > TOLERANCE)
       {
-      std::cerr << "Difference in Points is above tolerance (1e-9): " << distance << std::endl;
+      std::cerr << "Difference in Points is above tolerance (" << TOLERANCE << "): " << distance << std::endl;
       return EXIT_FAILURE;
       }
     }
@@ -93,9 +100,9 @@ int main(int argc, char *argv[])
   vtkPointData *masterPD;
   // pd1->Print(std::cerr);
   // pd2->Print(std::cerr);
-  int numComponents1 = pd1->GetNumberOfComponents();
-  int numComponents2 = pd2->GetNumberOfComponents();
-  int maxNumComponents = numComponents1 > numComponents2 ? numComponents1 : numComponents2;
+  const int numComponents1 = pd1->GetNumberOfComponents();
+  const int numComponents2 = pd2->GetNumberOfComponents();
+  const int maxNumComponents = numComponents1 > numComponents2 ? numComponents1 : numComponents2;
   masterPD = pd1;
   if(numComponents1 != numComponents2)
     {
@@ -138,8 +145,8 @@ int main(int argc, char *argv[])
       }
     for(vtkIdType j = 0; j < farray1size; ++j)
       {
-      float f1 = farray1->GetValue(j);
-      float f2 = farray2->GetValue(j);
+      const float f1 = farray1->GetValue(j);
+      const float f2 = farray2->GetValue(j);
       if(fabs(f1 - f2) > 1.0e-3)
         {
         std::cerr << "Difference is aove tolerance "

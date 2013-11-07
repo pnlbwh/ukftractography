@@ -205,7 +205,7 @@ private:
             input >> x;
             input >> y;
             input >> z;
-            (*_fibers)[i].Points[j] = make_vec(x, y, z);
+            (*_fibers)[i].Points[j] << x, y, z;
             }
           }
 
@@ -264,17 +264,18 @@ private:
           for( int j = 0; j < nLineLength; ++j )
             {
 
-            double t11, t12, t13;
-            double t21, t22, t23;
-            double t31, t32, t33;
+            ukfPrecisionType t11, t12, t13;
+            ukfPrecisionType t21, t22, t23;
+            ukfPrecisionType t31, t32, t33;
 
             input >> t11; input >> t12; input >> t13;
             input >> t21; input >> t22; input >> t23;
             input >> t31; input >> t32; input >> t33;
 
-            (*_fibers)[i].Tensors[name][j] = make_mat(t11, t12, t13,
-                                                      t21, t22, t23,
-                                                      t31, t31, t33);
+            (*_fibers)[i].Tensors[name][j] <<
+              t11, t12, t13,
+              t21, t22, t23,
+              t31, t31, t33;
 
             }
 

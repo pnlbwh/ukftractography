@@ -9,10 +9,7 @@
 #include <iostream>
 #include <cassert>
 
-#include <vnl/vnl_inverse.h>
-#include <vnl/vnl_vector.h>
-
-NrrdData::NrrdData(double sigma_signal, double sigma_mask)
+NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
   : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
 {
 
@@ -34,57 +31,57 @@ NrrdData::~NrrdData()
     }
 }
 
-void NrrdData::Interp3Signal(const vec_t& pos,
-                             std::vector<double>& signal) const
+void NrrdData::Interp3Signal(const vec3_t& pos,
+                             ukfVectorType& signal) const
 {
-  const int nx = static_cast<const int>(_dim._[0]);
-  const int ny = static_cast<const int>(_dim._[1]);
-  const int nz = static_cast<const int>(_dim._[2]);
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
 
-  double w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
+  ukfPrecisionType w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
-  assert(signal.size() == static_cast<size_t>(_num_gradients * 2) );
+  assert(signal.size() == static_cast<unsigned int>(_num_gradients * 2) );
   assert(_data);
   // Is this really necessary?
   for( int i = 0; i < 2 * _num_gradients; ++i )
     {
-    signal[i] = 0.0;
+    signal[i] = ukfZero;
     }
 
-  int step1 = nz * ny * _num_gradients;
-  int step2 = nz * _num_gradients;
+  const int step1 = nz * ny * _num_gradients;
+  const int step2 = nz * _num_gradients;
   // for each location
   for( int xx = -1; xx <= 1; ++xx )
     {
-    const int x = static_cast<const int>(round(pos._[0]) + xx);
+    const int x = static_cast<const int>(round(pos[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
       }
-    double dx = (x - pos._[0]) * _voxel._[0];
-    double dxx = dx * dx;
+    const ukfPrecisionType dx = (x - pos[0]) * _voxel[0];
+    const ukfPrecisionType dxx = dx * dx;
     for( int yy = -1; yy <= 1; ++yy )
       {
-      const int y = static_cast<const int>(round(pos._[1]) + yy);
+      const int y = static_cast<const int>(round(pos[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
         }
 
-      double dy = (y - pos._[1]) * _voxel._[1];
-      double dyy = dy * dy;
+      const ukfPrecisionType dy = (y - pos[1]) * _voxel[1];
+      const ukfPrecisionType dyy = dy * dy;
       for( int zz = -1; zz <= 1; ++zz )
         {
-        const int z = static_cast<const int>(round(pos._[2]) + zz);
+        const int z = static_cast<const int>(round(pos[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;
           }
-        double dz = (z - pos._[2]) * _voxel._[2];
-        double dzz = dz * dz;
+        const ukfPrecisionType dz = (z - pos[2]) * _voxel[2];
+        const ukfPrecisionType dzz = dz * dz;
 
         // gaussian smoothing
-        double w = exp(-(dxx + dyy + dzz) / _sigma_signal);
+        const ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_signal);
         // for each gradient direction
         for( int i = 0; i < _num_gradients; ++i )
           {
@@ -98,7 +95,7 @@ void NrrdData::Interp3Signal(const vec_t& pos,
     }
 
   // Deleted by Wendy
-  // signal shouldn't be halved due to double occurance of the gradients
+  // signal shouldn't be halved due to ukfPrecisionType occurance of the gradients
   // reinserted by CB, in order to match the MATLAB code.
   // CB: needs to removed in order to interpolate the signal correctly.
   w_sum *= 2; // Double each occurance.
@@ -112,45 +109,45 @@ void NrrdData::Interp3Signal(const vec_t& pos,
 
 }
 
-double NrrdData::Interp3ScalarMask(const vec_t& pos) const
+ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
 {
-  const int nx = static_cast<const int>(_dim._[0]);
-  const int ny = static_cast<const int>(_dim._[1]);
-  const int nz = static_cast<const int>(_dim._[2]);
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
 
   unsigned int index;
-  double       value;
+  ukfPrecisionType       value;
 
-  double w_sum = 1e-16;
-  double s = 0.0;
+  ukfPrecisionType w_sum = 1e-16;
+  ukfPrecisionType s = ukfZero;
 
   for( int xx = -1; xx <= 1; xx++ )
     {
-    const int x = static_cast<const int>(round(pos._[0]) + xx);
+    const int x = static_cast<const int>(round(pos[0]) + xx);
     if( x < 0 || nx <= x )
       {
       continue;
       }
-    double dx = (x - pos._[0]) * _voxel._[0];
-    double dxx = dx * dx;
+    ukfPrecisionType dx = (x - pos[0]) * _voxel[0];
+    ukfPrecisionType dxx = dx * dx;
     for( int yy = -1; yy <= 1; yy++ )
       {
-      const int y = static_cast<const int>(round(pos._[1]) + yy);
+      const int y = static_cast<const int>(round(pos[1]) + yy);
       if( y < 0 || ny <= y )
         {
         continue;
         }
-      double dy = (y - pos._[1]) * _voxel._[1];
-      double dyy = dy * dy;
+      ukfPrecisionType dy = (y - pos[1]) * _voxel[1];
+      ukfPrecisionType dyy = dy * dy;
       for( int zz = -1; zz <= 1; zz++ )
         {
-        const int z = static_cast<const int>(round(pos._[2]) + zz);
+        const int z = static_cast<const int>(round(pos[2]) + zz);
         if( z < 0 || nz <= z )
           {
           continue;
           }
-        double dz = (z - pos._[2]) * _voxel._[2];
-        double dzz = dz * dz;
+        ukfPrecisionType dz = (z - pos[2]) * _voxel[2];
+        ukfPrecisionType dzz = dz * dz;
 
         index = nz * ny * x + nz * y + z;
 
@@ -172,7 +169,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
             exit(1);
           }
 
-        double w = exp(-(dxx + dyy + dzz) / _sigma_mask);
+        ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_mask);
         if( value )
           {
           s += w;
@@ -187,7 +184,7 @@ double NrrdData::Interp3ScalarMask(const vec_t& pos) const
 }
 
 void NrrdData::GetSeeds(const std::vector<int>& labels,
-                        std::vector<vec_t>& seeds) const
+                        stdVec_t& seeds) const
 {
   if( _seed_data )
     {
@@ -199,7 +196,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     int ny = _seed_nrrd->axis[1].size;
     int nz = _seed_nrrd->axis[0].size;
     assert(_seed_data);
-    assert(nx == _dim._[0] && ny == _dim._[1] && nz == _dim._[2]);
+    assert(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]);
     for( int i = 0; i < nx; ++i )
       {
       for( int j = 0; j < ny; ++j )
@@ -234,7 +231,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
               }
             if( *cit == value )
               {
-              seeds.push_back(make_vec(i, j, k) );
+              seeds.push_back(vec3_t(i, j, k) );
               }
             }
           }
@@ -282,7 +279,6 @@ bool NrrdData::LoadData(const std::string& data_file,
 
   _mask_nrrd = nrrdNew();
 
-  char *err;
 
   // Load seeds
   if( !seed_file.empty() )
@@ -290,7 +286,7 @@ bool NrrdData::LoadData(const std::string& data_file,
     _seed_nrrd = nrrdNew();
     if( nrrdLoad(_seed_nrrd, seed_file.c_str(), NULL) )
       {
-      err = biffGetDone(NRRD);
+      char *err = biffGetDone(NRRD);
       std::cout << "Trouble reading " << seed_file << ": " << err << std::endl;
       free( err );
       return true;
@@ -304,7 +300,7 @@ bool NrrdData::LoadData(const std::string& data_file,
   // Load mask
   if( nrrdLoad(_mask_nrrd, mask_file.c_str(), NULL) )
     {
-    err = biffGetDone(NRRD);
+    char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
     free( err );
     return true;
@@ -334,13 +330,12 @@ bool NrrdData::LoadData(const std::string& data_file,
 bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWIData)
 {
   Nrrd *tempNrrd = nrrdNew();
-
   _data_nrrd = nrrdNew();
 
-  char *err;
+
   if( nrrdLoad(tempNrrd, data_file.c_str(), NULL) )
     {
-    err = biffGetDone(NRRD);
+    char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
     free( err );
     return true;
@@ -374,8 +369,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
   assert(size == 2);
 
-  double              b = 0.0;
-  std::vector<double> norm_vec;
+  ukfPrecisionType              bValue = ukfZero;
 
   assert(_gradients.size() == 0);
   // Read key value pairs.
@@ -387,7 +381,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
 
     if( !key.compare("DWMRI_b-value") )   // NOTE:compare returns 0 if strings match DWMRI_b-value
       {
-      b = atof(_data_nrrd->kvp[i + 1]);
+      bValue = atof(_data_nrrd->kvp[i + 1]);
       }
     else if( key.length() > 14 &&
              !key.substr(0, 14).compare("DWMRI_gradient") )
@@ -400,51 +394,28 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
         }
 
       // DEBUGING
-      // std::cout << "Gradients: " << gx << " " << gy << " " << gz << std::endl;
-
-      // normalizing the gradients
-
-      double norm = sqrt(gx * gx + gy * gy + gz * gz);
-      norm_vec.push_back(norm);
-
-      gx /= norm;
-      gy /= norm;
-      gz /= norm;
-
-      _gradients.push_back(make_vec(gx, gy, gz) );
-
+      //std::cout << "Gradients: " << gx << " " << gy << " " << gz << std::endl;
+      _gradients.push_back(vec3_t(gx, gy, gz) );
       }
     else if( !key.compare("modality") )
       {
       assert(!std::string(_data_nrrd->kvp[i + 1]).compare("DWMRI") );
       }
     }
-
-  // if the norm of any gradient norm is >= 1.5 we assume multiple b values
-  bool multiple_b_values = false;
-  for( unsigned int i = 0; i < _gradients.size(); ++i )
+  // if multiple bValues are present the gradient norms are the bValues
+  // otherwise the bValues are taken from the header
+  // if bValue not in header also take the norm
+  // normalizing the gradients
+  const unsigned int gradientCount = _gradients.size();
+  _b_values.resize(gradientCount * 2 );
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
-    if( norm_vec[i] > 1.5 )
-      {
-      multiple_b_values = true;
-      break;
-      }
-    }
-
-  // if multiple b values are present the gradient norms are the b values
-  // otherwise the b values are taken from the header
-  // if b not in header also take the norm
-  _b_values.resize(_gradients.size() );
-  for( unsigned int i = 0; i < _gradients.size(); ++i )
-    {
-    if( multiple_b_values || b == 0.0 )
-      {
-      _b_values[i] = norm_vec[i];
-      }
-    else
-      {
-      _b_values[i] = b;
-      }
+    const ukfPrecisionType gradientNorm = _gradients[i].norm();
+    const ukfPrecisionType effectiveBvalue = (fabs( gradientNorm - ukfOne ) > 1e-4 ) ? gradientNorm * bValue: bValue;
+    //http://www.na-mic.org/Wiki/index.php/NAMIC_Wiki:DTI:Nrrd_format
+    //It is after this magnitude rescaling that the nominal bValue (given via "DWMRI_b-value:=bValue") applies.
+    _b_values[i] = effectiveBvalue;
+    _gradients[i].normalize();
     }
 
   // Voxel spacing.
@@ -453,7 +424,7 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   nrrdSpacingCalculate(this->_data_nrrd, 1, &spacing1, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 2, &spacing2, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 3, &spacing3, space_dir);
-  _voxel = make_vec(spacing3, spacing2, spacing1);  // NOTE that the _voxel here is in reverse axis order!
+  _voxel << spacing3, spacing2, spacing1;  // NOTE that the _voxel here is in reverse axis order!
 
   // make sure something computable is in spacing.
   for(unsigned int i = 0; i < this->_data_nrrd->dim; ++i)
@@ -469,20 +440,20 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
 
   // DEBUGING
-  // std::cout << "Voxel: " << _voxel._[0] << " " << _voxel._[1] << " " << _voxel._[2] << std::endl;
+  // std::cout << "Voxel: " << _voxel[0] << " " << _voxel[1] << " " << _voxel[2] << std::endl;
 
   // Dimensions
   // NOTICE that the _dim is in reverse axis order!
-  _dim = make_vec(_data_nrrd->axis[3].size, _data_nrrd->axis[2].size,
-                  _data_nrrd->axis[1].size);
+  _dim << _data_nrrd->axis[3].size, _data_nrrd->axis[2].size,
+    _data_nrrd->axis[1].size;
 
-  // std::cout << "dim: " << _dim._[0] << " " << _dim._[1] << " " << _dim._[2] << std::endl;
+  // std::cout << "dim: " << _dim[0] << " " << _dim[1] << " " << _dim[2] << std::endl;
 
   _num_gradients = _data_nrrd->axis[0].size;
-  assert(_num_gradients == static_cast<int>(_gradients.size() ) );
+  assert(_num_gradients == static_cast<int>(gradientCount ) );
 
   // Get the measurement frame.
-  vnl_matrix<double> measurement_frame(3, 3);
+  ukfMatrixType measurement_frame(3, 3);
   for( int i = 0; i < 3; ++i )
     {
     for( int j = 0; j < 3; ++j )
@@ -494,8 +465,8 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
     }
 
   // Get the ijk->RAS transform matrix
-  _i2r.set_size(4, 4);
-  _i2r.fill(0);
+  _i2r.resize(4, 4);
+  _i2r.setConstant(ukfZero);
 
   _i2r(0, 0) = _data_nrrd->axis[1].spaceDirection[0];
   _i2r(1, 0) = _data_nrrd->axis[1].spaceDirection[1];
@@ -509,20 +480,20 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   _i2r(0, 3) = _data_nrrd->spaceOrigin[0];
   _i2r(1, 3) = _data_nrrd->spaceOrigin[1];
   _i2r(2, 3) = _data_nrrd->spaceOrigin[2];
-  _i2r(3, 3) = 1.0;
+  _i2r(3, 3) = ukfOne;
 
   // RAS->ijk.
-  _r2i = vnl_inverse(_i2r);
+  _r2i = _i2r.inverse();
 
   // Transform gradients.
-  vnl_matrix<double> R(3, 3);
-  R = _i2r.extract(3, 3);
+  ukfMatrixType R(3, 3);
+  R = _i2r.block(0,0,3,3);
 
   // The gradient should not be affected by voxel size, so factor out the voxel sizes
   // This is equivalent to normalizing the space directions
-  double vox_x_inv = 1.0 / _voxel._[2];
-  double vox_y_inv = 1.0 / _voxel._[1];
-  double vox_z_inv = 1.0 / _voxel._[0];
+  const ukfPrecisionType vox_x_inv = ukfOne / _voxel[2];
+  const ukfPrecisionType vox_y_inv = ukfOne / _voxel[1];
+  const ukfPrecisionType vox_z_inv = ukfOne / _voxel[0];
 
   R(0, 0) *=  vox_x_inv;
   R(1, 0) *=  vox_x_inv;
@@ -535,34 +506,35 @@ bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWI
   R(1, 2) *=  vox_z_inv;
   R(2, 2) *=  vox_z_inv;
 
-  vnl_matrix<double> tmp_mat = vnl_inverse(R) * measurement_frame;
+  ukfMatrixType tmp_mat = R.inverse() * measurement_frame;
 
-  int                count = _gradients.size();
-  vnl_vector<double> u(3), u_new(3);
-  for( int i = 0; i < count; ++i )
+  ukfVectorType u(3);
+  ukfVectorType u_new(3);
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
     // Transform and normalize.
-    u[0] = _gradients[i]._[0];
-    u[1] = _gradients[i]._[1];
-    u[2] = _gradients[i]._[2];
+    u[0] = _gradients[i][0];
+    u[1] = _gradients[i][1];
+    u[2] = _gradients[i][2];
 
     u_new = tmp_mat * u;
-    double dNorm_inv = 1.0 / u_new.magnitude();
+    const ukfPrecisionType dNorm_inv = ukfOne / u_new.norm();
 
     // No need to worry about the divison by zero here, since the normalized dwi data has no zero gradient
-    _gradients[i]._[0] = u_new[0] * dNorm_inv;
-    _gradients[i]._[1] = u_new[1] * dNorm_inv;
-    _gradients[i]._[2] = u_new[2] * dNorm_inv;
+    _gradients[i][0] = u_new[0] * dNorm_inv;
+    _gradients[i][1] = u_new[1] * dNorm_inv;
+    _gradients[i][2] = u_new[2] * dNorm_inv;
 
     }
   // Add reversed gradients
   // This is necessary since the data (signals and gradients) stored in the data files are typically for a half-sphere
   // To get the data for the other half-sphere, simply reverse the gradients and duplicate the signals
-  for( int i = 0; i < count; ++i )
+  for( unsigned int i = 0; i < gradientCount; ++i )
     {
+    const unsigned int dupIndex = i + gradientCount;
     // Duplicate and reverse direction.
     _gradients.push_back(-_gradients[i]);
-    _b_values.push_back(_b_values[i]);
+    _b_values[dupIndex] =_b_values[i];
     }
   return false;
 }

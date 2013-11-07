@@ -13,7 +13,6 @@
 #include <vector>
 #include <teem/nrrd.h>
 #include "linalg.h"
-#include <vnl/vnl_matrix.h>
 
 /**
  * \class ISignalData
@@ -31,7 +30,7 @@ public:
    * \param[in] sigma_signal the interpolation 'factor' for the signal
    * \param[in] sigma_mask the interpolation 'factor' for the mask
   */
-  ISignalData(double sigma_signal, double sigma_mask)
+  ISignalData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
     : _sigma_signal(sigma_signal), _sigma_mask(sigma_mask)
   {
 
@@ -43,19 +42,19 @@ public:
   }
 
   /** Gets the signal values at a specified position. */
-  virtual void Interp3Signal(const vec_t& pos, std::vector<double>& signal) const = 0;
+  virtual void Interp3Signal(const vec3_t& pos, ukfVectorType & signal) const = 0;
 
   /** Checks if a certian position is still within the brain mask. */
-  virtual double Interp3ScalarMask(const vec_t& pos) const = 0;
+  virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const = 0;
 
   /** Get all the seed points. */
-  virtual void GetSeeds(const std::vector<int>& labels, std::vector<vec_t>& seeds) const = 0;
+  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
 
   /** Returns the gradients. */
-  virtual const std::vector<vec_t> & gradients() const = 0;
+  virtual const stdVec_t & gradients() const = 0;
 
   /** Returns the vector of b values */
-  virtual const std::vector<double> & GetBValues() const = 0;
+  virtual const ukfVectorType & GetBValues() const = 0;
 
   /** Return the size of the signal vector */
   virtual int GetSignalDimension() const = 0;
@@ -80,22 +79,22 @@ public:
   virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData) = 0;
 
   /** Returns the voxel spacing */
-  vec_t voxel() const
+  vec3_t voxel() const
   {
     return _voxel;
   }
 
   /** Returns the dimensions of the image */
-  virtual vec_t dim() const = 0;
+  virtual vec3_t dim() const = 0;
 
   /** Returns the ijk-to-RAS matrix */
-  const vnl_matrix<double> i2r() const
+  const ukfMatrixType i2r() const
   {
     return _i2r;
   }
 
   /** Returns the RAS-to-ijk matrix */
-  const vnl_matrix<double> r2i() const
+  const ukfMatrixType r2i() const
   {
     return _r2i;
   }
@@ -103,18 +102,18 @@ public:
 protected:
 
   /** sigma for gaussian interpolation of signal */
-  const double _sigma_signal;
+  const ukfPrecisionType _sigma_signal;
   /** sigma for gaussian interpolation of mask */
-  const double _sigma_mask;
+  const ukfPrecisionType _sigma_mask;
 
   /** voxel size */
-  vec_t _voxel;
+  vec3_t _voxel;
 
   /** matrix for RAS to ijk conversion */
-  vnl_matrix<double> _r2i;
+  ukfMatrixType _r2i;
 
   /** matrix for ijk to RAS conversion */
-  vnl_matrix<double> _i2r;
+  ukfMatrixType _i2r;
 };
 
 #endif // ISIGNALDATA_H

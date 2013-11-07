@@ -83,9 +83,9 @@ public:
       {
       for( unsigned int i = 0; i < fib1.Points.size(); ++i )
         {
-        if( (fib1.Points[i]._[0] != fib2.Points[i]._[0]) &&
-            (fib1.Points[i]._[1] != fib2.Points[i]._[1]) &&
-            (fib1.Points[i]._[2] != fib2.Points[i]._[2]) )
+        if( (fib1.Points[i][0] != fib2.Points[i][0]) &&
+            (fib1.Points[i][1] != fib2.Points[i][1]) &&
+            (fib1.Points[i][2] != fib2.Points[i][2]) )
           {
           return false;
           }

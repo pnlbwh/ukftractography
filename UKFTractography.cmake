@@ -10,6 +10,7 @@ if(NOT Slicer_SOURCE_DIR)
   set(EXTENSION_MINOR_VERSION 2)
   set(EXTENSION_PATCH_VERSION 0)
   set(EXTENSION_STATUS "Alpha")
+  set(EXTENSION_DEPENDS "Eigen")
   set(EXTENSION_DESCRIPTION "This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. ")
   set(EXTENSION_LICENSE_SHORT_DESCRIPTION "Quadratic Programming Library QuadProg++ has LGPL or GPL")
   set(EXTENSION_ICONURL "http://viewvc.slicer.org/viewvc.cgi/Slicer4/trunk/Extensions/Testing/CLIExtensionTemplate/CLIExtensionTemplate.png?revision=19437&view=co")
@@ -38,6 +39,15 @@ if(Slicer_BUILD_${PROJECT_NAME})
 endif()
 include(${ITK_USE_FILE})
 
+if(NOT Eigen_INCLUDE_DIR)
+  if(NOT Eigen_DIR)
+    message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
+  endif()
+  set(Eigen_INCLUDE_DIR
+    ${Eigen_DIR}/../Eigen)
+endif()
+
+include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)

@@ -44,12 +44,15 @@ public:
    * \param[in] tractsWithSecondTensor File path for the fibers generated with the second tensor
    *                                   This one is optional.
    * \param[in] store_glyphs Write glyphs (i.e. main tensor directions) to a file named glyphs_{tracts}.
+   * \return EXIT_FAILURE or EXIT_SUCCESS
   */
-  bool Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
+  int Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
              bool write_state, bool store_glyphs);
 
-  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}. */
-  bool WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
+  /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}.
+   * \return EXIT_FAILURE or EXIT_SUCCESS
+   */
+  int WriteGlyphs(const std::string& file_name, const std::vector<UKFFiber>& fibers);
 
   /** Sets the variable that toggles the transform from ijk to RAS before writing the fiber to VTK. */
   void set_transform_position(bool transform_position)
@@ -63,7 +66,7 @@ protected:
   /**
    * Convert a point from the internal representation into what VTK expects
   */
-  vec_t PointConvert(const vec_t &point);
+  vec3_t PointConvert(const vec3_t &point);
   /**
    * Write a single scalar value out in binary.
    */
@@ -103,7 +106,7 @@ protected:
    * \param[out] D The calculated diffusion tensor
    * \todo I think there is something wrong with choosing a orthonormal basis for the tensor
   */
-  void State2Tensor(const State & state, mat_t & D, const int tensorNumber) const;
+  void State2Tensor(const State & state, mat33_t & D, const int tensorNumber) const;
 
   /** The diffusion weighted signal data */
   const ISignalData *_signal_data;
@@ -115,7 +118,7 @@ protected:
   const Tractography::model_type _filter_model_type;
 
   /** Scaling of the glyphs */
-  const double _scale_glyphs;
+  const ukfPrecisionType _scale_glyphs;
 
   /** Whether to attach the tensors to the fiber */
   bool _write_tensors;
@@ -134,10 +137,10 @@ protected:
   bool _full;
 
   /** Additional scaling of the eigenvalues before writing */
-  const double _eigenScaleFactor;
+  const ukfPrecisionType _eigenScaleFactor;
 
   /** Transformation matrix from ijk-RAS with voxel size normalized out */
-  mat_t _sizeFreeI2R;
+  mat33_t _sizeFreeI2R;
 
   /** is the file to be written binary? */
   bool _writeBinary;

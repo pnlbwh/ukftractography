@@ -51,20 +51,21 @@ if(PLATFORM_CHECK)
   endif()
 endif()
 
+#-----------------------------------------------------------------------------
+if(NOT COMMAND SETIFEMPTY)
+  macro(SETIFEMPTY)
+    set(KEY ${ARGV0})
+    set(VALUE ${ARGV1})
+    if(NOT ${KEY})
+      set(${ARGV})
+    endif()
+  endmacro()
+endif()
+
 #
 # if you're building as a Slicer extension, this stuff
 # overrides the defaults being set up for the Extension.
 if(UKFTractography_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
-  #-----------------------------------------------------------------------------
-  if(NOT COMMAND SETIFEMPTY)
-    macro(SETIFEMPTY)
-      set(KEY ${ARGV0})
-      set(VALUE ${ARGV1})
-      if(NOT ${KEY})
-        set(${ARGV})
-      endif()
-    endmacro()
-  endif()
 
   #-----------------------------------------------------------------------------
   SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
@@ -80,6 +81,12 @@ if(UKFTractography_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTEN
   set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION ${CMAKE_INSTALL_LIBRARY_DESTINATION})
   set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION ${CMAKE_INSTALL_ARCHIVE_DESTINATION})
 endif()
+
+# these apparently need to be set to something; 
+SETIFEMPTY(SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION bin)
+SETIFEMPTY(SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION lib)
+SETIFEMPTY(SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION lib)
+
 
 #-------------------------------------------------------------------------
 # Augment compiler flags

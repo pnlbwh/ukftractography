@@ -85,7 +85,7 @@ bool FiberFilter::inRegion(const Fiber & fiber)
   PointType                point;
   int                      nMultIndex;
 
-  std::vector<vec_t>::const_iterator cit;
+  stdVec_t::const_iterator cit;
 
   if( _bConnectionMode == PASS )
     {
@@ -98,9 +98,9 @@ bool FiberFilter::inRegion(const Fiber & fiber)
   for( /* init above */; cit != fiber.Points.end(); ++cit )
     {
 
-    point[0] = -cit->_[0];
-    point[1] = -cit->_[1];
-    point[2] = cit->_[2];
+    point[0] = - (*cit)[0];
+    point[1] = -(*cit)[1];
+    point[2] = (*cit)[2];
 
     _refImage->TransformPhysicalPointToIndex(point, index);
 

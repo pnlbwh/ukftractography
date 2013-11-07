@@ -13,9 +13,6 @@
 #include <cmath>
 #include <cassert>
 
-// Reimplemented functinality of math.h
-#include "math_utilities.h"
-
 void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
 {
 

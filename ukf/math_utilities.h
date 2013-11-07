@@ -12,30 +12,23 @@
 #define MATH_UTILITIES_H_
 
 #include <limits>
+
+//http://stackoverflow.com/questions/13690483/better-more-portable-method-of-defining-pi-in-c-c
 #ifndef M_PI
-/** Approximation of Pi, if necesseary */
-#define M_PI 3.14159265
+// Source: http://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
+#define M_PI 3.141592653589793238462643383279502884197169399375105820974944592307816406
+#else
+#define UKF_PI M_PI
 #endif
 
-/**
-* \brief Returns true for a variable of every type that has infinity defined in
-* std and is larger than its maximal value.
-* \param value A variable of any of the template types.
-*/
-template <typename T>
-inline bool isinf(T value)
-{
-  return std::numeric_limits<T>::has_infinity && value == std::numeric_limits<T>::infinity();
+#define DEG_TO_RAD (UKF_PI/180.0)
+#define RAD_TO_DEG (180.0/UKF_PI)
+inline double DegToRad(const double deg) {
+   return deg * DEG_TO_RAD;
 }
 
-/**
-* \brief Returns true if the given value is not a number (NaN).
-* \param value A value of any of the template types.
-*/
-template <typename T>
-inline bool isnan(T value)
-{
-  return value != value;
+inline double RadToDeg(const double rad) {
+   return rad * RAD_TO_DEG;
 }
 
 #endif  // MATH_UTILITIES_H_

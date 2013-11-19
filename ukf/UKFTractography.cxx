@@ -52,6 +52,8 @@ int main(int argc, char **argv)
   ukfPrecisionType l_maxBranchingAngle = maxBranchingAngle;
   ukfPrecisionType l_minBranchingAngle = minBranchingAngle;
 
+  bool simpleTensorModel = !fullTensorModel;
+
 
   std::cout << std::endl;
 

@@ -213,11 +213,11 @@
     <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>
 
     <boolean>
-      <name>simpleTensorModel</name>
-      <longflag>simpleTensorModel</longflag>
-      <label>Use simple tensor model</label>
-      <description>Whether to use the simple tensor model. If unchecked, use the full tensor model</description>
-      <default>true</default>
+      <name>fullTensorModel</name>
+      <longflag>fullTensorModel</longflag>
+      <label>Use full tensor model</label>
+      <description>Whether to use the full tensor model. If unchecked, use the default simple tensor model</description>
+      <default>false</default>
     </boolean>
 
     <integer>

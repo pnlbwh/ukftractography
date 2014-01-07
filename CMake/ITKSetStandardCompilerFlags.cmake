@@ -280,6 +280,11 @@ macro(check_compiler_platform_flags)
   endif()
 endmacro()#End the platform check function
 
+## Eigen requires building with deeper template depths than the default.
+CHECK_CXX_SOURCE_COMPILES(-ftemplate-depth-127 CXX_ALLOWS_TEMPLATE_DEPTH)
+if(DEFINED CXX_ALLOWS_TEMPLATE_DEPTH)
+  set(CXX_TEMPLATE_DEPTH_FLAG -ftemplate-depth-127)
+endif()
 #-----------------------------------------------------------------------------
 #Check the set of warning flags the compiler supports
 check_compiler_warning_flags(C_WARNING_FLAGS CXX_WARNING_FLAGS)
@@ -288,7 +293,7 @@ check_compiler_warning_flags(C_WARNING_FLAGS CXX_WARNING_FLAGS)
 # We do not set them in ITK_REQUIRED FLAGS because all project which
 # use ITK don't require these flags .
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${C_WARNING_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARNING_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_WARNING_FLAGS} ${CXX_TEMPLATE_DEPTH_FLAG}")
 
 #-----------------------------------------------------------------------------
 #Check the set of platform flags the compiler supports

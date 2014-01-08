@@ -451,7 +451,7 @@ Write(const std::string& file_name,
         const State & state = fibers[i].state[j];
         for(int k = 0; k < state_dim; ++k)
           {
-          tmpArray[k] = state[i];
+          tmpArray[k] = state[k];
           }
         stateArray->InsertNextTuple(tmpArray);
         }

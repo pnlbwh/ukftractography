@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Diffusion</category>
+  <title>White Matter Dispersion</title>
+  <description><![CDATA[Given a fiber tract, this module computes  the Total Dispersion measure of Savadjiev et al. (2012, see below) on each point of the tract. At each fiber point, the method works by computing the rate of change of the fiber's tangent vector in a set of uniformly distributed directions orthogonal to the fiber. These are the sampling directions of the Dispersion Distribution Function. The rate of change in all of these directions is then averaged to obtain the Total Dispersion measure at that point. A scale parameter controls the spatial scale at which these derivatives are computed. A larger scale parameter captures larger dispersion features. To increase computation speed on large fiber tracts, subsampling options are available to perform the computation only on a subset of points.\nA complete description of the algorithm may be found in:\nP. Savadjiev, Y. Rathi, S. Bouix, R. Verma and C.-F. Westin, Multi-scale Characterization of White Matter Tract Geometry, in: Medical Image Computing and Computer Assisted Intervention (MICCAI), volume LNCS 7512, pp. 34-41, 2012]]></description>
+  <version></version>
+  <documentation-url>http://www.na-mic.org/Wiki/index.php/2014_Project_Week:DWIDispersion</documentation-url>
+  <license>Slicer</license>
+  <contributor>Peter Savadjiev (BWH), Hans J. Johnson, Kent Williams (UIowa)</contributor>
+  <acknowledgements><![CDATA[Peter Savadjiev (1); Yogesh Rathi (1); Hans Johnson(2); Kent Williams(2); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements> 
+
+  <parameters advanced="false">
+    <label>I/O</label>
+    <description>Input/output parameters</description>
+    <geometry type = "fiberbundle">
+      <name>inputFiberBundle</name>
+      <longflag>--inputFiberBundle</longflag>
+      <label>Input Fiber Bundle</label>
+      <channel>input</channel>
+      <description>Input tractography</description>
+    </geometry>
+    <geometry type = "fiberbundle">
+      <name>outputFiberBundle</name>
+      <longflag>--outputFiberBundle</longflag>
+      <label>Output Fiber Bundle</label>
+      <channel>output</channel>
+      <description>Tractography with the dispersion measure computed on each point.</description>
+    </geometry>
+    <boolean>
+      <name>writeAscii</name>
+      <flag>a</flag>
+      <longflag>writeAscii</longflag>
+      <label>Write Ascii VTK or VTP files</label>
+      <description>Write a VTK Ascii  data file</description>
+      <default>false</default>
+    </boolean>
+    <boolean>
+      <name>writeUnCompressed</name>
+      <flag>u</flag>
+      <longflag>writeUncompressed</longflag>
+      <label>Write uncompressed VTP files</label>
+      <description>Write an uncompressed VTP data file</description>
+      <default>false</default>
+    </boolean>
+  </parameters>
+
+  <parameters advanced="false">
+    <label>Dispersion Computation Parameters</label>
+    <description><![CDATA[Parameters for the computation of dispersion]]></description>
+    <double>
+      <name>dispersionScale</name>
+      <label>Scale of dispersion estimation</label>
+      <longflag>dispersionScale</longflag>
+      <description><![CDATA[The spatial scale at which to compute fiber dispersion.]]></description>
+      <default>3</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>10</maximum>
+        <step>.1</step>
+      </constraints>
+    </double>
+    <integer>
+      <name>numberOfSamplingDirections</name>
+      <longflag>numberOfSamplingDirections</longflag>
+      <description><![CDATA[The number of uniformly distributed directions orthogonal to the fiber along which dispersion is computed. This refers to the sampling of the Dispersion Distribution FUnction in Savadjiev et al., 2012. ]]></description>
+      <label>Number of Sampling Directions</label>
+      <default>10</default>
+      <constraints>
+        <minimum>4</minimum>
+        <maximum>30</maximum>
+        <step>1</step>
+      </constraints>
+    </integer>
+  </parameters>
+
+  <parameters advanced="true">
+    <label>Subsampling Options</label>
+    <description><![CDATA[Subsampling options aimed at increasing computation speed]]></description>
+     <integer>
+      <name>tractSubsampling</name>
+      <longflag>tractSubsampling</longflag>
+      <description><![CDATA[Subsamples the computation so that is performed on only one fiber out of every N fibers, where N is the value of the present parameter.]]></description>
+      <label>Tract Subsampling</label>
+      <default>0</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>20</maximum>
+        <step>1</step>
+      </constraints>
+    </integer>
+    <integer>
+      <name>fiberPointSubsampling</name>
+      <longflag>fiberPointSubsampling</longflag>
+      <description><![CDATA[For each fiber along which the computation is performed, this parameter subsamples the computation so that is performed on only one fiber point out of every N fiber points, where N is the value of the present parameter.]]></description>
+      <label>Fiber Point Subsampling</label>
+      <default>0</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>20</maximum>
+        <step>1</step>
+      </constraints>
+    </integer>
+  </parameters>
+
+
+</executable>

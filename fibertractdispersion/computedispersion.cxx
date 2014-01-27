@@ -668,27 +668,28 @@ computedispersion(fiberbundle &bundle, double scale,
     }
 
   MatrixType DDFOutput = dispersionDistributionValues.row(numberOfSamplingDirections);
-
-
-  // WARNING WARNING WARNING
-  // this won't work if there's ANY SUBSAMPLING -- someone needs to
-  // decide what to do if we do allow subsampling.
-  // the problem is that when we write out a Fiber Bundle to a VTK
-  // file, it normally requires a 1:1 correspondance between points in
-  // the fibers and scalar values associated with fibers.
-  // If you subsample you'll have a vector of fewer scalars than
-  // points in the bundles.  It is possible to just stick the DDF into
-  // Field data, and then when it's read in, you can do whatever you
-  // want with it.
-
+  //
+  // So the 'punt' to handle sub-sampling is that any fibers skipped 
   for(unsigned int i = 0, curPoint = 0; i < fibers.size(); ++i)
     {
     Fiber &curFiber = fibers[i];
     std::vector<float> curDDF;
-    for(unsigned int j = 0; j < curFiber.Points.size(); ++j)
+    // if this fiber was sampled, print out DDF at points for this fiber
+    if(i % tractSubSampling == 0)
       {
-      curDDF.push_back(DDFOutput(curPoint));
-      ++curPoint;
+      for(unsigned int j = 0; j < curFiber.Points.size(); ++j)
+        {
+        curDDF.push_back(DDFOutput(curPoint));
+        ++curPoint;
+        }
+      }
+    // if this fiber was skipped, then output -1s for each point.
+    else
+      {
+      for(unsigned j = 0; j < curFiber.Points.size(); ++j)
+        {
+        curDDF.push_back(-1.0);
+        }
       }
     curFiber.Fields["DDF"] = curDDF;
     }

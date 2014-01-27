@@ -52,7 +52,7 @@
       <label>Scale of dispersion estimation</label>
       <longflag>dispersionScale</longflag>
       <description><![CDATA[The spatial scale at which to compute fiber dispersion.]]></description>
-      <default>3</default>
+      <default>1</default>
       <constraints>
         <minimum>0</minimum>
         <maximum>10</maximum>
@@ -81,7 +81,7 @@
       <longflag>tractSubsampling</longflag>
       <description><![CDATA[Subsamples the computation so that is performed on only one fiber out of every N fibers, where N is the value of the present parameter.]]></description>
       <label>Tract Subsampling</label>
-      <default>0</default>
+      <default>1</default>
       <constraints>
         <minimum>0</minimum>
         <maximum>20</maximum>
@@ -93,7 +93,7 @@
       <longflag>fiberPointSubsampling</longflag>
       <description><![CDATA[For each fiber along which the computation is performed, this parameter subsamples the computation so that is performed on only one fiber point out of every N fiber points, where N is the value of the present parameter.]]></description>
       <label>Fiber Point Subsampling</label>
-      <default>0</default>
+      <default>1</default>
       <constraints>
         <minimum>0</minimum>
         <maximum>20</maximum>

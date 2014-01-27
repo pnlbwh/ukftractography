@@ -34,7 +34,7 @@ int main( int argc, char * argv[] )
   mybundle.ReadFibers( inputFiberBundle );
 
   /* PART 2: Algorithm stuff here */
-  computedispersion(mybundle,1.0,10,"");
+  computedispersion(mybundle,dispersionScale,numberOfSamplingDirections,"",tractSubsampling,fiberPointSubsampling);
 
   /* PART 3: Write bundle to disk */
   mybundle.WriteFibers( outputFiberBundle,writeAscii,writeUnCompressed );

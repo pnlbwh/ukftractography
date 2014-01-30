@@ -706,37 +706,29 @@ void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorN
 
     }
   else
-    {
-    // Extract eigenvectors
-    eigenVec1 <<
-      state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-      state[5 * (tensorNumber - 1) + _p_m3];
-    eigenVec2 <<
-      state[5 * (tensorNumber - 1) + _p_m1], -state[5 * (tensorNumber - 1) + _p_m2],
-      state[5 * (tensorNumber - 1) + _p_m3];
-    eigenVec3 <<
-      -state[5 * (tensorNumber - 1) + _p_m1],  state[5 * (tensorNumber - 1) + _p_m2],
-      state[5 * (tensorNumber - 1) + _p_m3];
-    }
+  {
+      eigenVec1 <<
+          state[_tensor_space * (tensorNumber - 1) + _p_m1],  state[_tensor_space * (tensorNumber - 1) + _p_m2],
+          state[_tensor_space * (tensorNumber - 1) + _p_m3];
 
-  // Perform ijk->RAS transform on eigen vectors
-  eigenVec1 = _sizeFreeI2R * eigenVec1;
-  eigenVec2 = _sizeFreeI2R * eigenVec2;
-  eigenVec3 = _sizeFreeI2R * eigenVec3;
+      // Perform ijk->RAS transform on eigen vectors
+      eigenVec1 = _sizeFreeI2R * eigenVec1;
 
-  // Renormalize eigenvectors
-  eigenVec1.normalize();
-  eigenVec1.normalize();
-  eigenVec3.normalize();
+      // Renormalize eigenvectors
+      eigenVec1.normalize();
+  }
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-  mat33_t Q;
-  Q <<
-    eigenVec1[0], eigenVec2[0], eigenVec3[0],
-    eigenVec1[1], eigenVec2[1], eigenVec3[1],
-    eigenVec1[2], eigenVec2[2], eigenVec3[2];
+  mat33_t I;
+  I <<
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1;
 
-  D = Q * diag(state[5 * (tensorNumber - 1) + _p_l1], state[5 * (tensorNumber - 1) + _p_l2],
-               state[5 * (tensorNumber - 1) + _p_l2]) * Q.transpose() * 1e-6;
+  float L1= state[_tensor_space*(tensorNumber-1)+_p_l1];
+  float L2= state[_tensor_space*(tensorNumber-1)+_p_l2];
+
+  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * I)*1e-6;
+
 }

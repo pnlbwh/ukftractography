@@ -17,6 +17,9 @@ PURPOSE.  See the above copyright notices for more information.
 #include "CompressedSensingCLP.h"
 #include "CompressedSensing.h"
 #include "DefaultGradients.h"
+#include "itkImageFileReader.h"
+#include "BalancedDWIReplications.h"
+#include "DoCSEstimate.h"
 #include "nrrdIO.h"
 #include <cstring>
 #include <sstream>
@@ -37,6 +40,8 @@ PURPOSE.  See the above copyright notices for more information.
   }
 
 DeclarPrintMat(MatrixType)
+DeclarPrintMat(Eigen::Matrix3d)
+DeclarPrintMat(VectorType)
 DeclarPrintMat(Eigen::Vector3d)
 DeclarPrintMat(Eigen::Vector3f)
 
@@ -116,9 +121,40 @@ bool GetGradientsFromFile(const std::string &filename, MatrixType &gradients)
   return true;
 }
 
+template <typename TImage>
+typename TImage::Pointer
+ReadImage(const std::string &fileName)
+{
+  typedef itk::ImageFileReader<TImage> ImageReaderType;
+  typename ImageReaderType::Pointer reader = ImageReaderType::New();
+  reader->SetFileName(fileName.c_str());
+  try
+    {
+    reader->Update();
+    }
+  catch( itk::ExceptionObject & exp )
+    {
+    std::cerr << "Exception caught !" << std::endl;
+    std::cerr << exp << std::endl;
+    return 0;
+    }
+  return reader->GetOutput();
+}
+
+
 int main( int argc, char * argv[] )
 {
   PARSE_ARGS;
+  if(inputVolume.empty())
+    {
+    std::cerr << "Missing input volume name" << std::endl;
+    return 0;
+    }
+  if(outputVolume.empty())
+    {
+    std::cerr << "Missing output volume name" << std::endl;
+    return 0;
+    }
   MatrixType newGradients;
   if(!replacementGradients.empty())
     {
@@ -131,6 +167,30 @@ int main( int argc, char * argv[] )
     {
     SetDefaultGradients(newGradients);
     }
+  NrrdFile rawDWI;
+  // loads the file, extracts gradients, normalizes gradients and
+  // transforms them with the inverse of the measurement frame.
+  if(!rawDWI.LoadFile(inputVolume))
+    {
+    return 0;
+    }
+  // BalancedDWIReplications fixes rawDWI in place.
+  BalancedDWIReplications balancedDWIReplications(rawDWI);
+  balancedDWIReplications.compute();
+  VectorType metric = balancedDWIReplications.GetMetric();
+
+  MaskImageType::Pointer maskImage;
+  if(!maskVolume.empty())
+    {
+    maskImage = ReadImage<MaskImageType>(maskVolume);
+    }
+  DoCSEstimate doCSEstimate(rawDWI,maskImage,newGradients);
+  if(!doCSEstimate.Compute())
+    {
+    return 1;
+    }
+
+  rawDWI.SaveFile(outputVolume);
   return 0;
 }
 // function run_cs(input_dwi_fn,input_mask_fn,output_dwi_fn,new_gradients,saveC)

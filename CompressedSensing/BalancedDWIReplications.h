@@ -15,7 +15,7 @@ public:
 
       MatrixType newGradients(this->m_NrrdFile.GetGradients());
 
-      // duplicate gradients
+      // duplicate this gradient
       for(unsigned int i = 0; i < count; ++i)
         {
         unsigned rows = newGradients.rows();
@@ -122,30 +122,35 @@ public:
           }
         }
       unsigned _max = counts.maxCoeff();
-      // TODO this expression is insane. It isn't really possible to
-      // decode, though I try.
       // GradientsNeedDuplications =
       // ( (counts < max(counts) ).*max(counts) - counts .* (counts < max(counts) ) ) .* isGradient;
-      ArrayType GradientsNeedDuplications(n,1);
-      for(unsigned int i = 0; i < counts.cols(); ++i)
+      //
+      // this expression uses logical arrays in complicated ways
+      // (counts < max(counts)) == array, 1 if count(i) is < max, 0 otherwise
+      // otherwisie
+      // (counts < max(counts)) .* max(counts) == max if counts(i) <
+      // max, zero otherwise.
+      // counts .* (counts < max(counts)) = count(i) if count(i) <
+      // max, zero otherwise.
+      // so counts(i) needs to be max(counts) - counts(i) if counts(i)
+      // < max.
+      std::vector<unsigned> GradientsNeedDuplications(n,0);
+      for(unsigned int i = 0; i < n; ++i)
         {
-        unsigned tmp = 0;
-        if(counts(i) < _max)
+        if(isGradient(i) && counts(i) < _max)
           {
-          tmp = _max;
+          GradientsNeedDuplications[i] = _max - counts(i);
           }
-        unsigned int tmp2 = 0;
-        if(counts(i) > 0 && counts(i) <  _max)
+        else
           {
-          tmp2 = counts(i);
+          GradientsNeedDuplications[i] = 0;
           }
-        GradientsNeedDuplications(i) = (tmp - tmp2) * isGradient(i);
         }
       for(unsigned i = 0; i < n; ++i)
         {
-        if(GradientsNeedDuplications(i) > 0)
+        if(GradientsNeedDuplications[i] > 0)
           {
-          this->ReplicateGradient(i,GradientsNeedDuplications(i));
+          this->ReplicateGradient(i,GradientsNeedDuplications[i]);
           }
         }
     }

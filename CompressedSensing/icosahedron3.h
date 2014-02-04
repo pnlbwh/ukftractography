@@ -1,7 +1,7 @@
 #ifndef __icosahedron4_h
 #define __icosahedron4_h
 void
-Icoshedron3(MatrixType &mat)
+Icosahedron3(MatrixType &mat)
 {
   double vertices[][3] =
   {

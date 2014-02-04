@@ -85,8 +85,13 @@ public:
       mf = mf.inverse().eval();
       for(unsigned i = 0; i < this->m_GradientCount; ++i)
         {
-        this->m_Gradients.row(i) = (mf * this->m_Gradients.row(i).transpose()).transpose();
-        this->m_Gradients.row(i).normalize();
+        Eigen::Vector3d curRow = this->m_Gradients.row(i);
+        curRow = mf * curRow;
+        if(curRow.norm() > 0.0)
+          {
+          curRow.normalize();
+          }
+        this->m_Gradients.row(i) = curRow;
         }
       for(unsigned int i = 0; i < 3; ++i)
         {

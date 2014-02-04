@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Diffusion</category>
+  <title>Compressed Sensing HARDI Estimation</title>
+  <description><![CDATA[This function uses compressed sensing to recover the HARDI signal (single shell) from very vew gradient directions. A minimum of 16 directions are needed to recover crossing fiber signal.]]></description>
+  <version></version>
+  <documentation-url></documentation-url>
+  <license>Slicer</license>
+  <contributor>Yogesh Rathi (BWH), Hans J. Johnson (UIowa)</contributor>
+  <acknowledgements><![CDATA[Yogesh Rathi (1); Hans Johnson(2); Peter Savadjiev (1); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements> 
+
+ <parameters advanced="false">
+    <label>IO</label>
+    <description><![CDATA[Input/output parameters]]></description>
+    <image type="diffusion-weighted">
+      <name>inputDWIVolume</name>
+      <flag>i</flag>
+      <longflag>inputDWIVolume</longflag>		
+      <label>Input DWI Volume</label>
+      <channel>input</channel>
+      <index>0</index>
+      <description><![CDATA[Input DWI volume]]></description>
+    </image>
+    <image type="label">
+      <name>inputMaskVolume</name>
+      <flag>m</flag>
+      <longflag>mask</longflag>
+      <label>Input Mask</label>
+      <channel>input</channel>
+      <index>1</index>
+      <description><![CDATA[Indicates the voxels where the HARDI signal will be computed.]]></description>
+    </image>
+    <image type="diffusion-weighted">
+      <name>outputHARDIVolume</name>
+      <flag>o</flag>
+      <longflag>outputHARDIVolume</longflag>
+      <label>Output HARDI Volume</label>
+      <channel>output</channel>
+      <index>2</index>
+      <description><![CDATA[Estimated HARDI volume]]></description>
+    </image>
+  </parameters>
+
+  <parameters advanced="true">
+    <label>Optional Estimation Parameters</label>
+    <description><![CDATA[Optional Estimation Parameters]]></description>
+    <file>
+      <name>inputGradientVectorFile</name>
+      <longflag>--inputGradientVectorFile</longflag>
+      <label>Gradient Vector File</label>
+      <channel>input</channel>
+      <description><![CDATA[Optionally, supply the new gradients on which to sample the recovered signal.]]></description>
+    </file>
+  </parameters>
+
+  <parameters advanced="true">
+    <label>Output Options</label>
+    <description><![CDATA[Output Options]]></description>
+    <boolean>
+      <name>saveCoefficients</name>
+      <longflag>--saveCoefficients</longflag>
+      <label>Save Coefficients</label>
+      <description>Optionally, save the coefficients for future use.</description>
+      <!-- booleans default to false -->
+    </boolean>
+    <file>
+      <name>outputCoefficientsFile</name>
+      <longflag>--outputCoefficientsFile</longflag>
+      <label>Output Coefficients File</label>
+      <channel>output</channel>
+      <description><![CDATA[If you choose to save the coefficients, please select the output text file.]]></description>
+    </file>
+  </parameters> 
+</executable>

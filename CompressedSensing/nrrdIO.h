@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
 #include <ctype.h>
 
 /** NrrdFile holds original volume + gradients

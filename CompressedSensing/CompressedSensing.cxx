@@ -45,6 +45,18 @@ DeclarPrintMat(VectorType)
 DeclarPrintMat(Eigen::Vector3d)
 DeclarPrintMat(Eigen::Vector3f)
 
+#define DeclarPrintMatRow(type)                                 \
+  void PrintMatROW(const type &mat,unsigned int r)              \
+  {                                                             \
+    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");       \
+    std::cerr << mat.row(r).format(CleanFmt) << std::endl;      \
+  }
+DeclarPrintMatRow(MatrixType)
+DeclarPrintMatRow(Eigen::Matrix3d)
+DeclarPrintMatRow(VectorType)
+DeclarPrintMatRow(Eigen::Vector3d)
+DeclarPrintMatRow(Eigen::Vector3f)
+
 
 
 bool GetGradientsFromFile(const std::string &filename, MatrixType &gradients)

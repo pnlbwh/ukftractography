@@ -1,7 +1,8 @@
 
 cmake_minimum_required(VERSION 2.8.7)
-
-
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+message("Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
 #-----------------------------------------------------------------------------
 set(MODULE_NAME CompressedSensing)
 
@@ -46,6 +47,10 @@ include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
 
 set(MODULE_SRCS
   CompressedSensing.cxx
+  SphericalHarmonics.cxx
+  DefaultGradients.cxx
+  DoCSEstimate.cxx
+  icosahedron3.cxx
   )
 
 set(MODULE_TARGET_LIBRARIES

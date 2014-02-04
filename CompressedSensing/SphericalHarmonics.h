@@ -1,11 +1,7 @@
 #ifndef __SphericalHarmonics_h
 #define __SphericalHarmonics_h
-
-MatrixType SphericalHarmonics(const MatrixType &u, double m)
-{
-  MatrixType rval;
-  return rval;
-}
+#include "CompressedSensing.h"
+extern MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m);
 #endif //  __SphericalHarmonics_h
 
 

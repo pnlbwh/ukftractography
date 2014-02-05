@@ -1,8 +1,11 @@
 #include "DoCSEstimate.h"
+#include "BuildRidges.h"
+#include "BuildSensor.h"
+#include "MultiSample.h"
 
 DoCSEstimate
 ::DoCSEstimate(NrrdFile &nrrdFile,MaskImageType::Pointer &maskImage,MatrixType &newGradients) :
-  m_NrrdFile(nrrdFile), m_MaskImage(maskImage), m_Gradients(newGradients), m_Eps(2.2204e-16),
+  m_NrrdFile(nrrdFile), m_MaskImage(maskImage), m_NewGradients(newGradients),
   m_Pi(std::atan(static_cast<double>(1.0))*4)
 {
   this->m_SpaceOrigin = nrrdFile.GetImage()->GetOrigin();
@@ -30,7 +33,7 @@ DoCSEstimate
   for(unsigned i = 0; i < gradients.rows(); ++i)
     {
     double norm = gradients.row(i).norm();
-    if(norm < this->m_Eps)
+    if(norm < Eps)
       {
       b0Indices.push_back(i);
       }
@@ -67,7 +70,7 @@ DoCSEstimate
       avg += val[b0Indices[i]];
       }
     avg /= static_cast<double>(numB0);
-    if(std::fabs(avg) <= this->m_Eps)
+    if(std::fabs(avg) <= Eps)
       {
       avg = 1.0;
       }
@@ -100,7 +103,7 @@ DoCSEstimate
   for(unsigned int i = 0; i < numGradientIndices; ++i)
     {
     this->m_VoxelLatticeAlignedGradientDirections.conservativeResize(i+1,3);
-    this->m_VoxelLatticeAlignedGradientDirections.row(i) = this->m_Gradients.row(gradientIndices[i]);
+    this->m_VoxelLatticeAlignedGradientDirections.row(i) = gradients.row(gradientIndices[i]);
     }
   return true;
 }
@@ -135,14 +138,14 @@ DoCSEstimate
     {
     DWIVectorImageType::PixelType vec = ivIt.Get();
     double curB0 = b0It.Get();
-    if(std::fabs(curB0) > this->m_Eps)
+    if(std::fabs(curB0) > Eps)
       {
       for(unsigned int i = 0; i < numGrad; ++i)
         {
         vec[i] /= curB0;
         if(vec[i] < 0)
           {
-          vec[i] = this->m_Eps;
+          vec[i] = Eps;
           }
         }
       }
@@ -150,13 +153,13 @@ DoCSEstimate
       {
       for(unsigned int i = 0; i < numGrad; ++i)
         {
-        vec[i] = this->m_Eps;
+        vec[i] = Eps;
         }
       }
     ivIt.Set(vec);
     }
 
-  MatrixType estimatedGradients = this->m_Gradients;
+  MatrixType estimatedGradients = this->m_NewGradients;
   // this matlab code doesn't seem to do anything:
   // n0 = size(new_gradients,1);
   // new_gradients=new_gradients(1:n0,:);
@@ -182,9 +185,16 @@ DoCSEstimate
   this->OptimBand(m_BValue,D0,icos3,rho,p);
   rho = std::pow((rho * J),(J * p));
   // psi=buildridges(J,rho,1,p,0);
+  MatrixType psi = BuildRidges(J,rho,1,p,0);
+
+  std::vector<MatrixType> v;
+  unsigned long M;
   // [v,M]=multisample(J);
+  MultiSample(J,v,M);
   // A=buildsensor(gradientDirections,v,psi);
+  MatrixType A = BuildSensor(this->m_VoxelLatticeAlignedGradientDirections,v,psi);
   // A0=buildsensor(new_gradients,v,psi);
+  MatrixType A0 = BuildSensor(this->m_NewGradients,v,psi);
   //
   // %parameter setup
   // lmd=0.06;                   % Lagrangian L1

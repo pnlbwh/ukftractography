@@ -23,13 +23,12 @@ private:
   NrrdFile &                    m_NrrdFile;
   MaskImageType::Pointer        m_MaskImage;
   DWIVectorImageType::PointType m_SpaceOrigin;
-  MatrixType                    m_Gradients;
+  MatrixType                    m_NewGradients;
   double                        m_BValue;
   MatrixType                    m_SpaceDirections;
   MatrixType                    m_VoxelLatticeAlignedGradientDirections;
   DWIVectorImageType::Pointer   m_IntensityData;
   B0AvgImageType::Pointer       m_AverageB0;
-  const double                  m_Eps;
   const double                  m_Pi;
 };
 #endif // __DoCSEstimate_h

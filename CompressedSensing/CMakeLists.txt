@@ -51,6 +51,9 @@ set(MODULE_SRCS
   DefaultGradients.cxx
   DoCSEstimate.cxx
   icosahedron3.cxx
+  BuildRidges.cxx
+  MultiSample.cxx
+  BuildSensor.cxx
   )
 
 set(MODULE_TARGET_LIBRARIES

@@ -18,7 +18,7 @@
 class NrrdFile
 {
 public:
-  typedef signed short                    PixelType;
+  typedef double                          PixelType;
   typedef itk::VectorImage<PixelType,3>   ImageType;
   typedef itk::ImageFileReader<ImageType> ReaderType;
   typedef itk::ImageFileWriter<ImageType> WriterType;

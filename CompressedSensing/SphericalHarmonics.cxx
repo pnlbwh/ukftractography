@@ -1,7 +1,10 @@
 #include "SphericalHarmonics.h"
 #include <cmath>
+
+#if 0
 #include <boost/math/special_functions/spherical_harmonic.hpp>
 #include <boost/geometry/geometry.hpp>
+
 #include <vector>
 #include <complex>
 
@@ -26,6 +29,8 @@ MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
     // n = order index
     for(unsigned int n = 0; n < m; n++)
       {
+      std::vector<unsigned long> ind;
+
       std::vector<std::complex<double> > curHarm;
       // mm = harmonic index
       for(int mm = -static_cast<int>(n); mm <= static_cast<int>(n); ++mm)
@@ -34,20 +39,50 @@ MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
         }
       // the following is my translation of this matlab mumbo-jumbo
       // Y(:,indx)=real([c.*real(y(:,1:k)), y(:,k+1), c.*imag(y(:,k+2:2*k+1))]);
-      unsigned int k = 0;
-      for(; k < n; ++k,++col)
+      const unsigned start(n*n);
+      const unsigned limit((n +1 ) * (n + 1));
+      for(col = start; col < limit; ++col)
         {
-        rval(i,col) = C * curHarm[k].real();
-        }
-
-      rval(i,col) = curHarm[k].real();
-      ++col; ++k;
-
-      for(; k < (2 * n) + 1; ++k, ++col)
-        {
-        rval(i,col) = C * curHarm[k].imag();
+        const unsigned k(col - start);
+        if(k < n)
+          {
+          rval(i,col) = C * curHarm[k].real();
+          }
+        else if(k == n)
+          {
+          rval(i,col) = curHarm[k].real();
+          }
+        else
+          {
+          rval(i,col) = C * curHarm[k].imag();
+          }
         }
       }
     }
   return rval;
 }
+#else
+#include "SphHarm.h"
+
+MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
+{
+  MatrixType rval;
+  unsigned int rows = u.rows();
+  double *x = new double[rows];
+  double *y = new double[rows];
+  double *z = new double[rows];
+  double *theta = new double[rows];
+  double *phi = new double[rows];
+  for(unsigned int i = 0; i < rows; ++i)
+    {
+    x[i] = u(i,0);
+    y[i] = u(i,1);
+    z[i] = u(i,2);
+    }
+  shmaths::computeSphericalCoordsFromCartesian(x,y,z,theta,phi,rows);
+  shmaths::computeSHMatrix(rows,theta,phi,m,rval);
+  delete [] x; delete [] y; delete [] z;
+  delete [] theta; delete [] phi;
+  return rval;
+}
+#endif

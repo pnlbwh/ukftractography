@@ -54,6 +54,7 @@ set(MODULE_SRCS
   BuildRidges.cxx
   MultiSample.cxx
   BuildSensor.cxx
+  SphHarm.cxx
   )
 
 set(MODULE_TARGET_LIBRARIES

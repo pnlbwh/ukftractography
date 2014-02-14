@@ -496,13 +496,14 @@ void DoCSEstimate
   const unsigned int m(22);
   // Y=spheriharms(u,m);
   MatrixType Y = SphericalHarmonics(u,22);
+  // DumpToFile(Y,"/scratch/kent/ukf/build/UKFTractography-build/CompressedSensing/YMatrix.csv");
 
   // C=(2*(0:m)'+1)/(4*pi);
-  MatrixType C(1,m+1);
+  MatrixType C(m+1,1);
   for(unsigned int i = 0; i < m+1; ++i)
     {
-    C(0,i) = (2.0 * static_cast<double>(i) + 1);
-    C(0,i) /= 4.0 * this->m_Pi;
+    C(i) = (2.0 * static_cast<double>(i) + 1.0);
+    C(i) /= 4.0 * this->m_Pi;
     }
 
   //Lmd=ones(m+1,1);
@@ -524,16 +525,19 @@ void DoCSEstimate
 
   std::vector<unsigned> ind(m+1);
   //ind=[1; ((1:m).^2)'+(2:m+1)'];
-  ind[0] = 1;
+
+  ind[0] = 0;
   for(unsigned int i = 1; i < m+1; ++i)
     {
-    ind[i] = (i * i) + ( i + 1);
+    ind[i] = ((i * i) + ( i + 1)) - 1;
     }
   // s=(Y'*Y)\(Y'*S);
   MatrixType s = Y.transpose() * Y;
+  // DumpToFile(s,"/scratch/kent/ukf/build/UKFTractography-build/CompressedSensing/YYTranspose.csv");
   MatrixType s2 = Y.transpose() * S;
-  Eigen::FullPivLU<MatrixType> lu(s);
-  s = lu.solve(s2);
+  //  Eigen::FullPivLU<MatrixType> lu(s);
+  // s = lu.solve(s2);
+  s = s.colPivHouseholderQr().solve(s2);
 
   // h=(s(ind).*sqrt(1./C));
   MatrixType h(m+1,1);

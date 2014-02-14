@@ -8,4 +8,5 @@ typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,1> VectorType;
 typedef itk::Image<unsigned char,3> MaskImageType;
 const double Eps(2.2204e-16);
 
+extern void DumpToFile(const MatrixType &x,const char *filename);
 #endif // __CompressedSensing_h

@@ -26,6 +26,16 @@ PURPOSE.  See the above copyright notices for more information.
 #include <iostream>
 #include <fstream>
 
+
+void
+DumpToFile(const MatrixType &x,const char *filename)
+{
+  Eigen::IOFormat CSV(Eigen::FullPrecision, Eigen::DontAlignCols, ",", "\n");
+  std::ofstream f(filename);
+  f << x.format(CSV) << std::endl;
+  f.close();
+}
+
 /**
  * PrintMat
  * NOTE: during debugging, you can call this function to show contents

@@ -18,24 +18,23 @@ void spiralsample(unsigned flg, unsigned long N, MatrixType &u)
 // N=2*N;
   N *= 2;
 // z=(1-1/N:-2/N:1/N-1)';
-  Eigen::Vector3d z(N);
-// r=sqrt(1-z.*z);
-  Eigen::Vector3d r(N);
+  MatrixType z(N,1);
   double NInv = 1.0/static_cast<double>(N);
   double NIncr = -2.0/static_cast<double>(N);
-
   double iD = 1.0 - NInv;
   for(unsigned int i = 0; i < N; ++i, iD += NIncr)
     {
     z(i) = iD;
     }
+// r=sqrt(1-z.*z);
+  MatrixType r(N,1);
   for(unsigned int i = 0; i < N; ++i)
     {
     r(i) = std::sqrt(1.0 - z(i) * z(i));
     }
 
 // switch flg,
-  Eigen::Vector3d Long(N);
+  MatrixType Long(N,1);
   switch(flg)
     {
     //     case 1,
@@ -95,10 +94,9 @@ extern void MultiSample(unsigned J,
 
   for(unsigned int i = 0; i < J+1; ++i)
     {
-    N[i] =
-      static_cast<unsigned long>(std::pow(2.0,static_cast<double>(i)) *
-                                 (static_cast<double>(m0) + 1.0));
-    N[i] = N[i] * N[i];
+    unsigned long tmp = std::pow(static_cast<double>(2.0),
+                                 static_cast<double>(i)) * m0 + 1;
+    N[i] = tmp * tmp;
     }
 // v=cell(J+1,1);
   v.resize(J+1);

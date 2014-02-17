@@ -45,8 +45,8 @@ DumpToFile(const MatrixType &x,const char *filename)
 #define DeclarPrintMat(type)                                    \
   void PrintMat(const type &mat)                                \
   {                                                             \
-    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");       \
-    std::cerr << mat.format(CleanFmt) << std::endl;             \
+    Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]"); \
+    std::cerr << mat.format(HeavyFmt) << std::endl;         \
   }
 
 DeclarPrintMat(MatrixType)
@@ -56,10 +56,10 @@ DeclarPrintMat(Eigen::Vector3d)
 DeclarPrintMat(Eigen::Vector3f)
 
 #define DeclarPrintMatRow(type)                                 \
-  void PrintMatROW(const type &mat,unsigned int r)              \
+  void PrintMatRow(const type &mat,unsigned int r)              \
   {                                                             \
-    Eigen::IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");       \
-    std::cerr << mat.row(r).format(CleanFmt) << std::endl;      \
+    Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]"); \
+    std::cerr << mat.row(r).format(HeavyFmt) << std::endl;    \
   }
 DeclarPrintMatRow(MatrixType)
 DeclarPrintMatRow(Eigen::Matrix3d)

@@ -1,7 +1,7 @@
 #include "SphericalHarmonics.h"
 #include <cmath>
 
-#if 0
+#ifdef BOOST_SPHERICALHARMONIC
 #include <boost/math/special_functions/spherical_harmonic.hpp>
 #include <boost/geometry/geometry.hpp>
 
@@ -61,7 +61,8 @@ MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
     }
   return rval;
 }
-#else
+#endif
+#ifdef FINSLER_SPHERICALHARMONIC
 #include "SphHarm.h"
 
 MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
@@ -83,6 +84,30 @@ MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
   shmaths::computeSHMatrix(rows,theta,phi,m,rval);
   delete [] x; delete [] y; delete [] z;
   delete [] theta; delete [] phi;
+  return rval;
+}
+#endif
+#define MATLAB_SPHERICALHARMONIC
+#ifdef MATLAB_SPHERICALHARMONIC
+
+#include "SphericalHarmonicsConst.h"
+
+MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
+{
+  if(m != 22)
+    {
+    std::cerr << "Have to rebuild SphericalHarmonicsConst.h from Matlab" << std::endl;
+    exit(1);
+    }
+  unsigned long cols = (m+1)*(m+1);
+  MatrixType rval(u.rows(),cols);
+  for(unsigned int i = 0; i < u.rows(); ++i)
+    {
+    for(unsigned int j = 0; j < cols; ++j)
+      {
+      rval(i,j) = sphericalHarmonicsConstant[i][j];
+      }
+    }
   return rval;
 }
 #endif

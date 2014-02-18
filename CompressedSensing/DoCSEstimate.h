@@ -1,7 +1,7 @@
 #ifndef __DoCSEstimate_h
 #define __DoCSEstimate_h
 #include "CompressedSensing.h"
-#include "nrrdIO.h"
+#include "NrrdFile.h"
 #include <vector>
 #include <cmath>
 #include "itkImageRegionIterator.h"

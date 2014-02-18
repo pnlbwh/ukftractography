@@ -17,8 +17,8 @@ BuildRidges(unsigned J, double rho, unsigned nu, double p, unsigned flag)
   // else
   //     m=floor(nmax);
   // end
-  double nmax = std::pow(a,static_cast<double>(J)) *
-    std::pow(-std::log(localEps)/rho,(1.0/p));
+  double nmaxtemp = std::pow(-log(localEps)/rho,(1.0/p));
+  double nmax = std::pow(a,static_cast<double>(J)) * nmaxtemp;
   long nmaxInt = static_cast<long>(std::ceil(nmax));
   long m = static_cast<long>(std::floor(nmax));
   if(nmaxInt % 2 == 0)

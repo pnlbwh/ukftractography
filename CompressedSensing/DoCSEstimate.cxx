@@ -272,7 +272,8 @@ DoCSEstimate
 
   const unsigned J(2);
   this->OptimBand(m_BValue,D0,icos3,rho,p);
-  rho = std::pow((rho * J),(J * p));
+  // rho=rho*2^(J*p);
+  rho = rho * std::pow(2,(J * p));
   // psi=buildridges(J,rho,1,p,0);
   MatrixType psi = BuildRidges(J,rho,1,p,0);
 

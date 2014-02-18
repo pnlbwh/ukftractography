@@ -20,7 +20,7 @@ PURPOSE.  See the above copyright notices for more information.
 #include "itkImageFileReader.h"
 #include "BalancedDWIReplications.h"
 #include "DoCSEstimate.h"
-#include "nrrdIO.h"
+#include "NrrdFile.h"
 #include <cstring>
 #include <sstream>
 #include <iostream>

@@ -51,20 +51,19 @@ MatrixType polyleg(MatrixType x,unsigned n)
       // P(:,2)=x;
       P.col(1) = x;
       // for k=3:n+1,
-      for(unsigned k = 3; k <= n+1; ++k)
+        // P(:,k)=c1.*x.*P(:,k-1)-c2*P(:,k-2);
+      for(unsigned k = 2; k < n+1; ++k)
         {
         // c1=(2*k-3)/(k-1);
         const double kD(k);
         double c1 = (2.0 * (kD - 3)) / (kD - 1.0);
         // c2=(k-2)/(k-1);
         double c2 = (kD - 2.0) / (kD - 1.0);
-        // P(:,k)=c1.*x.*P(:,k-1)-c2*P(:,k-2);
-        P.col(k - 1) = c1 * x * P.col(k-2) - c2 * P.col(k-3);
-        // for(unsigned int i = 0; i < N; ++i)
-        //   {
-        //   P(i,k-1) = c1 * x(i) * P(i,k-2) - c2 * P(i,k -3);
-        //   }
-        // end
+        for(unsigned int row = 0; row < P.rows(); ++row)
+          {
+          P(row,k) = c1 * x(row,0) * P(row,k-1) -
+            c2 * P(row,k-2);
+          }
         }
     }
   return P;
@@ -130,14 +129,12 @@ MatrixType BuildSensor(MatrixType &g, std::vector<MatrixType> &v,MatrixType &psi
   // for k=0:J,
   //     N(k+1)=size(v{k+1},1);
   // end
-  MatrixType N;
+  std::vector<unsigned long> N;
   unsigned nSum = 0;
-  N = MatrixType::Zero(J+1,1);
   for(unsigned int k = 0; k < J+1; ++k)
     {
-    nSum += v[k].size();
-    N(k) = v[k].size();
-
+    N.push_back(v[k].rows());
+    nSum += N[k];
     }
   // **** As it happens, there's only ever one return value requested
   // switch nargout,
@@ -152,14 +149,15 @@ MatrixType BuildSensor(MatrixType &g, std::vector<MatrixType> &v,MatrixType &psi
   //         end
   MatrixType A;
   A = MatrixType::Zero(K,nSum);
-  for(unsigned int j = 0; j < J+1; ++j)
+  nSum = 0;
+  for(unsigned int j = 0; j < J+1; ++j, nSum += N[j])
     {
     MatrixType &vv = v[j];
-    for(unsigned int k = 0; k < N(j); ++k)
+    for(unsigned int k = 0; k < N[j]; ++k)
       {
       MatrixType tmp1 = g * vv.row(k).transpose();
       MatrixType P = polyleg(tmp1,m);
-      A.col(nSum) = P * XCn.col(j);
+      A.col(k+nSum) = P * XCn.col(j);
       }
     }
   return A;

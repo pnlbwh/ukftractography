@@ -55,6 +55,7 @@ set(MODULE_SRCS
   MultiSample.cxx
   BuildSensor.cxx
   SphHarm.cxx
+  NrrdFile.cxx
   )
 
 set(MODULE_TARGET_LIBRARIES

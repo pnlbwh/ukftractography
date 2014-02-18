@@ -1,6 +1,6 @@
 #ifndef __BalancedDWIReplications_h
 #define __BalancedDWIReplications_h
-#include "nrrdIO.h"
+#include "NrrdFile.h"
 #include "itkImageRegionIterator.h"
 #include "itkImageRegionConstIterator.h"
 #include <cmath>

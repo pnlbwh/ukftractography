@@ -52,20 +52,20 @@ DoCSEstimate
   for(unsigned int z = 0; z < size[2]; ++z)
     {
     index[2] = z;
-    for(unsigned int y = 0; y < size[1]; ++y)
-      {
-      index[1] = y;
-      for(unsigned int x = 0; x < size[0]; ++x)
+    for(unsigned int x = 0; x < size[0]; ++x)
         {
         index[0] = x;
-        unsigned int row = (z * index[2]) + (x * index[0]) + y;
-        const DWIVectorImageType::PixelType &current = this->m_IntensityData->GetPixel(index);
-        for(unsigned int grad = 0; grad < columns; ++grad)
+        for(unsigned int y = 0; y < size[1]; ++y)
           {
-          outMatrix(row,grad) = current[grad];
+          index[1] = y;
+          unsigned long row = (z * size[1] * size[0]) + (y * size[0]) + x;
+          const DWIVectorImageType::PixelType &current = this->m_IntensityData->GetPixel(index);
+          for(unsigned int grad = 0; grad < columns; ++grad)
+            {
+            outMatrix(row,grad) = current[grad];
+            }
           }
         }
-      }
     }
 }
 
@@ -592,10 +592,11 @@ void DoCSEstimate
 template <typename ImageType>
 ImageType *shiftImage(const typename ImageType::Pointer &input,
                       unsigned int dimension,
-                      const std::vector<unsigned int> indices)
+                      const std::vector<unsigned int> &indices)
 {
   typename ImageType::Pointer rval = ImageType::New();
   rval->CopyInformation(input);
+  rval->SetRegions(input->GetLargestPossibleRegion());
   rval->Allocate();
   itk::ImageRegionConstIteratorWithIndex<ImageType> fromIt(input,input->GetLargestPossibleRegion());
   for(fromIt.GoToBegin(); !fromIt.IsAtEnd(); ++fromIt)
@@ -630,6 +631,7 @@ DoCSEstimate
 {
   B0AvgImageType::Pointer f = B0AvgImageType::New();
   f->CopyInformation(inputImage);
+  f->SetRegions(inputImage->GetLargestPossibleRegion());
   f->Allocate();
 
   itk::ImageRegionConstIterator<DWIVectorImageType>
@@ -642,6 +644,35 @@ DoCSEstimate
     }
   f.GetPointer()->Register();
   return f.GetPointer();
+}
+
+namespace
+{
+template <typename TImage>
+TImage *SubtractImage(const TImage *t1, const TImage *t2)
+{
+  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
+  typename SubtractFilterType::Pointer sub1 = SubtractFilterType::New();
+  sub1->SetInput1(t1);
+  sub1->SetInput2(t2);
+  sub1->Update();
+  typename TImage::Pointer rval = sub1->GetOutput();
+  rval.GetPointer()->Register();
+  return rval.GetPointer();
+}
+
+template <typename TImage>
+TImage *ScratchImage(const itk::ImageBase<TImage::ImageDimension> *templateImage, double initval)
+{
+  typename TImage::Pointer p1 = TImage::New();
+  p1->CopyInformation(templateImage);
+  p1->SetRegions(templateImage->GetLargestPossibleRegion());
+  p1->Allocate();
+  p1->FillBuffer(0.0);
+  p1.GetPointer()->Register();
+  return p1.GetPointer();
+}
+
 }
 
 /** Denoise image
@@ -657,18 +688,46 @@ DoCSEstimate
              unsigned int gradientIndex,
              double lambda,double tol,DWIVectorImageType::Pointer &target)
 {
-  typedef itk::SubtractImageFilter<B0AvgImageType,B0AvgImageType,B0AvgImageType>  SubtractFilterType;
-  typedef itk::AbsImageFilter<B0AvgImageType,B0AvgImageType>                      AbsImageFilterType;
-  typedef itk::StatisticsImageFilter<B0AvgImageType>                              StatsFilterType;
-  typedef itk::MultiplyImageFilter<B0AvgImageType,B0AvgImageType,B0AvgImageType>  MultiplyImageFilterType;
+  typedef B0AvgImageType TImage;
+#if 0
+  double dt = 0.125;
 
-  B0AvgImageType::Pointer f = this->FromVecImage(inputImage,gradientIndex);
+  TImage::Pointer p1 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer p2 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer p3 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer divp = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer lastdivp = ScratchImage<TImage>(inputImage,1.0);
+
+  for(double normdivp = 1.0; normdivp > tol; )
+    {
+    // lastdivp = divp;
+    lastdivp = divp;
+    // z = divp - f*lambda;
+    // z1 = z(:,ir,:) - z;
+    // z2 = z(id,:,:) - z;
+    // z3 = z(:,:,ib) - z;
+    // denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
+    // p1 = (p1 + dt*z1)./denom;
+    // p2 = (p2 + dt*z2)./denom;
+    // p3 = (p3 + dt*z3)./denom;
+    // divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
+    // normdivp = norm(divp(:) - lastdivp(:));
+    }
+#else
+  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
+  typedef itk::AbsImageFilter<TImage,TImage>                      AbsImageFilterType;
+  typedef itk::StatisticsImageFilter<TImage>                              StatsFilterType;
+  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyImageFilterType;
+  typedef itk::ImageRegionIterator<TImage>                                B0Iterator;
+  typedef itk::ImageRegionConstIterator<TImage>                           B0ConstIterator;
+
+  TImage::Pointer f = this->FromVecImage(inputImage,gradientIndex);
 
   MultiplyImageFilterType::Pointer mult = MultiplyImageFilterType::New();
   mult->SetInput1(f);
   mult->SetConstant(lambda);
   mult->Update();
-  B0AvgImageType::Pointer fLambda = mult->GetOutput();
+  TImage::Pointer fLambda = mult->GetOutput();
 
   // dt = 0.25/2;
   const double dt = 0.125;
@@ -678,7 +737,7 @@ DoCSEstimate
 
   // id = [2:N(1),N(1)];
   std::vector<unsigned int> id;
-  for(unsigned int i = 1; i < N[0] - 1; ++i)
+  for(unsigned int i = 1; i <= N[0] - 1; ++i)
     {
     id.push_back(i);
     }
@@ -694,63 +753,43 @@ DoCSEstimate
 
   // ir = [2:N(2),N(2)];
   std::vector<unsigned int> ir;
-  for(unsigned int i = 1; i < N[2]; ++i)
+  for(unsigned int i = 1; i < N[1]; ++i)
     {
     ir.push_back(i);
     }
-  ir.push_back(N[2] - 1);
+  ir.push_back(N[1] - 1);
 
   // il = [1,1:N(2)-1];
   std::vector<unsigned int> il;
   il.push_back(0);
-  for(unsigned int i = 0; i < N[2] - 1; ++i)
+  for(unsigned int i = 0; i < N[1] - 1; ++i)
     {
     il.push_back(i);
     }
 
   // ib = [2:N(3),N(3)];
   std::vector<unsigned int> ib;
-  for(unsigned int i = 1; i < N[3]; ++i)
+  for(unsigned int i = 1; i < N[2]; ++i)
     {
     ib.push_back(i);
     }
-  ib.push_back(N[3] - 1);
+  ib.push_back(N[2] - 1);
 
   // ifr = [1,1:N(3)-1];
   std::vector<unsigned int> ifr;
   ifr.push_back(0);
-  for(unsigned int i = 0; i < N[3] - 1; ++i)
+  for(unsigned int i = 0; i < N[2] - 1; ++i)
     {
     ifr.push_back(i);
     }
   //
   // p1 = zeros(size(f));
-  B0AvgImageType::Pointer p1 = B0AvgImageType::New();
-  p1->SetRegions(N);
-  p1->Allocate();
-  p1->FillBuffer(0.0);
-  // p2 = zeros(size(f));
-  B0AvgImageType::Pointer p2 = B0AvgImageType::New();
-  p2->SetRegions(N);
-  p2->Allocate();
-  p2->FillBuffer(0.0);
-  // p3 = zeros(size(f));
-  B0AvgImageType::Pointer p3 = B0AvgImageType::New();
-  p3->SetRegions(N);
-  p3->Allocate();
-  p3->FillBuffer(0.0);
-  //
-  // divp = zeros(size(f));
-  B0AvgImageType::Pointer divp = B0AvgImageType::New();
-  divp->SetRegions(N);
-  divp->Allocate();
-  divp->FillBuffer(0.0);
-
+  TImage::Pointer p1 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer p2 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer p3 = ScratchImage<TImage>(inputImage,0.0);
+  TImage::Pointer divp = ScratchImage<TImage>(inputImage,0.0);
   // lastdivp = ones(size(f));
-  B0AvgImageType::Pointer lastdivp;
-  lastdivp->SetRegions(N);
-  lastdivp->Allocate();
-
+  TImage::Pointer lastdivp;
   double pnorm;
 //
 // if (length(N) == 3), which it always will be.
@@ -759,59 +798,51 @@ DoCSEstimate
 //     while (norm(divp(:) - lastdivp(:),inf) > Tol),
 //         lastdivp = divp;
     // to avoid needless allocation, swap divp with lastdivp
-    B0AvgImageType::Pointer tmpvp = divp;
-    divp = lastdivp;
-    lastdivp = tmpvp;
+    lastdivp = divp;
 
     // note: f doesn't change in loop so f*lambda done above and
     //         assigned to fLambda
     //         z = divp - f*lambda;
-    SubtractFilterType::Pointer sub1 = SubtractFilterType::New();
-    sub1->SetInput1(divp);
-    sub1->SetInput2(fLambda);
-    B0AvgImageType::Pointer z = sub1->GetOutput();
+    TImage::Pointer z = SubtractImage<TImage>(divp,fLambda);
     // z1 = z(:,ir,:) - z;
-    B0AvgImageType::Pointer z1 = shiftImage<B0AvgImageType>(z,1,ir);
-    sub1->SetInput1(z1); sub1->SetInput2(z); sub1->Update();
-    z1 = sub1->GetOutput();
+    TImage::Pointer z1 = shiftImage<TImage>(z,1,ir);
+    z1 = SubtractImage<TImage>(z1,z);
     // z2 = z(id,:,:) - z;
-    B0AvgImageType::Pointer z2 = shiftImage<B0AvgImageType>(z,0,id);
-    sub1->SetInput1(z2); sub1->SetInput2(z); sub1->Update();
-    z2 = sub1->GetOutput();
+    TImage::Pointer z2 = shiftImage<TImage>(z,0,id);
+    z2 = SubtractImage<TImage>(z2,z);
     // z3 = z(:,:,ib) - z;
-    B0AvgImageType::Pointer z3 = shiftImage<B0AvgImageType>(z,2,ib);
-    sub1->SetInput1(z3); sub1->SetInput2(z); sub1->Update();
-    z3 = sub1->GetOutput();
+    TImage::Pointer z3 = shiftImage<TImage>(z,2,ib);
+    z3 = SubtractImage<TImage>(z3,z);
 
     // denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
-    B0AvgImageType::Pointer denom = B0AvgImageType::New();
+    TImage::Pointer denom = TImage::New();
     denom->CopyInformation(f);
+    denom->SetRegions(f->GetLargestPossibleRegion());
     denom->Allocate();
-    itk::ImageRegionIterator<B0AvgImageType> denomIt(denom,denom->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<B0AvgImageType> z1It(z1,z1->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<B0AvgImageType> z2It(z2,z2->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<B0AvgImageType> z3It(z3,z3->GetLargestPossibleRegion());
+    B0Iterator denomIt(denom,denom->GetLargestPossibleRegion());
+    B0ConstIterator z1It(z1,z1->GetLargestPossibleRegion());
+    B0ConstIterator z2It(z2,z2->GetLargestPossibleRegion());
+    B0ConstIterator z3It(z3,z3->GetLargestPossibleRegion());
 
-    for(denomIt.GoToBegin(), z1It.GoToBegin(),z2It.GoToBegin(),z3It.GoToBegin();
-        !denomIt.IsAtEnd() && !z1It.IsAtEnd() && !z2It.IsAtEnd() && z3It.IsAtEnd();
+    for(denomIt.GoToBegin(), z1It.GoToBegin(), z2It.GoToBegin(), z3It.GoToBegin();
+        !denomIt.IsAtEnd();
         ++denomIt, ++z1It, ++z2It, ++z3It)
       {
-      B0AvgImageType::PixelType z1Val = z1It.Get();
-      B0AvgImageType::PixelType z2Val = z2It.Get();
-      B0AvgImageType::PixelType z3Val = z3It.Get();
+      TImage::PixelType z1Val = z1It.Get();
+      TImage::PixelType z2Val = z2It.Get();
+      TImage::PixelType z3Val = z3It.Get();
       denomIt.Set(1 + dt * std::sqrt((z1Val * z1Val) + (z2Val * z2Val)+ (z3Val * z3Val)));
       }
-    itk::ImageRegionIterator<B0AvgImageType> p1It(p1,p1->GetLargestPossibleRegion());
-    itk::ImageRegionIterator<B0AvgImageType> p2It(p2,p2->GetLargestPossibleRegion());
-    itk::ImageRegionIterator<B0AvgImageType> p3It(p3,p3->GetLargestPossibleRegion());
+    B0Iterator p1It(p1,p1->GetLargestPossibleRegion());
+    B0Iterator p2It(p2,p2->GetLargestPossibleRegion());
+    B0Iterator p3It(p3,p3->GetLargestPossibleRegion());
 
      // p1 = (p1 + dt*z1)./denom;
      // p2 = (p2 + dt*z2)./denom;
      // p3 = (p3 + dt*z3)./denom;
     for(denomIt.GoToBegin(), p1It.GoToBegin(),p2It.GoToBegin(),p3It.GoToBegin(),
           z1It.GoToBegin(), z2It.GoToBegin(), z3It.GoToBegin();
-        !denomIt.IsAtEnd() && !p1It.IsAtEnd() && !p2It.IsAtEnd() && p3It.IsAtEnd();
-        ++denomIt, ++p1It, ++p2It, ++p3It, ++z1It, ++z2It, ++z3It)
+        !denomIt.IsAtEnd(); ++denomIt, ++p1It, ++p2It, ++p3It, ++z1It, ++z2It, ++z3It)
       {
       double curDenom = denomIt.Get();
       double p1val = (p1It.Get() + dt * z1It.Get())/curDenom;
@@ -822,23 +853,24 @@ DoCSEstimate
       p3It.Set(p3val);
       }
     // divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
-    itk::ImageRegionIteratorWithIndex<B0AvgImageType>
+    divp = ScratchImage<TImage>(inputImage,0.0);
+    itk::ImageRegionIteratorWithIndex<TImage>
       divpIt(divp,divp->GetLargestPossibleRegion());
     for(divpIt.GoToBegin(); !divpIt.IsAtEnd(); ++divpIt)
       {
-      B0AvgImageType::IndexType curIndex = divpIt.GetIndex();
-      B0AvgImageType::IndexType pIndex;
+      TImage::IndexType curIndex = divpIt.GetIndex();
+      TImage::IndexType pIndex;
       double curP1 = p1->GetPixel(curIndex);
       pIndex = curIndex;
-      pIndex[1] = curIndex[il[1]];
+      pIndex[1] = il[curIndex[1]];
       curP1 -= p1->GetPixel(pIndex);
       double curP2 = p2->GetPixel(curIndex);
       pIndex = curIndex;
-      pIndex[0] = curIndex[iu[0]];
+      pIndex[0] = iu[curIndex[0]];
       curP2 -= p2->GetPixel(pIndex);
       double curP3 = p3->GetPixel(curIndex);
       pIndex = curIndex;
-      pIndex[2] = curIndex[ifr[2]];
+      pIndex[2] = ifr[curIndex[2]];
       curP3 -= p3->GetPixel(pIndex);
       divp->SetPixel(curIndex, curP1 + curP2 + curP3);
       }
@@ -851,15 +883,31 @@ DoCSEstimate
      * I suppose I could devise a more expensive loop test, but I'd
      * have to really work at it.
      */
+    B0ConstIterator divpIt2(divp,divp->GetLargestPossibleRegion());
+    B0ConstIterator lastdivpIt(lastdivp,lastdivp->GetLargestPossibleRegion());
+    pnorm = 0.0;
+    for(divpIt2.GoToBegin(), lastdivpIt.GoToBegin();
+        !divpIt2.IsAtEnd() && !lastdivpIt.IsAtEnd();
+        ++divpIt2, ++lastdivpIt)
+      {
+      const double diff = std::abs(divpIt2.Get() - lastdivpIt.Get());
+      if(diff > pnorm)
+        {
+        pnorm = diff;
+        }
+      }
+#if 0
     SubtractFilterType::Pointer subFilter = SubtractFilterType::New();
-    subFilter->SetInput(divp);
-    subFilter->SetInput(lastdivp);
+    subFilter->SetInput1(divp);
+    subFilter->SetInput2(lastdivp);
     AbsImageFilterType::Pointer absImageFilter = AbsImageFilterType::New();
     absImageFilter->SetInput(subFilter->GetOutput());
     StatsFilterType::Pointer statsFilter = StatsFilterType::New();
     statsFilter->SetInput(absImageFilter->GetOutput());
     statsFilter->Update();
     pnorm = statsFilter->GetMaximum();
+    std::cerr << "pnorm=" << pnorm << std::endl;
+#endif
     }
   while(pnorm > tol);
 // end
@@ -872,7 +920,8 @@ DoCSEstimate
   subFilter->SetInput1(f);
   subFilter->SetInput2(multFilter->GetOutput());
   subFilter->Update();
-  this->ToVecImage(subFilter->GetOutput(),gradientIndex,target);
+  this->ToVecImage(subFilter->GetOutput(), gradientIndex,target);
+#endif
 }
 
 // function u = tvdenoise3(f,lambda,Tol)
@@ -962,6 +1011,7 @@ DoCSEstimate
   unsigned int numGradients = inputImage->GetNumberOfComponentsPerPixel();
   DWIVectorImageType::Pointer rval = DWIVectorImageType::New();
   rval->CopyInformation(inputImage);
+  rval->SetRegions(inputImage->GetLargestPossibleRegion());
   rval->SetNumberOfComponentsPerPixel(numGradients);
   rval->Allocate();
   typedef DWIVectorImageType::SizeValueType sizetype;
@@ -994,7 +1044,7 @@ DoCSEstimate
   // M=size(A,2);
   ImageSizeValueType M = A.cols();
 
-  unsigned int numGradients = inputImage->GetNumberOfComponentsPerPixel();
+  unsigned int numGradients = A.rows();
   // the reshape takes image of size [ x y z g ] and turns it into
   // [n g ] where n = x * y * z.  Matlab reshapes columnwise, so you
   // end up with G columns of n rows.
@@ -1085,7 +1135,7 @@ DoCSEstimate
 //
 // gamma_xk = i;
   std::vector<unsigned long> gamma_xk(1,irow);
-
+  gamma_xk[0] = irow;
 //
 // epsilon = c;
   double epsilon(c);

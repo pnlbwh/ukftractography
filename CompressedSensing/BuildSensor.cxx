@@ -150,7 +150,7 @@ MatrixType BuildSensor(MatrixType &g, std::vector<MatrixType> &v,MatrixType &psi
   MatrixType A;
   A = MatrixType::Zero(K,nSum);
   nSum = 0;
-  for(unsigned int j = 0; j < J+1; ++j, nSum += N[j])
+  for(unsigned int j = 0; j < J+1; ++j)
     {
     MatrixType &vv = v[j];
     for(unsigned int k = 0; k < N[j]; ++k)
@@ -159,6 +159,7 @@ MatrixType BuildSensor(MatrixType &g, std::vector<MatrixType> &v,MatrixType &psi
       MatrixType P = polyleg(tmp1,m);
       A.col(k+nSum) = P * XCn.col(j);
       }
+    nSum += N[j];
     }
   return A;
   //     case 2,

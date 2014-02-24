@@ -19,6 +19,145 @@
 
 namespace
 {
+template <typename TImage>
+TImage *SubtractImage(const TImage *t1, const TImage *t2)
+{
+  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
+  typename SubtractFilterType::Pointer sub1 = SubtractFilterType::New();
+  sub1->SetInput1(t1);
+  sub1->SetInput2(t2);
+  sub1->Update();
+  typename TImage::Pointer rval = sub1->GetOutput();
+  rval.GetPointer()->Register();
+  return rval.GetPointer();
+}
+
+template <typename TImage>
+TImage *AddImage(const TImage *t1, const TImage *t2)
+{
+  typedef itk::AddImageFilter<TImage,TImage,TImage>  AddFilterType;
+  typename AddFilterType::Pointer sub1 = AddFilterType::New();
+  sub1->SetInput1(t1);
+  sub1->SetInput2(t2);
+  sub1->Update();
+  typename TImage::Pointer rval = sub1->GetOutput();
+  rval.GetPointer()->Register();
+  return rval.GetPointer();
+}
+
+template <typename TImage>
+TImage *MultiplyImage(const TImage *t1, const TImage *t2)
+{
+  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
+  typename MultiplyFilterType::Pointer sub1 = MultiplyFilterType::New();
+  sub1->SetInput1(t1);
+  sub1->SetInput2(t2);
+  sub1->Update();
+  typename TImage::Pointer rval = sub1->GetOutput();
+  rval.GetPointer()->Register();
+  return rval.GetPointer();
+}
+
+template <typename TImage>
+TImage *MultiplyImage(const TImage *t1, typename TImage::PixelType constant)
+{
+  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
+  typename MultiplyFilterType::Pointer sub1 = MultiplyFilterType::New();
+  sub1->SetInput1(t1);
+  sub1->SetConstant(constant);
+  sub1->Update();
+  typename TImage::Pointer rval = sub1->GetOutput();
+  rval.GetPointer()->Register();
+  return rval.GetPointer();
+}
+
+template <typename TImage>
+TImage *AllocImage(const itk::ImageBase<TImage::ImageDimension> *templateImage)
+{
+  typename TImage::Pointer p1 = TImage::New();
+  p1->CopyInformation(templateImage);
+  p1->SetRegions(templateImage->GetLargestPossibleRegion());
+  p1->Allocate();
+  p1.GetPointer()->Register();
+  return p1.GetPointer();
+}
+
+template <typename TImage>
+TImage *AllocVecImage(const itk::ImageBase<TImage::ImageDimension> *templateImage, unsigned long vecSize)
+{
+  typename TImage::Pointer p1 = TImage::New();
+  p1->CopyInformation(templateImage);
+  p1->SetRegions(templateImage->GetLargestPossibleRegion());
+  p1->SetNumberOfComponentsPerPixel(vecSize);
+  p1->Allocate();
+  p1.GetPointer()->Register();
+  return p1.GetPointer();
+}
+
+template <typename TImage>
+TImage *AllocImage(const itk::ImageBase<TImage::ImageDimension> *templateImage, typename TImage::PixelType initval)
+{
+  TImage *rval = AllocImage<TImage>(templateImage);
+  rval->FillBuffer(initval);
+  return rval;
+}
+
+template <typename TImage>
+double PNormImageDiff(const TImage *im1, const TImage *im2)
+{
+  itk::ImageRegionConstIterator<TImage> im1It(im1,im1->GetLargestPossibleRegion());
+  itk::ImageRegionConstIterator<TImage> im2It(im2,im2->GetLargestPossibleRegion());
+  double maxPixel = 0;
+  for(im1It.GoToBegin(), im2It.GoToBegin(); !im1It.IsAtEnd(); ++im1It,++im2It)
+    {
+    const double current = std::abs(im1It.Get() - im2It.Get());
+    if(current > maxPixel)
+      {
+      maxPixel = current;
+      }
+    }
+  return maxPixel;
+}
+
+typedef std::vector<unsigned long> ShiftVectorType;
+ShiftVectorType MakeShiftVector(unsigned long dim, signed short direction)
+{
+  ShiftVectorType rval;
+  if(direction < 0)
+    {
+    rval.push_back(0);
+    for(unsigned int i = 0; i < dim - 1; ++i)
+      {
+      rval.push_back(i);
+      }
+    }
+  else
+    {
+    for(unsigned int i = 1; i < dim; ++i)
+      {
+      rval.push_back(i);
+      }
+    rval.push_back(dim - 1);
+    }
+  return rval;
+}
+
+template<typename TImage>
+TImage *SubtractShift(const TImage *inImage,unsigned axis,ShiftVectorType &shift)
+{
+  TImage *rval = AllocImage<TImage>(inImage);
+  itk::ImageRegionIterator<TImage> rvalIt(rval,rval->GetLargestPossibleRegion());
+  itk::ImageRegionConstIteratorWithIndex<TImage> inIt(inImage,inImage->GetLargestPossibleRegion());
+
+  for(rvalIt.GoToBegin(), inIt.GoToBegin(); !rvalIt.IsAtEnd(); ++rvalIt, ++inIt)
+    {
+    typename TImage::IndexType index = inIt.GetIndex();
+    index[axis] = shift[index[axis]];
+    rvalIt.Set(inImage->GetPixel(index) - inIt.Get());
+    }
+  return rval;
+}
+
 template <class ImageType>
 void
 WriteImage(const ImageType *image,
@@ -40,7 +179,9 @@ WriteImage(const ImageType *image,
     throw;
     }
 }
-}
+
+} // anon namespace
+
 DoCSEstimate
 ::DoCSEstimate(NrrdFile &nrrdFile,MaskImageType::Pointer &maskImage,MatrixType &newGradients) :
   m_NrrdFile(nrrdFile), m_MaskImage(maskImage), m_NewGradients(newGradients),
@@ -69,7 +210,7 @@ void
 DoCSEstimate
 ::Reshape(const DWIVectorImageType::Pointer &src,unsigned rows, unsigned columns, MatrixType &outMatrix)
 {
-  outMatrix.conservativeResize(rows,columns);
+  outMatrix.resize(rows,columns);
   // S=reshape(S,[n d]);
   DWIVectorImageType::IndexType index = {{0,0,0}};
   DWIVectorImageType::SizeType size = src->GetLargestPossibleRegion().GetSize();
@@ -108,6 +249,7 @@ DoCSEstimate
   unsigned int numComponents = templateImage->GetNumberOfComponentsPerPixel();
   outImage = DWIVectorImageType::New();
   outImage->CopyInformation(templateImage);
+  outImage->SetRegions(templateImage->GetLargestPossibleRegion());
   outImage->SetNumberOfComponentsPerPixel(numComponents);
   outImage->Allocate();
   DWIVectorImageType::SizeType size = templateImage->GetLargestPossibleRegion().GetSize();
@@ -115,18 +257,18 @@ DoCSEstimate
   for(unsigned int z = 0; z < size[2]; ++z)
     {
     index[2] = z;
-    for(unsigned int y = 0; y < size[1]; ++y)
-      {
-      index[1] = y;
       for(unsigned int x = 0; x < size[0]; ++x)
         {
         index[0] = x;
-        DWIVectorImageType::PixelType curPixel;
-        unsigned int row = (z * index[2]) + (x * index[0]) + y;
-        for(unsigned int grad = 0; grad < numComponents; ++grad)
+        for(unsigned int y = 0; y < size[1]; ++y)
           {
-          curPixel[grad] = src(row,grad);
-          }
+          index[1] = y;
+          DWIVectorImageType::PixelType curPixel(numComponents);
+          unsigned int row = (z * index[1] * index[0]) + (y * index[0]) + x;
+          for(unsigned int grad = 0; grad < numComponents; ++grad)
+            {
+            curPixel[grad] = src(row,grad);
+            }
         outImage->SetPixel(index,curPixel);
         }
       }
@@ -190,11 +332,7 @@ DoCSEstimate
     }
   //
   // separate out gradient volumes
-  this->m_IntensityData = DWIVectorImageType::New();
-  this->m_IntensityData->CopyInformation(originalNrrd);
-  this->m_IntensityData->SetRegions(region);
-  this->m_IntensityData->SetNumberOfComponentsPerPixel(gradientIndices.size());
-  this->m_IntensityData->Allocate();
+  this->m_IntensityData = AllocVecImage<DWIVectorImageType>(originalNrrd,gradientIndices.size());
 
   const unsigned int numGradientIndices = gradientIndices.size();
   //
@@ -399,34 +537,32 @@ DoCSEstimate
     //
     // t=(1/(1+gama))*(DWIIntensityData+gama*(Ac+p));
     {
-    const unsigned int pixSize(Ac->GetNumberOfComponentsPerPixel());
-    DWIVectorImageType::PixelType gamaVec;
-    DWIVectorImageType::PixelType invGamaVec;
-    gamaVec.SetSize(pixSize);
-    invGamaVec.SetSize(pixSize);
-    for(unsigned int i = 0; i < pixSize; ++i)
-      {
-      gamaVec[i] = gama;
-      invGamaVec[i] = 1.0/(1.0 + gama);
-      }
-    AddImageFilterType::Pointer addFilter1 = AddImageFilterType::New();
-    AddImageFilterType::Pointer addFilter2 = AddImageFilterType::New();
-    MultiplyFilterType::Pointer multFilter1 = MultiplyFilterType::New();
-    MultiplyFilterType::Pointer multFilter2 = MultiplyFilterType::New();
-    addFilter1->SetInput1(Ac);
-    addFilter1->SetInput1(P);
-    multFilter1->SetInput(addFilter1->GetOutput());
-    multFilter1->SetConstant(gamaVec);
-    addFilter2->SetInput1(multFilter1->GetOutput());
-    addFilter2->SetInput2(this->m_IntensityData);
-    multFilter2->SetInput(addFilter2->GetOutput());
-    multFilter2->SetConstant(invGamaVec);
-    multFilter2->Update();
-    t = multFilter2->GetOutput();
+    typedef itk::Image<DWIVectorImageType::InternalPixelType,
+                       DWIVectorImageType::ImageDimension> ScalarImageType;
+    typedef itk::MultiplyImageFilter<DWIVectorImageType,ScalarImageType,DWIVectorImageType>
+      MultScalarFilterType;
+    // Ac + p
+    AddImageFilterType::Pointer add1 = AddImageFilterType::New();
+    add1->SetInput1(Ac);
+    add1->SetInput2(P);
+    // gama * (Ac + p)
+    MultScalarFilterType::Pointer mult1 = MultScalarFilterType::New();
+    mult1->SetInput1(add1->GetOutput());
+    mult1->SetConstant(gama);
+    // DWIIntensityData + gama * (Ac + p)
+    AddImageFilterType::Pointer add2 = AddImageFilterType::New();
+    add2->SetInput1(this->m_IntensityData);
+    add2->SetInput2(mult1->GetOutput());
+    add2->Update();
+    // t = (1 / (1 + gama)) * (DWIIntensityData + gama * (Ac + p))
+    const double invGama = 1.0 / (1.0 * gama);
+    MultScalarFilterType::Pointer mult2 = MultScalarFilterType::New();
+    mult2->SetInput(add2->GetOutput());
+    mult2->SetConstant(invGama);
+    mult2->Update();
+    t = mult2->GetOutput();
     }
-    // u=step2(t,myu/(1+gama),tol);
-    u = this->step2(t,myu/(1+gama),tol);
-    //
+
     // p=p+(Ac-u);
     {
     SubtractFilterType::Pointer subFilter = SubtractFilterType::New();
@@ -469,10 +605,13 @@ DoCSEstimate
   // %% Insert the B0 back in
   // estimatedSignal = cat(4,averagedB0,estimatedSignal); %add B0 to the data
   // estimatedGradients=[0 0 0;new_gradients];
-  DWIVectorImageType::Pointer newImage = DWIVectorImageType::New();
-  newImage->CopyInformation(estimatedSignal);
   const unsigned newGradCount(estimatedSignal->GetNumberOfComponentsPerPixel() + 1);
+  DWIVectorImageType::Pointer newImage =
+    AllocVecImage<DWIVectorImageType>(estimatedSignal,newGradCount);
+
+  newImage->CopyInformation(estimatedSignal);
   newImage->SetNumberOfComponentsPerPixel(newGradCount);
+
   newImage->Allocate();
   itk::ImageRegionConstIterator<DWIVectorImageType> estimIt(estimatedSignal,estimatedSignal->GetLargestPossibleRegion());
   itk::ImageRegionConstIterator<B0AvgImageType> b0It(this->m_AverageB0,this->m_AverageB0->GetLargestPossibleRegion());
@@ -672,112 +811,8 @@ DoCSEstimate
   return f.GetPointer();
 }
 
-namespace
-{
-template <typename TImage>
-TImage *SubtractImage(const TImage *t1, const TImage *t2)
-{
-  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
-  typename SubtractFilterType::Pointer sub1 = SubtractFilterType::New();
-  sub1->SetInput1(t1);
-  sub1->SetInput2(t2);
-  sub1->Update();
-  typename TImage::Pointer rval = sub1->GetOutput();
-  rval.GetPointer()->Register();
-  return rval.GetPointer();
-}
 
-template <typename TImage>
-TImage *AddImage(const TImage *t1, const TImage *t2)
-{
-  typedef itk::AddImageFilter<TImage,TImage,TImage>  AddFilterType;
-  typename AddFilterType::Pointer sub1 = AddFilterType::New();
-  sub1->SetInput1(t1);
-  sub1->SetInput2(t2);
-  sub1->Update();
-  typename TImage::Pointer rval = sub1->GetOutput();
-  rval.GetPointer()->Register();
-  return rval.GetPointer();
-}
 
-template <typename TImage>
-TImage *MultiplyImage(const TImage *t1, const TImage *t2)
-{
-  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
-  typename MultiplyFilterType::Pointer sub1 = MultiplyFilterType::New();
-  sub1->SetInput1(t1);
-  sub1->SetInput2(t2);
-  sub1->Update();
-  typename TImage::Pointer rval = sub1->GetOutput();
-  rval.GetPointer()->Register();
-  return rval.GetPointer();
-}
-
-template <typename TImage>
-TImage *MultiplyImage(const TImage *t1, typename TImage::PixelType constant)
-{
-  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
-  typename MultiplyFilterType::Pointer sub1 = MultiplyFilterType::New();
-  sub1->SetInput1(t1);
-  sub1->SetConstant(constant);
-  sub1->Update();
-  typename TImage::Pointer rval = sub1->GetOutput();
-  rval.GetPointer()->Register();
-  return rval.GetPointer();
-}
-
-template <typename TImage>
-TImage *AllocImage(const itk::ImageBase<TImage::ImageDimension> *templateImage)
-{
-  typename TImage::Pointer p1 = TImage::New();
-  p1->CopyInformation(templateImage);
-  p1->SetRegions(templateImage->GetLargestPossibleRegion());
-  p1->Allocate();
-  p1.GetPointer()->Register();
-  return p1.GetPointer();
-}
-template <typename TImage>
-TImage *AllocImage(const itk::ImageBase<TImage::ImageDimension> *templateImage, typename TImage::PixelType initval)
-{
-  TImage *rval = AllocImage<TImage>(templateImage);
-  rval->FillBuffer(initval);
-  return rval;
-}
-
-template <typename TImage>
-double PNormImageDiff(const TImage *im1, const TImage *im2)
-{
-  itk::ImageRegionConstIterator<TImage> im1It(im1,im1->GetLargestPossibleRegion());
-  itk::ImageRegionConstIterator<TImage> im2It(im2,im2->GetLargestPossibleRegion());
-  typename TImage::PixelType maxPixel = 0;
-  for(im1It.GoToBegin(), im2It.GoToBegin(); !im1It.IsAtEnd(); ++im1It,++im2It)
-    {
-    const typename TImage::PixelType current = std::abs(im1It.Get() - im2It.Get());
-    if(current > maxPixel)
-      {
-      maxPixel = current;
-      }
-    }
-  return maxPixel;
-}
-
-}
-
-template<typename TImage>
-TImage *SubtractShift(const TImage *inImage,unsigned axis,std::vector<unsigned int> &shift)
-{
-  TImage *rval = AllocImage<TImage>(inImage);
-  itk::ImageRegionIterator<TImage> rvalIt(rval,rval->GetLargestPossibleRegion());
-  itk::ImageRegionConstIteratorWithIndex<TImage> inIt(inImage,inImage->GetLargestPossibleRegion());
-
-  for(rvalIt.GoToBegin(), inIt.GoToBegin(); !rvalIt.IsAtEnd(); ++rvalIt, ++inIt)
-    {
-    typename TImage::IndexType index = inIt.GetIndex();
-    index[axis] = shift[index[axis]];
-    rvalIt.Set(inIt.Get() - inImage->GetPixel(index));
-    }
-  return rval;
-}
 
 /** Denoise image
  *  this method has to behave very differently than matlab.
@@ -793,199 +828,120 @@ DoCSEstimate
              double lambda,double tol,DWIVectorImageType::Pointer &target)
 {
   typedef B0AvgImageType TImage;
-  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
-  typedef itk::AbsImageFilter<TImage,TImage>                      AbsImageFilterType;
-  typedef itk::StatisticsImageFilter<TImage>                              StatsFilterType;
-  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyImageFilterType;
-
   TImage::Pointer f = this->FromVecImage(inputImage,gradientIndex);
-
-  MultiplyImageFilterType::Pointer mult = MultiplyImageFilterType::New();
-  mult->SetInput1(f);
-  mult->SetConstant(lambda);
-  mult->Update();
-  TImage::Pointer fLambda = mult->GetOutput();
-
-  // dt = 0.25/2;
-  const double dt = 0.125;
-
-  // N = size(f);
-  const ImageSizeType N = inputImage->GetLargestPossibleRegion().GetSize();
-
-  // id = [2:N(1),N(1)];
-  std::vector<unsigned int> id;
-  for(unsigned int i = 1; i <= N[0] - 1; ++i)
-    {
-    id.push_back(i);
-    }
-  id.push_back(N[0] - 1);
-
-  // iu = [1,1:N(1)-1];
-  std::vector<unsigned int> iu;
-  iu.push_back(0);
-  for(unsigned int i = 0; i < N[0] - 1; ++i)
-    {
-    iu.push_back(i);
-    }
-
-  // ir = [2:N(2),N(2)];
-  std::vector<unsigned int> ir;
-  for(unsigned int i = 1; i < N[1]; ++i)
-    {
-    ir.push_back(i);
-    }
-  ir.push_back(N[1] - 1);
-
-  // il = [1,1:N(2)-1];
-  std::vector<unsigned int> il;
-  il.push_back(0);
-  for(unsigned int i = 0; i < N[1] - 1; ++i)
-    {
-    il.push_back(i);
-    }
-
-  // ib = [2:N(3),N(3)];
-  std::vector<unsigned int> ib;
-  for(unsigned int i = 1; i < N[2]; ++i)
-    {
-    ib.push_back(i);
-    }
-  ib.push_back(N[2] - 1);
-
-  // ifr = [1,1:N(3)-1];
-  std::vector<unsigned int> ifr;
-  ifr.push_back(0);
-  for(unsigned int i = 0; i < N[2] - 1; ++i)
-    {
-    ifr.push_back(i);
-    }
-
-  //
-  // p1 = zeros(size(f));
-  TImage::Pointer p1 = AllocImage<TImage>(f,0.0);
-  // p2 = zeros(size(f));
-  TImage::Pointer p2 = AllocImage<TImage>(f,0.0);
-  // p3 = zeros(size(f));
-  TImage::Pointer p3 = AllocImage<TImage>(f,0.0);
-  //
-  // divp = zeros(size(f));
-  TImage::Pointer divp = AllocImage<TImage>(f,0.0);
-
-  // lastdivp = ones(size(f));
-  TImage::Pointer lastdivp;
-
-  double pnorm(1);
+// if (nargin < 3),
+//     Tol = 1e-2;
+// end
 //
-// if (length(N) == 3), which it always will be.
-  while(pnorm > tol)
-    {
+// if (lambda < 0),
+//     error('Parameter lambda must be nonnegative.');
+// end
+//
+// dt = 0.25/2;
+  double dt = 0.25/2;
+//
+// N = size(f);
+  const TImage::SizeType N =
+    inputImage->GetLargestPossibleRegion().GetSize();
+// id = [2:N(1),N(1)];
+  ShiftVectorType id = MakeShiftVector(N[0],1);
+// iu = [1,1:N(1)-1];
+  ShiftVectorType iu = MakeShiftVector(N[0],-1);
+// ir = [2:N(2),N(2)];
+  ShiftVectorType ir = MakeShiftVector(N[1],1);
+// il = [1,1:N(2)-1];
+  ShiftVectorType il = MakeShiftVector(N[1],-1);
+// ib = [2:N(3),N(3)];
+  ShiftVectorType ib = MakeShiftVector(N[2],1);
+// ifr = [1,1:N(3)-1];
+  ShiftVectorType ifr = MakeShiftVector(N[2],-1);
+//
+// p1 = zeros(size(f));
+  TImage::Pointer p1 = AllocImage<TImage>(f,0.0);
+// p2 = zeros(size(f));
+  TImage::Pointer p2 = AllocImage<TImage>(f,0.0);
+// p3 = zeros(size(f));
+  TImage::Pointer p3 = AllocImage<TImage>(f,0.0);
+//
+// divp = zeros(size(f));
+  TImage::Pointer divp = AllocImage<TImage>(f,0.0);
+// lastdivp = ones(size(f));
+  TImage::Pointer lastdivp;
+//
+  TImage::Pointer fLambda = MultiplyImage<TImage>(f,lambda);
+// if (length(N) == 3),
 //     while (norm(divp(:) - lastdivp(:),inf) > Tol),
+  for(double normdivp = 1.0; normdivp > tol; )
+    {
 //         lastdivp = divp;
-    // to avoid needless allocation, swap divp with lastdivp
     lastdivp = divp;
-
-    // note: f doesn't change in loop so f*lambda done above and
-    //         assigned to fLambda
-    //         z = divp - f*lambda;
-    SubtractFilterType::Pointer sub1 = SubtractFilterType::New();
-    sub1->SetInput1(divp);
-    sub1->SetInput2(fLambda);
-    sub1->Update();
-    TImage::Pointer z = sub1->GetOutput();
-    // z1 = z(:,ir,:) - z;
-    TImage::Pointer z1 = shiftImage<TImage>(z,1,ir);
-    sub1->SetInput1(z1); sub1->SetInput2(z); sub1->Update();
-    z1 = sub1->GetOutput();
-    // z2 = z(id,:,:) - z;
-    TImage::Pointer z2 = shiftImage<TImage>(z,0,id);
-    sub1->SetInput1(z2); sub1->SetInput2(z); sub1->Update();
-    z2 = sub1->GetOutput();
-    // z3 = z(:,:,ib) - z;
-    TImage::Pointer z3 = shiftImage<TImage>(z,2,ib);
-    sub1->SetInput1(z3); sub1->SetInput2(z); sub1->Update();
-    z3 = sub1->GetOutput();
-
-    // denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
-    TImage::Pointer denom = AllocImage<TImage>(f);
-    itk::ImageRegionIterator<TImage> denomIt(denom,denom->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<TImage> z1It(z1,z1->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<TImage> z2It(z2,z2->GetLargestPossibleRegion());
-    itk::ImageRegionConstIterator<TImage> z3It(z3,z3->GetLargestPossibleRegion());
-
-    for(denomIt.GoToBegin(), z1It.GoToBegin(),z2It.GoToBegin(),z3It.GoToBegin();
-        !denomIt.IsAtEnd() && !z1It.IsAtEnd() && !z2It.IsAtEnd() && !z3It.IsAtEnd();
-        ++denomIt, ++z1It, ++z2It, ++z3It)
-      {
-      TImage::PixelType z1Val = z1It.Get();
-      TImage::PixelType z2Val = z2It.Get();
-      TImage::PixelType z3Val = z3It.Get();
-      denomIt.Set(1 + dt * std::sqrt((z1Val * z1Val) + (z2Val * z2Val)+ (z3Val * z3Val)));
-      }
+//         z = divp - f*lambda;
+    TImage::Pointer z = SubtractImage<TImage>(divp,fLambda);
+//         z1 = z(:,ir,:) - z;
+    TImage::Pointer z1 = SubtractShift<TImage>(z,1,ir);
+//         z2 = z(id,:,:) - z;
+    TImage::Pointer z2 = SubtractShift<TImage>(z,0,id);
+//         z3 = z(:,:,ib) - z;
+    TImage::Pointer z3 = SubtractShift<TImage>(z,2,ib);
     itk::ImageRegionIterator<TImage> p1It(p1,p1->GetLargestPossibleRegion());
     itk::ImageRegionIterator<TImage> p2It(p2,p2->GetLargestPossibleRegion());
     itk::ImageRegionIterator<TImage> p3It(p3,p3->GetLargestPossibleRegion());
-
-     // p1 = (p1 + dt*z1)./denom;
-     // p2 = (p2 + dt*z2)./denom;
-     // p3 = (p3 + dt*z3)./denom;
-    for(denomIt.GoToBegin(), p1It.GoToBegin(),p2It.GoToBegin(),p3It.GoToBegin(),
+    itk::ImageRegionIterator<TImage> z1It(z1,z1->GetLargestPossibleRegion());
+    itk::ImageRegionIterator<TImage> z2It(z2,z2->GetLargestPossibleRegion());
+    itk::ImageRegionIterator<TImage> z3It(z3,z3->GetLargestPossibleRegion());
+    for(p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin(),
           z1It.GoToBegin(), z2It.GoToBegin(), z3It.GoToBegin();
-        !denomIt.IsAtEnd() && !p1It.IsAtEnd() && !p2It.IsAtEnd() && !p3It.IsAtEnd();
-        ++denomIt, ++p1It, ++p2It, ++p3It, ++z1It, ++z2It, ++z3It)
+        !p1It.IsAtEnd();
+        ++p1It, ++p2It, ++p3It, ++z1It, ++z2It, ++z3It)
       {
-      double curDenom = denomIt.Get();
-      double p1val = (p1It.Get() + dt * z1It.Get())/curDenom;
-      double p2val = (p2It.Get() + dt * z2It.Get())/curDenom;
-      double p3val = (p3It.Get() + dt * z3It.Get())/curDenom;
-      p1It.Set(p1val);
-      p2It.Set(p2val);
-      p3It.Set(p3val);
+      const double z1val(z1It.Get()), z2val(z2It.Get()), z3val(z3It.Get());
+//    denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
+      const double denom = 1 + dt * std::sqrt( (z1val*z1val) + (z2val*z2val) + (z3val*z3val));
+      const double p1val(p1It.Get()), p2val(p2It.Get()), p3val(p3It.Get());
+//         p1 = (p1 + dt*z1)./denom;
+      p1It.Set((p1val + dt * z1val) / denom);
+//         p2 = (p2 + dt*z2)./denom;
+      p2It.Set((p2val + dt * z2val) / denom);
+//         p3 = (p3 + dt*z3)./denom;
+      p3It.Set((p3val + dt * z3val) / denom);
       }
-    // divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
-    divp = AllocImage<TImage>(f,0.0);
-    itk::ImageRegionIteratorWithIndex<TImage>
-      divpIt(divp,divp->GetLargestPossibleRegion());
-    for(divpIt.GoToBegin(); !divpIt.IsAtEnd(); ++divpIt)
+//         divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
+    divp = AllocImage<TImage>(f);
+    itk::ImageRegionIteratorWithIndex<TImage> divpIt(divp,divp->GetLargestPossibleRegion());
+    for(divpIt.GoToBegin(), p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin();
+        !p1It.IsAtEnd();
+        ++divpIt, ++p1It, ++p2It, ++p3It)
       {
-      TImage::IndexType curIndex = divpIt.GetIndex();
-      TImage::IndexType pIndex;
-      double curP1 = p1->GetPixel(curIndex);
-      pIndex = curIndex;
-      pIndex[1] = il[curIndex[1]];
-      curP1 -= p1->GetPixel(pIndex);
-      double curP2 = p2->GetPixel(curIndex);
-      pIndex = curIndex;
-      pIndex[0] = iu[curIndex[0]];
-      curP2 -= p2->GetPixel(pIndex);
-      double curP3 = p3->GetPixel(curIndex);
-      pIndex = curIndex;
-      pIndex[2] = ifr[curIndex[2]];
-      curP3 -= p3->GetPixel(pIndex);
-      divp->SetPixel(curIndex, curP1 + curP2 + curP3);
+      const TImage::IndexType curIndex = divpIt.GetIndex();
+      TImage::IndexType shiftIndex;
+      shiftIndex = curIndex;
+      shiftIndex[2] = il[curIndex[2]];
+      const double p1val = p1It.Get() - p1->GetPixel(shiftIndex);
+      shiftIndex = curIndex;
+      shiftIndex[0] = iu[curIndex[0]];
+      const double p2val = p2It.Get() - p2->GetPixel(shiftIndex);
+      shiftIndex = curIndex;
+      shiftIndex[2] = ifr[curIndex[2]];
+      const double p3val = p3It.Get() - p3->GetPixel(shiftIndex);
+      divpIt.Set(p1val + p2val + p3val);
       }
-    /* the test moved to the bottom of the list, since the
-     * first time through the loop, the test will always succeed.
-     * norm(divp(:) - lastdivp(:),inf) > Tol
-     * now according to matlab docs norm(X,p) is the p-norm of X.  And
-     * if p = inf, p-norm(X,inf) is the unform norm which is the
-     * maximum absolute value.
-     * I suppose I could devise a more expensive loop test, but I'd
-     * have to really work at it.
-     */
-    pnorm = PNormImageDiff<TImage>(divp,lastdivp);
+//     end
+    normdivp = PNormImageDiff<TImage>(divp,lastdivp);
     }
-  while(pnorm > tol);
 // end
 //
 // u = f - divp/lambda;
-  SubtractFilterType::Pointer subFilter = SubtractFilterType::New();
-  MultiplyImageFilterType::Pointer multFilter = MultiplyImageFilterType::New();
-  multFilter->SetInput(divp);
-  multFilter->SetConstant(1.0/lambda);
-  subFilter->SetInput1(f);
-  subFilter->SetInput2(multFilter->GetOutput());
-  subFilter->Update();
-  this->ToVecImage(subFilter->GetOutput(),gradientIndex,target);
+  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
+  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
+  MultiplyFilterType::Pointer mult = MultiplyFilterType::New();
+  SubtractFilterType::Pointer sub = SubtractFilterType::New();
+  mult->SetInput1(divp);
+  mult->SetConstant(1.0/lambda);
+  sub->SetInput1(f);
+  sub->SetInput2(mult->GetOutput());
+  sub->Update();
+  TImage::Pointer u = sub->GetOutput();
+  this->ToVecImage(u,gradientIndex,target);
 }
 
 // function u = tvdenoise3(f,lambda,Tol)
@@ -1102,7 +1058,7 @@ DoCSEstimate
 ::step1(DWIVectorImageType::Pointer &inputImage,MatrixType &A,double lmd,unsigned NIT,std::vector<unsigned char> &id)
 {
   // [nx, ny, nz, d]=size(S);
-  ImageSizeType size = inputImage->GetLargestPossibleRegion().GetSize();
+  const ImageSizeType size = inputImage->GetLargestPossibleRegion().GetSize();
   // n=nx*ny*nz;
   ImageSizeValueType n = size[0] * size[1] * size[2];
   // M=size(A,2);
@@ -1116,12 +1072,9 @@ DoCSEstimate
   this->Reshape(inputImage,n,numGradients,_S);
   // S=S(id,:);
   MatrixType S(id.size(),numGradients);
-  for(unsigned int grad = 0; grad < numGradients; ++grad)
+  for(unsigned int row = 0; row < id.size(); ++row)
     {
-    for(unsigned int row = 0; row < id.size(); ++row)
-      {
-      S(row,grad) = _S(id[row],grad);
-      }
+    S.row(row) = _S.row(id[row]);
     }
   // x=zeros(size(S,1),M);
   MatrixType x; x = MatrixType::Zero(S.rows(),M);
@@ -1198,8 +1151,8 @@ DoCSEstimate
   double c = Primal_constrk.cwiseAbs().maxCoeff(&irow,&ijunk);
 //
 // gamma_xk = i;
-  std::vector<unsigned long> gamma_xk(1,irow);
-  gamma_xk[0] = irow;
+  std::vector<unsigned long> gamma_xk;
+  gamma_xk.push_back(irow);
 //
 // epsilon = c;
   double epsilon(c);
@@ -1245,11 +1198,15 @@ DoCSEstimate
   unsigned constraint_plots(1);
 //
 // AtgxAgx = A(:,gamma_xk)'*A(:,gamma_xk);
-  MatrixType AtgxAgx(gamma_xk.size(),1);
+  MatrixType AtgxAgx;
+  {
+  MatrixType Ag(A.rows(),gamma_xk.size());
   for(unsigned int i = 0; i < gamma_xk.size(); ++i)
     {
-    AtgxAgx(i) = A.col(gamma_xk[i]).transpose() * A.col(gamma_xk[i]);
+    Ag.col(i) = A.col(gamma_xk[i]);
     }
+  AtgxAgx = Ag.transpose() * Ag;
+  }
 // iAtgxAgx = inv(A(:,gamma_xk)'*A(:,gamma_xk));
   MatrixType iAtgxAgx = AtgxAgx.inverse();
 //
@@ -1549,7 +1506,7 @@ DoCSEstimate
     }
 // total_iter = iter;
 // x_out = xk_1;
-  return xk_1;
+  return xk_1.transpose();
 }
 // % BPDN_homotopy_function.m
 // %
@@ -1756,25 +1713,19 @@ DoCSEstimate
 // % gamma_lc = setdiff([1:N]', [gamma_lambda; out_lambda]); WRONG
 // % check out_lambda as well, that is if outgoing lambda switches sign in just one step
 // temp_gamma = zeros(N,1);
-  MatrixType temp_gamma;
-  temp_gamma = MatrixType::Zero(N,1);
+  std::vector<unsigned long> temp_gamma(N,0);
 // temp_gamma(gamma_lambda) = gamma_lambda;
+  for(unsigned i = 0; i < gamma_lambda.size(); ++i)
+    {
+    temp_gamma[gamma_lambda[i]] = gamma_lambda[i];
+    }
 // gamma_lc = find([1:N]' ~= temp_gamma);
   // NOTE: the above two lines are just constructing a list
   // of array indices that are not in gamma_lambda
   std::vector<unsigned long> gamma_lc;
   for(unsigned int i = 0; i < N; ++i)
     {
-    bool exclude(false);
-    for(unsigned int j = 0; j < gamma_lambda.size(); ++j)
-      {
-      if(i == gamma_lambda[j])
-        {
-        exclude = true;
-        break;
-        }
-      }
-    if(!exclude)
+    if(temp_gamma[i] == 0)
       {
       gamma_lc.push_back(i);
       }
@@ -1796,17 +1747,19 @@ DoCSEstimate
       }
     }
 // delta1_pos = delta1_constr(delta1_pos_ind);
-  double delta1 = std::numeric_limits<double>::infinity();;
-  unsigned long i_delta1(0), dummy(0);
-  if(delta1_pos_ind.size() > 0)
-    {
-    MatrixType delta1_pos(delta1_pos_ind.size(),1);
-    for(unsigned int i = 0; i < delta1_pos_ind.size(); ++i)
-      {
-      delta1_pos(i) = delta1_constr(delta1_pos_ind[i]);
-      }
 // [delta1 i_delta1] = min(delta1_pos);
-    delta1 = delta1_pos.minCoeff(&i_delta1,&dummy);
+  MatrixType delta1_pos(delta1_pos_ind.size(),1);
+  double delta1 = std::numeric_limits<double>::infinity();;
+  long i_delta1 = -1;
+  for(unsigned int i = 0; i < delta1_pos_ind.size(); ++i)
+    {
+    double cur = delta1_constr(delta1_pos_ind[i],0);
+    delta1_pos(i,0) = cur;
+    if(cur < delta1)
+      {
+      i_delta1 = i;
+      delta1 = cur;
+      }
     }
 // if isempty(delta1)
 //     delta1 = inf;
@@ -1827,22 +1780,24 @@ DoCSEstimate
       delta2_pos_ind.push_back(i);
       }
     }
-  double delta2 = std::numeric_limits<double>::infinity();
-  unsigned long i_delta2(0);
-  if(delta2_pos_ind.size() > 0)
-    {
 // delta2_pos = delta2_constr(delta2_pos_ind);
-    MatrixType delta2_pos(delta2_pos_ind.size(),1);
-    for(unsigned int i = 0; i < delta2_pos_ind.size(); ++i)
+  MatrixType delta2_pos(delta2_pos_ind.size(),1);
+  double delta2 = std::numeric_limits<double>::infinity();
+  int i_delta2 = -1;
+  for(unsigned i = 0; i < delta2_pos_ind.size(); ++i)
+    {
+    double cur = delta2_constr(delta2_pos_ind[i],0);
+    delta2_pos(i,0) = cur;
+    if(cur < delta2)
       {
-      delta2_pos(i) = delta1_constr(delta2_pos_ind[i]);
-      }
 // [delta2 i_delta2] = min(delta2_pos);
-    delta2 = delta2_pos.minCoeff(&i_delta2,&dummy);
+      i_delta2 = i;
+      delta2 = cur;
+      }
+    }
 // if isempty(delta2)
 //     delta2 = inf;
 // end
-    }
 // if delta1>delta2
   if(delta1 > delta2)
     {
@@ -1868,28 +1823,27 @@ DoCSEstimate
     delta3_constr(i) = -x_k(gamma_x[i]) / del_x_vec(gamma_x[i]);
     }
 // delta3_pos_index = find(delta3_constr>0);
-  std::vector<unsigned long> delta3_pos_index;
+  std::vector<unsigned long> delta3_pos_ind;
   for(unsigned i = 0; i < delta3_constr.rows(); ++i)
     {
     if(delta3_constr(i) > 0)
       {
-      delta3_pos_index.push_back(i);
+      delta3_pos_ind.push_back(i);
       }
     }
 // [delta3 i_delta3] = min(delta3_constr(delta3_pos_index));
   double delta3 = std::numeric_limits<double>::infinity();
-  unsigned long i_delta3(0),ijunk(0);
-  if(delta3_pos_index.size() > 0)
+  long i_delta3(-1);
+  for(unsigned i = 0; i < delta3_pos_ind.size(); ++i)
     {
-    MatrixType delta3_pos(delta3_pos_index.size(),1);
-    for(unsigned i = 0; i < delta3_pos_index.size(); ++i)
+    double cur = delta3_constr(delta3_pos_ind[i],0);
+    if(cur < delta3)
       {
-      delta3_pos(i) = delta3_constr(delta3_pos_index[i]);
+      i_delta3 = i;
+      delta3 = cur;
       }
-    delta3 = delta3_pos.minCoeff(&i_delta3,&ijunk);
     }
 // out_x_index = gamma_x(delta3_pos_index(i_delta3));
-  unsigned long out_x_index = gamma_x[delta3_pos_index[i_delta3]];
 //
 // chk_x = 0;
   chk_x = 0;
@@ -1898,12 +1852,13 @@ DoCSEstimate
 // if delta3 > 0 & delta3 <= delta
   if(delta3 > 0 && delta3 <= delta)
     {
+    unsigned long out_x_index = gamma_x[delta3_pos_ind[i_delta3]];
 //     chk_x = 1;
     chk_x = 1;
 //     delta = delta3;
     delta = delta3;
 //     out_x = out_x_index;
-      out_x.push_back(out_x_index);
+    out_x.push_back(out_x_index);
 // end
     }
 //

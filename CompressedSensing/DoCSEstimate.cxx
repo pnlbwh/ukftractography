@@ -247,11 +247,8 @@ DoCSEstimate
 ::Reshape(const MatrixType &src, DWIVectorImageType::Pointer templateImage, DWIVectorImageType::Pointer &outImage)
 {
   unsigned int numComponents = templateImage->GetNumberOfComponentsPerPixel();
-  outImage = DWIVectorImageType::New();
-  outImage->CopyInformation(templateImage);
-  outImage->SetRegions(templateImage->GetLargestPossibleRegion());
-  outImage->SetNumberOfComponentsPerPixel(numComponents);
-  outImage->Allocate();
+  outImage = AllocVecImage<DWIVectorImageType>(templateImage,numComponents);
+
   DWIVectorImageType::SizeType size = templateImage->GetLargestPossibleRegion().GetSize();
   DWIVectorImageType::IndexType index;
   for(unsigned int z = 0; z < size[2]; ++z)
@@ -307,10 +304,7 @@ DoCSEstimate
   // allocate b0 average
   DWIVectorImageType::Pointer originalNrrd = this->m_NrrdFile.GetImage();
   DWIVectorImageType::RegionType region = originalNrrd->GetLargestPossibleRegion();
-  this->m_AverageB0 = B0AvgImageType::New();
-  this->m_AverageB0->SetRegions(region);
-  this->m_AverageB0->Allocate();
-  this->m_AverageB0->FillBuffer(0.0);
+  this->m_AverageB0 = AllocImage<B0AvgImageType>(originalNrrd,0.0);
 
   itk::ImageRegionConstIterator<DWIVectorImageType> b0It(originalNrrd,region);
   itk::ImageRegionIterator<B0AvgImageType> avgIt(this->m_AverageB0,region);
@@ -513,7 +507,6 @@ DoCSEstimate
     {
     typedef itk::AddImageFilter<DWIVectorImageType,DWIVectorImageType,DWIVectorImageType> AddImageFilterType;
     typedef itk::SubtractImageFilter<DWIVectorImageType,DWIVectorImageType,DWIVectorImageType> SubtractImageFilterType;
-    typedef itk::MultiplyImageFilter<DWIVectorImageType,DWIVectorImageType,DWIVectorImageType> MultiplyFilterType;
     // fprintf(1,'Iteration %d of %d\t',[itr TNIT]);
     std::cerr << "Iteration "
               << itr+1
@@ -594,12 +587,13 @@ DoCSEstimate
     {
     // can't multiply vector image by scalar image, so do it the hard
     // way.
-    itk::ImageRegionConstIterator<B0AvgImageType> b0It(this->m_AverageB0,this->m_AverageB0->GetLargestPossibleRegion());
-    itk::ImageRegionIterator<DWIVectorImageType> estIt(estimatedSignal,estimatedSignal->GetLargestPossibleRegion());
-    for(b0It.GoToBegin(),estIt.GoToBegin(); !b0It.IsAtEnd() && !estIt.IsAtEnd(); ++b0It, ++estIt)
-      {
-      estIt.Set(estIt.Get() * b0It.Get());
-      }
+    typedef itk::MultiplyImageFilter<DWIVectorImageType,B0AvgImageType,DWIVectorImageType>
+      MultScalarFilterType;
+    MultScalarFilterType::Pointer mult = MultScalarFilterType::New();
+    mult->SetInput1(estimatedSignal);
+    mult->SetInput2(this->m_AverageB0);
+    mult->Update();
+    estimatedSignal = mult->GetOutput();
     }
     }
   // %% Insert the B0 back in
@@ -609,10 +603,6 @@ DoCSEstimate
   DWIVectorImageType::Pointer newImage =
     AllocVecImage<DWIVectorImageType>(estimatedSignal,newGradCount);
 
-  newImage->CopyInformation(estimatedSignal);
-  newImage->SetNumberOfComponentsPerPixel(newGradCount);
-
-  newImage->Allocate();
   itk::ImageRegionConstIterator<DWIVectorImageType> estimIt(estimatedSignal,estimatedSignal->GetLargestPossibleRegion());
   itk::ImageRegionConstIterator<B0AvgImageType> b0It(this->m_AverageB0,this->m_AverageB0->GetLargestPossibleRegion());
   itk::ImageRegionIterator<DWIVectorImageType> newIt(newImage,newImage->GetLargestPossibleRegion());
@@ -630,8 +620,12 @@ DoCSEstimate
       }
     }
   this->m_NrrdFile.SetImage(newImage);
-  MatrixType newGrad(estimatedGradients.rows(),estimatedGradients.cols()+1);
-  newGrad(0,0) = newGrad(1,0) = newGrad(2,0) = 0.0;
+  MatrixType newGrad(estimatedGradients.rows()+1,3);
+  newGrad(0,0) = newGrad(0,1) = newGrad(0,0) = 0.0;
+  for(unsigned int i = 1; i <= estimatedGradients.cols(); ++i)
+    {
+    newGrad.row(i) = estimatedGradients.row(i-1);
+    }
   this->m_NrrdFile.SetGradients(newGrad);
   return true;
 }
@@ -759,10 +753,7 @@ ImageType *shiftImage(const typename ImageType::Pointer &input,
                       unsigned int dimension,
                       const std::vector<unsigned int> &indices)
 {
-  typename ImageType::Pointer rval = ImageType::New();
-  rval->CopyInformation(input);
-  rval->SetRegions(input->GetLargestPossibleRegion());
-  rval->Allocate();
+  typename ImageType::Pointer rval = AllocImage<ImageType>(input);
   itk::ImageRegionConstIteratorWithIndex<ImageType> fromIt(input,input->GetLargestPossibleRegion());
   for(fromIt.GoToBegin(); !fromIt.IsAtEnd(); ++fromIt)
     {
@@ -794,10 +785,7 @@ DoCSEstimate::B0AvgImageType *
 DoCSEstimate
 ::FromVecImage(DWIVectorImageType::Pointer inputImage,unsigned gradientIndex)
 {
-  B0AvgImageType::Pointer f = B0AvgImageType::New();
-  f->CopyInformation(inputImage);
-  f->SetRegions(inputImage->GetLargestPossibleRegion());
-  f->Allocate();
+  B0AvgImageType::Pointer f = AllocImage<B0AvgImageType>(inputImage);
 
   itk::ImageRegionConstIterator<DWIVectorImageType>
     dwiIt(inputImage,inputImage->GetLargestPossibleRegion());
@@ -1029,11 +1017,8 @@ DoCSEstimate
 ::step2(DWIVectorImageType::Pointer &inputImage,double myu, double tol)
 {
   unsigned int numGradients = inputImage->GetNumberOfComponentsPerPixel();
-  DWIVectorImageType::Pointer rval = DWIVectorImageType::New();
-  rval->CopyInformation(inputImage);
-  rval->SetRegions(inputImage->GetLargestPossibleRegion());
-  rval->SetNumberOfComponentsPerPixel(numGradients);
-  rval->Allocate();
+  DWIVectorImageType::Pointer rval = AllocVecImage<DWIVectorImageType>(inputImage,numGradients);
+
   typedef DWIVectorImageType::SizeValueType sizetype;
   for(unsigned int k = 0; k < numGradients; ++k)
     {

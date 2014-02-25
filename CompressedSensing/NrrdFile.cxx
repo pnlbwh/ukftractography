@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <iomanip>
 #include <ctype.h>
-
 #include "NrrdFile.h"
+
 bool
 NrrdFile
 ::ExtractGradients()

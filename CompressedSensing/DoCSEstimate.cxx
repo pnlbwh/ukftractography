@@ -621,11 +621,8 @@ DoCSEstimate
     }
   this->m_NrrdFile.SetImage(newImage);
   MatrixType newGrad(estimatedGradients.rows()+1,3);
-  newGrad(0,0) = newGrad(0,1) = newGrad(0,0) = 0.0;
-  for(unsigned int i = 1; i <= estimatedGradients.cols(); ++i)
-    {
-    newGrad.row(i) = estimatedGradients.row(i-1);
-    }
+  newGrad(0,0) = newGrad(0,1) = newGrad(0,2) = 0.0;;
+  newGrad.block(1,0,estimatedGradients.rows(), estimatedGradients.cols()) = estimatedGradients;
   this->m_NrrdFile.SetGradients(newGrad);
   return true;
 }

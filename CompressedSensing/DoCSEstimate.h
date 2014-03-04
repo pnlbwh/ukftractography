@@ -21,8 +21,12 @@ public:
   bool AverageB0AndExtractIntensity();
   bool Compute();
   void OptimBand(double B,const MatrixType &D,const MatrixType &ico3,double  &rho, double  &p);
-  DWIVectorImageType *step2(DWIVectorImageType::Pointer &inputImage,double myu, double tol);
-  MatrixType step1(DWIVectorImageType::Pointer &inputImage, MatrixType &A,double lmd,unsigned NIT,std::vector<unsigned char> &id);
+  void step2(DWIVectorImageType::Pointer &inputImage,double myu, double tol,DWIVectorImageType::Pointer &rval);
+  MatrixType step1(DWIVectorImageType::Pointer &inputImage,
+                   MatrixType &A,
+                   double lmd,
+                   unsigned NIT,
+                   std::vector<unsigned char> &id);
   void tvdenoise3(DWIVectorImageType::Pointer &inputImage,
                   unsigned int gradientIndex,double lambda,
                   double tol,

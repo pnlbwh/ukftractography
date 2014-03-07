@@ -33,29 +33,30 @@ public:
                   DWIVectorImageType::Pointer &target);
   void ToVecImage(const B0AvgImageType *fromImage, unsigned int gradientIndex, DWIVectorImageType::Pointer &target);
   B0AvgImageType *FromVecImage(DWIVectorImageType::Pointer inputImage,unsigned gradientIndex);
-  MatrixType BPDN_HOMOTOPY_function(MatrixType &A,MatrixType &SqueezeS,double tau, unsigned int maxiter);
-  void update_primal(std::vector<unsigned long> & gamma_x, // current support of x
-                     std::vector<unsigned long> & gamma_lambda, // current support of
-                     // lambda
-                     MatrixType &                 z_x, // sign sequence of x
-                     MatrixType &                 x_k, // sign sequence of lambda
-                     MatrixType &                 del_x_vec, // primal update direction
-                     MatrixType &                 pk,       //
-                     MatrixType &                 dk,       //
-                     double                       epsilon, // current value of epsilon
-                     std::vector<unsigned long> & out_lambda, // element removed from
-                                                              // support of lambda in
-                                                              // previous step if any
-                                                              // OUTPUTS
-                     unsigned long &              i_delta, // index corresponding to
-                                                           // newly active primal
-                                                           // constraint (new_lambda)
-                     std::vector<unsigned long> & out_x, // element in x shrunk to zero;
-                     double  &                    delta, // primal step size
-                     unsigned &                   chk_x); // 1 an element is removed
-                                                         // from support of x
-                                                         // 0 a new element enters
-                                                         // the support of lambd
+
+  // MatrixType BPDN_HOMOTOPY_function(MatrixType &A,MatrixType &SqueezeS,double tau, unsigned int maxiter);
+  // void update_primal(std::vector<unsigned long> & gamma_x, // current support of x
+  //                    std::vector<unsigned long> & gamma_lambda, // current support of
+  //                    // lambda
+  //                    MatrixType &                 z_x, // sign sequence of x
+  //                    MatrixType &                 x_k, // sign sequence of lambda
+  //                    MatrixType &                 del_x_vec, // primal update direction
+  //                    MatrixType &                 pk,       //
+  //                    MatrixType &                 dk,       //
+  //                    double                       epsilon, // current value of epsilon
+  //                    std::vector<unsigned long> & out_lambda, // element removed from
+  //                                                             // support of lambda in
+  //                                                             // previous step if any
+  //                                                             // OUTPUTS
+  //                    unsigned long &              i_delta, // index corresponding to
+  //                                                          // newly active primal
+  //                                                          // constraint (new_lambda)
+  //                    std::vector<unsigned long> & out_x, // element in x shrunk to zero;
+  //                    double  &                    delta, // primal step size
+  //                    unsigned &                   chk_x); // 1 an element is removed
+  //                                                        // from support of x
+  //                                                        // 0 a new element enters
+  //                                                        // the support of lambd
 
   void Reshape(const DWIVectorImageType::Pointer &src,
                unsigned rows, unsigned columns,

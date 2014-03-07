@@ -56,6 +56,7 @@ set(MODULE_SRCS
   BuildSensor.cxx
   SphHarm.cxx
   NrrdFile.cxx
+  BPDN_Homotopy.cxx
   )
 
 set(MODULE_TARGET_LIBRARIES

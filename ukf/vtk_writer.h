@@ -46,7 +46,9 @@ public:
    * \param[in] store_glyphs Write glyphs (i.e. main tensor directions) to a file named glyphs_{tracts}.
    * \return EXIT_FAILURE or EXIT_SUCCESS
   */
-  int Write(const std::string& file_name, const std::string & tractsWithSecondTensor, const std::vector<UKFFiber>& fibers,
+  int Write(const std::string& file_name,
+            const std::string & tractsWithSecondTensor,
+            const std::vector<UKFFiber>& fibers,
              bool write_state, bool store_glyphs);
 
   /** Write the glyphs (i.e. main tensor directions) to  a file named glyphs_{tracts}.

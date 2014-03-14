@@ -85,6 +85,7 @@ set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   VTK
   teem
   Eigen
+  Boost
   )
 
 #-----------------------------------------------------------------------------
@@ -173,6 +174,8 @@ list(APPEND ${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_VARS
   PYTHON_EXECUTABLE:FILEPATH
   PYTHON_INCLUDE_DIR:PATH
   PYTHON_LIBRARY:FILEPATH
+  BOOST_ROOT:PATH
+  BOOST_INCLUDE_DIR:PATH
   )
 
 if(${PRIMARY_PROJECT_NAME}_USE_QT)

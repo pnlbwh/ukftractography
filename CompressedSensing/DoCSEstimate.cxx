@@ -16,7 +16,8 @@
 #include "itkImageRegionIteratorWithIndex.h"
 #include "itkImageRegionIterator.h"
 #include "itkImageRegionConstIterator.h"
-// #include "itkMedianImageFilter.h"
+#include "itkMultiThreader.h"
+#include "itkMedianImageFilter.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -174,6 +175,279 @@ WriteImage(const ImageType *image,
     throw;
     }
 }
+
+void
+ToVecImage(const DoCSEstimate::B0AvgImageType *fromImage,
+           unsigned int gradientIndex, DoCSEstimate::DWIVectorImageType::Pointer &target)
+{
+  itk::ImageRegionConstIterator<DoCSEstimate::B0AvgImageType>
+    uIt(fromImage, fromImage->GetLargestPossibleRegion());
+  itk::ImageRegionIterator<DoCSEstimate::DWIVectorImageType>
+    dwiIt(target,target->GetLargestPossibleRegion());
+  for(uIt.GoToBegin(), dwiIt.GoToBegin(); !uIt.IsAtEnd() && !dwiIt.IsAtEnd(); ++uIt, ++dwiIt)
+    {
+    DoCSEstimate::DWIVectorImageType::PixelType pixel = dwiIt.Get();
+    pixel[gradientIndex] = uIt.Get();
+    dwiIt.Set(pixel);
+    }
+}
+
+void
+FromVecImage(DoCSEstimate::DWIVectorImageType::Pointer inputImage,unsigned gradientIndex,
+             DoCSEstimate::B0AvgImageType::Pointer &f)
+{
+  AllocImage<DoCSEstimate::B0AvgImageType>(inputImage,f);
+
+  itk::ImageRegionConstIterator<DoCSEstimate::DWIVectorImageType>
+    dwiIt(inputImage,inputImage->GetLargestPossibleRegion());
+  itk::ImageRegionIterator<DoCSEstimate::B0AvgImageType> fIt(f,f->GetLargestPossibleRegion());
+  for(dwiIt.GoToBegin(), fIt.GoToBegin(); !dwiIt.IsAtEnd() && !fIt.IsAtEnd(); ++dwiIt, ++fIt)
+    {
+    DoCSEstimate::DWIVectorImageType::PixelType curVec = dwiIt.Get();
+    fIt.Set(curVec[gradientIndex]);
+    }
+}
+
+/** Denoise image
+ *  this method has to behave very differently than matlab.
+ *  for one thing, Eigen only does 2D matrices, so we use ITK images.
+ *  for another, matlab expects a sequence of volumes, one per
+ *  gradient, and the itk gradient image is a vector image, and each
+ *  voxel has one scalar per gradient.
+ */
+void
+tvdenoise3(DoCSEstimate::DWIVectorImageType::Pointer &inputImage,
+           unsigned int gradientIndex,
+           double lambda,double tol,
+           DoCSEstimate::DWIVectorImageType::Pointer &target)
+{
+  typedef DoCSEstimate::B0AvgImageType TImage;
+  TImage::Pointer f;
+  FromVecImage(inputImage,gradientIndex,f);
+#if 1
+  typedef itk::MedianImageFilter<TImage,TImage> MedianFilterType;
+  MedianFilterType::Pointer medianFilter = MedianFilterType::New();
+  MedianFilterType::InputSizeType radius;
+  radius.Fill(1);
+  medianFilter->SetRadius(radius);
+  medianFilter->SetInput(f);
+  medianFilter->Update();
+  ToVecImage(medianFilter->GetOutput(),gradientIndex,target);
+#else
+// if (nargin < 3),
+//     Tol = 1e-2;
+// end
+//
+// if (lambda < 0),
+//     error('Parameter lambda must be nonnegative.');
+// end
+//
+// dt = 0.25/2;
+  double dt = 0.25/2;
+//
+// N = size(f);
+  const TImage::SizeType N =
+    inputImage->GetLargestPossibleRegion().GetSize();
+// id = [2:N(1),N(1)];
+  ShiftVectorType id = MakeShiftVector(N[0],1);
+// iu = [1,1:N(1)-1];
+  ShiftVectorType iu = MakeShiftVector(N[0],-1);
+// ir = [2:N(2),N(2)];
+  ShiftVectorType ir = MakeShiftVector(N[1],1);
+// il = [1,1:N(2)-1];
+  ShiftVectorType il = MakeShiftVector(N[1],-1);
+// ib = [2:N(3),N(3)];
+  ShiftVectorType ib = MakeShiftVector(N[2],1);
+// ifr = [1,1:N(3)-1];
+  ShiftVectorType ifr = MakeShiftVector(N[2],-1);
+//
+// p1 = zeros(size(f));
+  TImage::Pointer p1;
+  AllocImage<TImage>(f,0.0,p1);
+// p2 = zeros(size(f));
+  TImage::Pointer p2;
+  AllocImage<TImage>(f,0.0,p2);
+// p3 = zeros(size(f));
+  TImage::Pointer p3;
+  AllocImage<TImage>(f,0.0,p3);
+//
+// divp = zeros(size(f));
+  TImage::Pointer divp;
+  AllocImage<TImage>(f,0.0,divp);
+// lastdivp = ones(size(f));
+  TImage::Pointer lastdivp;
+  AllocImage<TImage>(f,1.0,lastdivp);
+//
+  TImage::Pointer fLambda;
+  MultiplyImage<TImage>(f,lambda,fLambda);
+// if (length(N) == 3),
+//     while (norm(divp(:) - lastdivp(:),inf) > Tol),
+  for(double normdivp = 1.0; normdivp > tol; )
+    {
+//         lastdivp = divp;
+//         DO below to avod repeated allocations
+//         z = divp - f*lambda;
+    TImage::Pointer z;
+    SubtractImage<TImage>(divp,fLambda,z);
+    //
+    // avoid re-allocating images
+    TImage::Pointer tmpdivp = lastdivp;
+    lastdivp = divp;
+    divp = tmpdivp;
+
+    itk::ImageRegionIterator<TImage> p1It(p1,p1->GetLargestPossibleRegion());
+    itk::ImageRegionIterator<TImage> p2It(p2,p2->GetLargestPossibleRegion());
+    itk::ImageRegionIterator<TImage> p3It(p3,p3->GetLargestPossibleRegion());
+    itk::ImageRegionConstIteratorWithIndex<TImage>
+      zIt(z,z->GetLargestPossibleRegion());
+
+    for(p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin(),zIt.GoToBegin();
+        !p1It.IsAtEnd();
+        ++p1It, ++p2It, ++p3It, ++zIt)
+      {
+//         z1 = z(:,ir,:) - z;
+//         z2 = z(id,:,:) - z;
+//         z3 = z(:,:,ib) - z;
+      const double zVal = zIt.Get();
+      TImage::IndexType zIndex;
+      zIndex = zIt.GetIndex();
+      zIndex[1] = ir[zIndex[1]];
+      double z1val = z->GetPixel(zIndex) - zVal;
+      zIndex = zIt.GetIndex();
+      zIndex[0] = id[zIndex[0]];
+      double z2val = z->GetPixel(zIndex) - zVal;
+      zIndex = zIt.GetIndex();
+      zIndex[2] = ib[zIndex[2]];
+      double z3val = z->GetPixel(zIndex) - zVal;
+//    denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
+      const double denom = 1 + dt * std::sqrt( (z1val*z1val) + (z2val*z2val) + (z3val*z3val));
+      const double p1val(p1It.Get()), p2val(p2It.Get()), p3val(p3It.Get());
+//         p1 = (p1 + dt*z1)./denom;
+      p1It.Set((p1val + dt * z1val) / denom);
+//         p2 = (p2 + dt*z2)./denom;
+      p2It.Set((p2val + dt * z2val) / denom);
+//         p3 = (p3 + dt*z3)./denom;
+      p3It.Set((p3val + dt * z3val) / denom);
+      }
+//         divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
+    //  image allocation happens once
+    //  divp = AllocImage<TImage>(f);
+    itk::ImageRegionIteratorWithIndex<TImage> divpIt(divp,divp->GetLargestPossibleRegion());
+    for(divpIt.GoToBegin(), p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin();
+        !p1It.IsAtEnd();
+        ++divpIt, ++p1It, ++p2It, ++p3It)
+      {
+      const TImage::IndexType curIndex = divpIt.GetIndex();
+      TImage::IndexType shiftIndex;
+      shiftIndex = curIndex;
+      shiftIndex[2] = il[curIndex[2]];
+      const double p1val = p1It.Get() - p1->GetPixel(shiftIndex);
+      shiftIndex = curIndex;
+      shiftIndex[0] = iu[curIndex[0]];
+      const double p2val = p2It.Get() - p2->GetPixel(shiftIndex);
+      shiftIndex = curIndex;
+      shiftIndex[2] = ifr[curIndex[2]];
+      const double p3val = p3It.Get() - p3->GetPixel(shiftIndex);
+      divpIt.Set(p1val + p2val + p3val);
+      }
+//     end
+    normdivp = PNormImageDiff<TImage>(divp,lastdivp);
+    }
+// end
+//
+// u = f - divp/lambda;
+  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
+  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
+  MultiplyFilterType::Pointer mult = MultiplyFilterType::New();
+  SubtractFilterType::Pointer sub = SubtractFilterType::New();
+  mult->SetInput1(divp);
+  mult->SetConstant(1.0/lambda);
+  sub->SetInput1(f);
+  sub->SetInput2(mult->GetOutput());
+  sub->Update();
+  TImage::Pointer u = sub->GetOutput();
+  ToVecImage(u,gradientIndex,target);
+#endif
+}
+// function u = tvdenoise3(f,lambda,Tol)
+// %This function extends the chambolle's algo to 3D images
+// %TVDENOISE  Total variation grayscale and color image denoising
+// %   u = TVDENOISE(f,lambda) denoises the input image f.  The smaller
+// %   the parameter lambda, the stronger the denoising.
+// %
+// %   The output u approximately minimizes the Rudin-Osher-Fatemi (ROF)
+// %   denoising model
+// %
+// %       Min  TV(u) + lambda/2 || f - u ||^2_2,
+// %        u
+// %
+// %   where TV(u) is the total variation of u.  If f is a color image (or any
+// %   array where size(f,3) > 1), the vectorial TV model is used,
+// %
+// %       Min  VTV(u) + lambda/2 || f - u ||^2_2.
+// %        u
+// %
+// %   TVDENOISE(...,Tol) specifies the stopping tolerance (default 1e-2).
+// %
+// %   The minimization is solved using Chambolle's method,
+// %      A. Chambolle, "An Algorithm for Total Variation Minimization and
+// %      Applications," J. Math. Imaging and Vision 20 (1-2): 89-97, 2004.
+// %   When f is a color image, the minimization is solved by a generalization
+// %   of Chambolle's method,
+// %      X. Bresson and T.F. Chan,  "Fast Minimization of the Vectorial Total
+// %      Variation Norm and Applications to Color Image Processing", UCLA CAM
+// %      Report 07-25.
+// %
+// %   Example:
+// %   f = double(imread('barbara-color.png'))/255;
+// %   f = f + randn(size(f))*16/255;
+// %   u = tvdenoise(f,12);
+// %   subplot(1,2,1); imshow(f); title Input
+// %   subplot(1,2,2); imshow(u); title Denoised
+//
+// % Pascal Getreuer 2007-2008
+//
+// if (nargin < 3),
+//     Tol = 1e-2;
+// end
+//
+// if (lambda < 0),
+//     error('Parameter lambda must be nonnegative.');
+// end
+//
+// dt = 0.25/2;
+//
+// N = size(f);
+// id = [2:N(1),N(1)];
+// iu = [1,1:N(1)-1];
+// ir = [2:N(2),N(2)];
+// il = [1,1:N(2)-1];
+// ib = [2:N(3),N(3)];
+// ifr = [1,1:N(3)-1];
+//
+// p1 = zeros(size(f));
+// p2 = zeros(size(f));
+// p3 = zeros(size(f));
+//
+// divp = zeros(size(f));
+// lastdivp = ones(size(f));
+//
+// if (length(N) == 3),
+//     while (norm(divp(:) - lastdivp(:),inf) > Tol),
+//         lastdivp = divp;
+//         z = divp - f*lambda;
+//         z1 = z(:,ir,:) - z;
+//         z2 = z(id,:,:) - z;
+//         z3 = z(:,:,ib) - z;
+//         denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
+//         p1 = (p1 + dt*z1)./denom;
+//         p2 = (p2 + dt*z2)./denom;
+//         p3 = (p3 + dt*z3)./denom;
+//         divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
+//     end
+// end
+//
+// u = f - divp/lambda;
 
 } // anon namespace
 
@@ -477,7 +751,8 @@ DoCSEstimate
   WriteImage<DWIVectorImageType>(u,"/scratch/kent/ukf/build/UKFTractography-build/CompressedSensing/SmoothedImage.nrrd");
 
   // c=step1(DWIIntensityData,A,lmd,NIT,id);   % initialization of ridgelet coefficients
-  MatrixType c = step1(this->m_IntensityData,A,lmd,NIT,id);
+  MatrixType c;
+  this->step1(this->m_IntensityData,A,lmd,NIT,id,c);
   //
   // Ac=reshape(reshape(c,[numGradientVoxels M])*A',[nx ny nz numGradientDirections]);
   // NOTE: The inner 'reshape' call makes no sense, since the returned
@@ -516,7 +791,7 @@ DoCSEstimate
     subFilter->Update();
     DWIVectorImageType::Pointer t = subFilter->GetOutput();
     // c=step1(t,A,lmd/gama,NIT,id);
-    c = this->step1(t,A,lmd/gama,NIT,id);
+    this->step1(t,A,lmd/gama,NIT,id,c);
     // Ac=reshape(reshape(c,[numGradientVoxels M])*A',[nx ny nz numGradientDirections]);
     // NOTE - the inner reshape makes no sense, since c is already
     // shaped that way.
@@ -760,283 +1035,27 @@ ImageType *shiftImage(const typename ImageType::Pointer &input,
   return rval.GetPointer();
 }
 
-void
-DoCSEstimate
-::ToVecImage(const B0AvgImageType *fromImage, unsigned int gradientIndex, DWIVectorImageType::Pointer &target)
-{
-  itk::ImageRegionConstIterator<B0AvgImageType>
-    uIt(fromImage, fromImage->GetLargestPossibleRegion());
-  itk::ImageRegionIterator<DWIVectorImageType>
-    dwiIt(target,target->GetLargestPossibleRegion());
-  for(uIt.GoToBegin(), dwiIt.GoToBegin(); !uIt.IsAtEnd() && !dwiIt.IsAtEnd(); ++uIt, ++dwiIt)
-    {
-    DWIVectorImageType::PixelType pixel = dwiIt.Get();
-    pixel[gradientIndex] = uIt.Get();
-    dwiIt.Set(pixel);
-    }
-}
-
-DoCSEstimate::B0AvgImageType *
-DoCSEstimate
-::FromVecImage(DWIVectorImageType::Pointer inputImage,unsigned gradientIndex)
-{
-  B0AvgImageType::Pointer f;
-  AllocImage<B0AvgImageType>(inputImage,f);
-
-  itk::ImageRegionConstIterator<DWIVectorImageType>
-    dwiIt(inputImage,inputImage->GetLargestPossibleRegion());
-  itk::ImageRegionIterator<B0AvgImageType> fIt(f,f->GetLargestPossibleRegion());
-  for(dwiIt.GoToBegin(), fIt.GoToBegin(); !dwiIt.IsAtEnd() && !fIt.IsAtEnd(); ++dwiIt, ++fIt)
-    {
-    DWIVectorImageType::PixelType curVec = dwiIt.Get();
-    fIt.Set(curVec[gradientIndex]);
-    }
-  f.GetPointer()->Register();
-  return f.GetPointer();
-}
 
 
 
-/** Denoise image
- *  this method has to behave very differently than matlab.
- *  for one thing, Eigen only does 2D matrices, so we use ITK images.
- *  for another, matlab expects a sequence of volumes, one per
- *  gradient, and the itk gradient image is a vector image, and each
- *  voxel has one scalar per gradient.
- */
-void
-DoCSEstimate
-::tvdenoise3(DWIVectorImageType::Pointer &inputImage,
-             unsigned int gradientIndex,
-             double lambda,double tol,DWIVectorImageType::Pointer &target)
-{
-  typedef B0AvgImageType TImage;
-  TImage::Pointer f = this->FromVecImage(inputImage,gradientIndex);
 #if 0
-  typedef itk::MedianImageFilter<TImage,TImage> MedianFilterType;
-  MedianFilterType::Pointer medianFilter = MedianFilterType::New();
-  MedianFilterType::InputSizeType radius;
-  radius.Fill(1);
-  medianFilter->SetRadius(radius);
-  medianFilter->SetInput(f);
-  medianFilter->Update();
-  this->ToVecImage(medianFilter->GetOutput(),gradientIndex,target);
-#else
-// if (nargin < 3),
-//     Tol = 1e-2;
-// end
-//
-// if (lambda < 0),
-//     error('Parameter lambda must be nonnegative.');
-// end
-//
-// dt = 0.25/2;
-  double dt = 0.25/2;
-//
-// N = size(f);
-  const TImage::SizeType N =
-    inputImage->GetLargestPossibleRegion().GetSize();
-// id = [2:N(1),N(1)];
-  ShiftVectorType id = MakeShiftVector(N[0],1);
-// iu = [1,1:N(1)-1];
-  ShiftVectorType iu = MakeShiftVector(N[0],-1);
-// ir = [2:N(2),N(2)];
-  ShiftVectorType ir = MakeShiftVector(N[1],1);
-// il = [1,1:N(2)-1];
-  ShiftVectorType il = MakeShiftVector(N[1],-1);
-// ib = [2:N(3),N(3)];
-  ShiftVectorType ib = MakeShiftVector(N[2],1);
-// ifr = [1,1:N(3)-1];
-  ShiftVectorType ifr = MakeShiftVector(N[2],-1);
-//
-// p1 = zeros(size(f));
-  TImage::Pointer p1;
-  AllocImage<TImage>(f,0.0,p1);
-// p2 = zeros(size(f));
-  TImage::Pointer p2;
-  AllocImage<TImage>(f,0.0,p2);
-// p3 = zeros(size(f));
-  TImage::Pointer p3;
-  AllocImage<TImage>(f,0.0,p3);
-//
-// divp = zeros(size(f));
-  TImage::Pointer divp;
-  AllocImage<TImage>(f,0.0,divp);
-// lastdivp = ones(size(f));
-  TImage::Pointer lastdivp;
-  AllocImage<TImage>(f,1.0,lastdivp);
-//
-  TImage::Pointer fLambda;
-  MultiplyImage<TImage>(f,lambda,fLambda);
-// if (length(N) == 3),
-//     while (norm(divp(:) - lastdivp(:),inf) > Tol),
-  for(double normdivp = 1.0; normdivp > tol; )
-    {
-//         lastdivp = divp;
-//         DO below to avod repeated allocations
-//         z = divp - f*lambda;
-    TImage::Pointer z;
-    SubtractImage<TImage>(divp,fLambda,z);
-    //
-    // avoid re-allocating images
-    TImage::Pointer tmpdivp = lastdivp;
-    lastdivp = divp;
-    divp = tmpdivp;
+struct tv_ThreadData
+{
+  DoCSEstimate::DWIVectorImageType::Pointer m_InputImage;
+  double m_Myu;
+  double m_Tol;
+  DoCSEstimate::DWIVectorImageType::Pointer m_Rval;
+  unsigned m_Gradient;
+};
 
-    itk::ImageRegionIterator<TImage> p1It(p1,p1->GetLargestPossibleRegion());
-    itk::ImageRegionIterator<TImage> p2It(p2,p2->GetLargestPossibleRegion());
-    itk::ImageRegionIterator<TImage> p3It(p3,p3->GetLargestPossibleRegion());
-    itk::ImageRegionConstIteratorWithIndex<TImage>
-      zIt(z,z->GetLargestPossibleRegion());
-
-    for(p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin(),zIt.GoToBegin();
-        !p1It.IsAtEnd();
-        ++p1It, ++p2It, ++p3It, ++zIt)
-      {
-//         z1 = z(:,ir,:) - z;
-//         z2 = z(id,:,:) - z;
-//         z3 = z(:,:,ib) - z;
-      const double zVal = zIt.Get();
-      TImage::IndexType zIndex;
-      zIndex = zIt.GetIndex();
-      zIndex[1] = ir[zIndex[1]];
-      double z1val = z->GetPixel(zIndex) - zVal;
-      zIndex = zIt.GetIndex();
-      zIndex[0] = id[zIndex[0]];
-      double z2val = z->GetPixel(zIndex) - zVal;
-      zIndex = zIt.GetIndex();
-      zIndex[2] = ib[zIndex[2]];
-      double z3val = z->GetPixel(zIndex) - zVal;
-//    denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
-      const double denom = 1 + dt * std::sqrt( (z1val*z1val) + (z2val*z2val) + (z3val*z3val));
-      const double p1val(p1It.Get()), p2val(p2It.Get()), p3val(p3It.Get());
-//         p1 = (p1 + dt*z1)./denom;
-      p1It.Set((p1val + dt * z1val) / denom);
-//         p2 = (p2 + dt*z2)./denom;
-      p2It.Set((p2val + dt * z2val) / denom);
-//         p3 = (p3 + dt*z3)./denom;
-      p3It.Set((p3val + dt * z3val) / denom);
-      }
-//         divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
-    //  image allocation happens once
-    //  divp = AllocImage<TImage>(f);
-    itk::ImageRegionIteratorWithIndex<TImage> divpIt(divp,divp->GetLargestPossibleRegion());
-    for(divpIt.GoToBegin(), p1It.GoToBegin(), p2It.GoToBegin(), p3It.GoToBegin();
-        !p1It.IsAtEnd();
-        ++divpIt, ++p1It, ++p2It, ++p3It)
-      {
-      const TImage::IndexType curIndex = divpIt.GetIndex();
-      TImage::IndexType shiftIndex;
-      shiftIndex = curIndex;
-      shiftIndex[2] = il[curIndex[2]];
-      const double p1val = p1It.Get() - p1->GetPixel(shiftIndex);
-      shiftIndex = curIndex;
-      shiftIndex[0] = iu[curIndex[0]];
-      const double p2val = p2It.Get() - p2->GetPixel(shiftIndex);
-      shiftIndex = curIndex;
-      shiftIndex[2] = ifr[curIndex[2]];
-      const double p3val = p3It.Get() - p3->GetPixel(shiftIndex);
-      divpIt.Set(p1val + p2val + p3val);
-      }
-//     end
-    normdivp = PNormImageDiff<TImage>(divp,lastdivp);
-    }
-// end
-//
-// u = f - divp/lambda;
-  typedef itk::MultiplyImageFilter<TImage,TImage,TImage>  MultiplyFilterType;
-  typedef itk::SubtractImageFilter<TImage,TImage,TImage>  SubtractFilterType;
-  MultiplyFilterType::Pointer mult = MultiplyFilterType::New();
-  SubtractFilterType::Pointer sub = SubtractFilterType::New();
-  mult->SetInput1(divp);
-  mult->SetConstant(1.0/lambda);
-  sub->SetInput1(f);
-  sub->SetInput2(mult->GetOutput());
-  sub->Update();
-  TImage::Pointer u = sub->GetOutput();
-  this->ToVecImage(u,gradientIndex,target);
-#endif
+void *CallTVDenoise(void *data)
+{
+  tv_ThreadData *td =
+    static_cast<tv_ThreadData *>(static_cast<itk::MultiThreader::ThreadInfoStruct *>(data)->UserData);
+  tvdenoise3(td->m_InputImage,td->m_Gradient,td->m_Myu,td->m_Tol,td->m_Rval);
+  return data;
 }
-
-// function u = tvdenoise3(f,lambda,Tol)
-// %This function extends the chambolle's algo to 3D images
-// %TVDENOISE  Total variation grayscale and color image denoising
-// %   u = TVDENOISE(f,lambda) denoises the input image f.  The smaller
-// %   the parameter lambda, the stronger the denoising.
-// %
-// %   The output u approximately minimizes the Rudin-Osher-Fatemi (ROF)
-// %   denoising model
-// %
-// %       Min  TV(u) + lambda/2 || f - u ||^2_2,
-// %        u
-// %
-// %   where TV(u) is the total variation of u.  If f is a color image (or any
-// %   array where size(f,3) > 1), the vectorial TV model is used,
-// %
-// %       Min  VTV(u) + lambda/2 || f - u ||^2_2.
-// %        u
-// %
-// %   TVDENOISE(...,Tol) specifies the stopping tolerance (default 1e-2).
-// %
-// %   The minimization is solved using Chambolle's method,
-// %      A. Chambolle, "An Algorithm for Total Variation Minimization and
-// %      Applications," J. Math. Imaging and Vision 20 (1-2): 89-97, 2004.
-// %   When f is a color image, the minimization is solved by a generalization
-// %   of Chambolle's method,
-// %      X. Bresson and T.F. Chan,  "Fast Minimization of the Vectorial Total
-// %      Variation Norm and Applications to Color Image Processing", UCLA CAM
-// %      Report 07-25.
-// %
-// %   Example:
-// %   f = double(imread('barbara-color.png'))/255;
-// %   f = f + randn(size(f))*16/255;
-// %   u = tvdenoise(f,12);
-// %   subplot(1,2,1); imshow(f); title Input
-// %   subplot(1,2,2); imshow(u); title Denoised
-//
-// % Pascal Getreuer 2007-2008
-//
-// if (nargin < 3),
-//     Tol = 1e-2;
-// end
-//
-// if (lambda < 0),
-//     error('Parameter lambda must be nonnegative.');
-// end
-//
-// dt = 0.25/2;
-//
-// N = size(f);
-// id = [2:N(1),N(1)];
-// iu = [1,1:N(1)-1];
-// ir = [2:N(2),N(2)];
-// il = [1,1:N(2)-1];
-// ib = [2:N(3),N(3)];
-// ifr = [1,1:N(3)-1];
-//
-// p1 = zeros(size(f));
-// p2 = zeros(size(f));
-// p3 = zeros(size(f));
-//
-// divp = zeros(size(f));
-// lastdivp = ones(size(f));
-//
-// if (length(N) == 3),
-//     while (norm(divp(:) - lastdivp(:),inf) > Tol),
-//         lastdivp = divp;
-//         z = divp - f*lambda;
-//         z1 = z(:,ir,:) - z;
-//         z2 = z(id,:,:) - z;
-//         z3 = z(:,:,ib) - z;
-//         denom = 1 + dt*sqrt(z1.^2 + z2.^2 + z3.^2);
-//         p1 = (p1 + dt*z1)./denom;
-//         p2 = (p2 + dt*z2)./denom;
-//         p3 = (p3 + dt*z3)./denom;
-//         divp = p1 - p1(:,il,:) + p2 - p2(iu,:,:) + p3 - p3(:,:,ifr);
-//     end
-// end
-//
-// u = f - divp/lambda;
+#endif
 
 void
 DoCSEstimate
@@ -1045,15 +1064,54 @@ DoCSEstimate
   std::cerr << "Step 2" << std::endl;
   unsigned int numGradients = inputImage->GetNumberOfComponentsPerPixel();
  AllocVecImage<DWIVectorImageType>(inputImage,numGradients,rval);
-
+#if 0
+ itk::MultiThreader::Pointer mt = itk::MultiThreader::New();
+ itk::ThreadIdType numThreads = mt->GetNumberOfThreads();
+ std::vector<tv_ThreadData> tv(numGradients);
+ for(unsigned int k = 0; k < numGradients;)
+   {
+   for(unsigned int i = 0; i < numThreads && k < numGradients; ++i, ++k)
+     {
+     std::cerr << "Gradient " << k << std::endl;
+     tv[k].m_InputImage = inputImage;
+     tv[k].m_Myu = 1.0/myu;
+     tv[k].m_Tol = tol;
+     tv[k].m_Rval = rval;
+     tv[k].m_Gradient = k;
+     mt->SetMultipleMethod(i,CallTVDenoise,&tv[k]);
+     }
+   mt->MultipleMethodExecute();
+   }
+#else
   typedef DWIVectorImageType::SizeValueType sizetype;
   for(unsigned int k = 0; k < numGradients; ++k)
     {
     std::cerr << "Gradient " << k << std::endl;
-    this->tvdenoise3(inputImage,k,1/myu,tol,rval);
+    tvdenoise3(inputImage,k,1/myu,tol,rval);
     }
+#endif
 }
 
+struct BPDN_ThreadData
+{
+  MatrixType *m_A;
+  MatrixType *m_S;
+  double m_lmd;
+  unsigned m_NIT;
+
+  MatrixType m_XRowI;
+  unsigned m_i;
+};
+
+void *CallBPDNHomoTopy(void *data)
+{
+
+  BPDN_ThreadData *td =
+    static_cast<BPDN_ThreadData *>(static_cast<itk::MultiThreader::ThreadInfoStruct *>(data)->UserData);
+  MatrixType squeezeS = td->m_S->row(td->m_i).transpose();
+  td->m_XRowI = BPDN_HOMOTOPY_function(*(td->m_A),squeezeS,td->m_lmd,td->m_NIT);
+  return data;
+}
 // function [u] = step2(u,myu,tol)
 //
 // r=1/myu;
@@ -1064,9 +1122,14 @@ DoCSEstimate
 
 // function [X] = step1(S,A,lmd,NIT,id)
 // NOTE the S parameter is the intensity data.
-MatrixType
+void
 DoCSEstimate
-::step1(DWIVectorImageType::Pointer &inputImage,MatrixType &A,double lmd,unsigned NIT,std::vector<unsigned char> &id)
+::step1(DWIVectorImageType::Pointer &inputImage,
+        MatrixType &A,
+        double lmd,
+        unsigned NIT,
+        std::vector<unsigned char> &id,
+        MatrixType &OutMatrix)
 {
   std::cerr << "Step 1" << std::endl;
   // [nx, ny, nz, d]=size(S);
@@ -1091,6 +1154,28 @@ DoCSEstimate
   // x=zeros(size(S,1),M);
   MatrixType x; x = MatrixType::Zero(S.rows(),M);
   //
+#if 0
+  itk::MultiThreader::Pointer mt = itk::MultiThreader::New();
+  itk::ThreadIdType numThreads = mt->GetNumberOfThreads();
+  std::vector<BPDN_ThreadData> td(S.rows());
+  for(unsigned int threadCount = 0; threadCount < S.rows();)
+    {
+    for(unsigned i = 0; i < numThreads && threadCount < S.rows(); ++i, ++threadCount)
+      {
+      td[threadCount].m_A = &A;
+      td[threadCount].m_S = &S;
+      td[threadCount].m_lmd = lmd;
+      td[threadCount].m_NIT = NIT;
+      td[threadCount].m_i = threadCount;
+      mt->SetMultipleMethod(i,CallBPDNHomoTopy,&td[threadCount]);
+      }
+    mt->MultipleMethodExecute();
+    }
+  for(itk::ThreadIdType i = 0; i < S.rows(); ++i)
+    {
+    x.row(i) = td[i].m_XRowI;
+    }
+#else
   // parfor i=1:size(S,1),
   for(unsigned i = 0; i < S.rows(); ++i)
     {
@@ -1099,19 +1184,19 @@ DoCSEstimate
     x.row(i) = BPDN_HOMOTOPY_function(A,squeezeS,lmd,NIT);
     // end
     }
+#endif
   // %matlabpool close;
   //
   // X=zeros(n,M);
   // X(id,:)=x;
-  MatrixType rval; rval = MatrixType::Zero(n,M);
+  OutMatrix = MatrixType::Zero(n,M);
   for(unsigned int grad = 0; grad < numGradients; ++grad)
     {
     for(unsigned int row = 0; row < id.size(); ++row)
       {
-      rval(id[row],grad) = x(row,grad);
+      OutMatrix(id[row],grad) = x(row,grad);
       }
     }
-  return rval;
 }
 // function [X] = step1(S,A,lmd,NIT,id)
 //

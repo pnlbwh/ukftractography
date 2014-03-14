@@ -4,6 +4,7 @@
 #include "itkVectorImage.h"
 #include "itkImageFileWriter.h"
 #include "itkImageFileReader.h"
+#include "itkMetaDataObject.h"
 #include <vector>
 /** NrrdFile holds original volume + gradients
  *
@@ -34,5 +35,6 @@ private:
   MatrixType m_Gradients;
   unsigned int m_GradientCount;
   double m_BValue;
+  itk::MetaDataDictionary m_SaveDict;
 };
 #endif // __NrrdFile_h

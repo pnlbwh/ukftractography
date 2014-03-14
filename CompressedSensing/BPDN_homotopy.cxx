@@ -148,7 +148,7 @@ update_primal(IndexVec & gamma_x, // current support of x
     i_delta = gamma_lc[delta2_pos_ind[i_delta2]];
     }
 // else
-  else
+  else if(i_delta1 != -1 && delta1_pos_ind.size() > 0) // if delta1_pos_ind is empty
     {
 //     delta = delta1;
     delta = delta1;

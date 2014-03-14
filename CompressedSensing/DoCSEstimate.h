@@ -22,18 +22,17 @@ public:
   bool Compute();
   void OptimBand(double B,const MatrixType &D,const MatrixType &ico3,double  &rho, double  &p);
   void step2(DWIVectorImageType::Pointer &inputImage,double myu, double tol,DWIVectorImageType::Pointer &rval);
+  void step1(DWIVectorImageType::Pointer &inputImage,
+             MatrixType &A,
+             double lmd,
+             unsigned NIT,
+             std::vector<unsigned char> &id,
+             MatrixType &OutMatrix);
   MatrixType step1(DWIVectorImageType::Pointer &inputImage,
                    MatrixType &A,
                    double lmd,
                    unsigned NIT,
                    std::vector<unsigned char> &id);
-  void tvdenoise3(DWIVectorImageType::Pointer &inputImage,
-                  unsigned int gradientIndex,double lambda,
-                  double tol,
-                  DWIVectorImageType::Pointer &target);
-  void ToVecImage(const B0AvgImageType *fromImage, unsigned int gradientIndex, DWIVectorImageType::Pointer &target);
-  B0AvgImageType *FromVecImage(DWIVectorImageType::Pointer inputImage,unsigned gradientIndex);
-
   // MatrixType BPDN_HOMOTOPY_function(MatrixType &A,MatrixType &SqueezeS,double tau, unsigned int maxiter);
   // void update_primal(std::vector<unsigned long> & gamma_x, // current support of x
   //                    std::vector<unsigned long> & gamma_lambda, // current support of

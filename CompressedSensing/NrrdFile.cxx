@@ -1,5 +1,4 @@
 #include <fstream>
-#include "itkMetaDataObject.h"
 #include <string>
 #include <sstream>
 #include <algorithm>
@@ -12,11 +11,11 @@ NrrdFile
 ::ExtractGradients()
 {
 
-  itk::MetaDataDictionary &thisDic = this->m_Image->GetMetaDataDictionary();
+  this->m_SaveDict  = this->m_Image->GetMetaDataDictionary();
   // determine if image contains bvalue & gradients.
   std::string bValueString;
 
-  if(itk::ExposeMetaData<std::string>(thisDic,"DWMRI_b-value",bValueString) == false)
+  if(itk::ExposeMetaData<std::string>(this->m_SaveDict,"DWMRI_b-value",bValueString) == false)
     {
     std::cerr << "Gradient information missing from this image" << std::endl;
     return false;
@@ -31,7 +30,7 @@ NrrdFile
 
   std::string gradString;
 
-  while(itk::ExposeMetaData<std::string>(thisDic,gradTag.str(),gradString) != false)
+  while(itk::ExposeMetaData<std::string>(this->m_SaveDict,gradTag.str(),gradString) != false)
     {
     this->m_Gradients.conservativeResize(this->m_GradientCount+1,3);
     VectorType curGrad(3,1);
@@ -51,9 +50,9 @@ NrrdFile
     }
   Eigen::Matrix3d mf;
   std::vector<std::vector<double> > msrFrame;
-  if(itk::ExposeMetaData<std::vector<std::vector<double> > >( thisDic, "NRRD_measurement frame", msrFrame ) == false)
+  if(itk::ExposeMetaData<std::vector<std::vector<double> > >( this->m_SaveDict, "NRRD_measurement frame", msrFrame ) == false)
     {
-    itk::EncapsulateMetaData<std::vector<std::vector<double> > >(thisDic, "NRRD_measurement frame", msrFrame );
+    itk::EncapsulateMetaData<std::vector<std::vector<double> > >(this->m_SaveDict, "NRRD_measurement frame", msrFrame );
     return true;
     }
   ImageType::DirectionType directions = this->m_Image->GetDirection();
@@ -109,7 +108,7 @@ NrrdFile
     this->m_Gradients.row(i) = curRow;
     }
 #endif
-  itk::EncapsulateMetaData<std::vector<std::vector<double> > >(thisDic, "NRRD_measurement frame", msrFrame );
+  itk::EncapsulateMetaData<std::vector<std::vector<double> > >(this->m_SaveDict, "NRRD_measurement frame", msrFrame );
   return true;
 }
 bool
@@ -143,11 +142,22 @@ void
 NrrdFile
 ::SaveFile(const std::string &filename)
 {
+
   itk::MetaDataDictionary & thisDic = this->m_Image->GetMetaDataDictionary();
+  //
+  // copy dictionary except for the gradients
+  for(itk::MetaDataDictionary::ConstIterator it = this->m_SaveDict.Begin();
+      it != this->m_SaveDict.End(); ++it)
+    {
+    if(it->first.find("DWMRI_gradient_",0) == std::string::npos)
+      {
+      thisDic.Set(it->first,it->second);
+      }
+    }
+
   //
   // space direction
   itk::EncapsulateMetaData<std::string>(thisDic,"NRRD_space","left-posterior-superior");
-  itk::EncapsulateMetaData<std::string>(thisDic,std::string("modality"),std::string("DWMRI"));
 
   std::stringstream ss;
   ss.precision(10);

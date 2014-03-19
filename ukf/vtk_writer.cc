@@ -226,7 +226,11 @@ VtkWriter
       {
       writer->SetCompressorTypeToNone();
       }
+#if (VTK_MAJOR_VERSION < 6)
     writer->SetInput(dataObject);
+#else
+    writer->SetInputData(dataObject);
+#endif
     writer->SetFileName(filename);
     writer->Write();
     }
@@ -238,7 +242,11 @@ VtkWriter
       {
       writer->SetFileTypeToBinary();
       }
+#if (VTK_MAJOR_VERSION < 6)
     writer->SetInput(dataObject);
+#else
+    writer->SetInputData(dataObject);
+#endif
     writer->SetFileName(filename);
     writer->Write();
     }

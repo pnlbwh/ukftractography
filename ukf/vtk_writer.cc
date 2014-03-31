@@ -4,6 +4,7 @@
  * \todo The case differentiation in the beginning is very hackish..
 */
 
+#include "vtkVersionMacros.h"
 #include "ukf_types.h"
 #include "vtk_writer.h"
 #include <fstream>

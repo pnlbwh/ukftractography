@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Compressed Sensing</category>
+  <title>White Matter Dispersion</title>
+  <description><![CDATA[TODO HANS]]></description>
+  <version></version>
+  <documentation-url>http://www.na-mic.org/Wiki/index.php/2014_Project_Week:DWIDispersion</documentation-url>
+  <license>Slicer</license>
+  <contributor>Peter Savadjiev (BWH), Hans J. Johnson, Kent Williams (UIowa)</contributor>
+  <acknowledgements><![CDATA[Peter Savadjiev (1); Yogesh Rathi (1); Hans Johnson(2); Kent Williams(2); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements> 
+
+  <parameters advanced="false">
+    <label>I/O</label>
+    <description>Input/output parameters</description>
+    <image>
+      <name>inputVolume</name>
+      <longflag>inputVolume</longflag>
+      <label>Input DWI Image Volume</label>
+      <description>The DWI Image to apply Compressed Sensing to.</description>
+      <channel>input</channel>
+      <default></default>
+    </image>
+    <image>
+      <name>outputVolume</name>
+      <longflag>outputVolume</longflag>
+      <label>Output Image Volume</label>
+      <description>Filename for modified DWI Image Volume</description>
+      <channel>output</channel>
+    </image>
+    <image>
+      <name>maskVolume</name>
+      <longflag>maskVolume</longflag>
+      <label>Input Mask Volume</label>
+      <description>Optional binary image to use as mask</description>
+      <channel>input</channel>
+      <default></default>
+    </image>
+    <file>
+      <name>replacementGradients</name>
+      <longflag>replacementGradients</longflag>
+      <label>Replacement Gradients</label>
+      <description>Gradients to use instead of those embedded in the input volume</description>
+      <channel>input</channel>
+      <default></default>
+    </file>
+  </parameters>
+
+</executable>

@@ -4,6 +4,7 @@
  * \todo The case differentiation in the beginning is very hackish..
 */
 
+#include "vtkVersion.h"
 #include "ukf_types.h"
 #include "vtk_writer.h"
 #include <fstream>
@@ -226,7 +227,11 @@ VtkWriter
       {
       writer->SetCompressorTypeToNone();
       }
+#if (VTK_MAJOR_VERSION < 6)
     writer->SetInput(dataObject);
+#else
+    writer->SetInputData(dataObject);
+#endif
     writer->SetFileName(filename);
     writer->Write();
     }
@@ -238,7 +243,11 @@ VtkWriter
       {
       writer->SetFileTypeToBinary();
       }
+#if (VTK_MAJOR_VERSION < 6)
     writer->SetInput(dataObject);
+#else
+    writer->SetInputData(dataObject);
+#endif
     writer->SetFileName(filename);
     writer->Write();
     }
@@ -451,7 +460,7 @@ Write(const std::string& file_name,
         const State & state = fibers[i].state[j];
         for(int k = 0; k < state_dim; ++k)
           {
-          tmpArray[k] = state[i];
+          tmpArray[k] = state[k];
           }
         stateArray->InsertNextTuple(tmpArray);
         }

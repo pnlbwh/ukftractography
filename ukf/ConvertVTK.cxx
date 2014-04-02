@@ -1,78 +1,7 @@
 #include "ConvertVTKCLP.h"
-#include "itksys/SystemTools.hxx"
 #include "vtkSmartPointer.h"
 #include "vtkPolyData.h"
-#include "vtkPolyDataReader.h"
-#include "vtkXMLPolyDataReader.h"
-#include "vtkPolyDataWriter.h"
-#include "vtkXMLPolyDataWriter.h"
-
-vtkSmartPointer<vtkPolyData>
-ReadPolyData(const char *filename)
-{
-  const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
-  if(ext == ".vtp")
-    {
-    vtkSmartPointer<vtkXMLPolyDataReader> reader =
-      vtkSmartPointer<vtkXMLPolyDataReader>::New();
-    reader->SetFileName(filename);
-    reader->Update();
-    return vtkSmartPointer<vtkPolyData>(reader->GetOutput());
-    }
-  else
-    {
-    vtkSmartPointer<vtkPolyDataReader> reader =
-      vtkSmartPointer<vtkPolyDataReader>::New();
-    reader->SetFileName(filename);
-    reader->Update();
-    return vtkSmartPointer<vtkPolyData>(reader->GetOutput());
-    }
-}
-
-void
-WritePolyData(const vtkPolyData *pd, const char *filename, bool binary, bool compressed)
-{
-  const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
-  // all the casting is because vtk SetInput isn't const-correct.
-  vtkDataObject *dataObject =
-    const_cast<vtkDataObject *>(static_cast<const vtkDataObject *>(pd));
-  if(ext == ".vtp")
-    {
-    vtkSmartPointer<vtkXMLPolyDataWriter> writer =
-      vtkSmartPointer<vtkXMLPolyDataWriter>::New();
-    if(binary)
-      {
-      writer->SetDataModeToBinary();
-      }
-    else
-      {
-      writer->SetDataModeToAscii();
-      }
-    if(compressed)
-      {
-      writer->SetCompressorTypeToZLib();
-      }
-    else
-      {
-      writer->SetCompressorTypeToNone();
-      }
-    writer->SetInput(dataObject);
-    writer->SetFileName(filename);
-    writer->Write();
-    }
-  else
-    {
-    vtkSmartPointer<vtkPolyDataWriter> writer =
-      vtkSmartPointer<vtkPolyDataWriter>::New();
-    if(binary)
-      {
-      writer->SetFileTypeToBinary();
-      }
-    writer->SetInput(dataObject);
-    writer->SetFileName(filename);
-    writer->Write();
-    }
-}
+#include "vtkPolyDataIO.h"
 
 int main(int argc, char *argv[])
 {
@@ -96,7 +25,7 @@ int main(int argc, char *argv[])
   vtkSmartPointer<vtkPolyData> pd;
   try
     {
-    pd = ReadPolyData(inputFile.c_str());
+    pd = vtkPolyDataIO::Read(inputFile.c_str());
     }
   catch(...)
     {
@@ -105,7 +34,7 @@ int main(int argc, char *argv[])
     }
   try
     {
-    WritePolyData(pd, outputFile.c_str(), !writeAscii, !writeUnCompressed);
+    vtkPolyDataIO::Write(pd, outputFile.c_str(), !writeAscii, !writeUnCompressed);
     }
   catch(...)
     {

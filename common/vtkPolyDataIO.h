@@ -1,7 +1,7 @@
 #ifndef __vtkReadWrite_h
 #define __vtkReadWrite_h
 #include "itksys/SystemTools.hxx"
-#include "vtkVersionMacros.h"
+#include "vtkVersion.h"
 #include "vtkSmartPointer.h"
 #include "vtkPolyData.h"
 #include "vtkPolyDataReader.h"

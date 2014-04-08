@@ -61,7 +61,8 @@ set(MODULE_SRCS
 set(MODULE_TARGET_LIBRARIES
     ${ITK_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    teem
+    ${TEEM_LIB}
+    ${VTK_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------
@@ -71,7 +72,7 @@ add_subdirectory(Testing)
 #-----------------------------------------------------------------------------
 SEMMacroBuildCLI(
   NAME ${MODULE_NAME}
-  TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES} ${VTK_LIBRARIES}
+  TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
   ADDITIONAL_SRCS ${MODULE_SRCS}
   EXECUTABLE_ONLY

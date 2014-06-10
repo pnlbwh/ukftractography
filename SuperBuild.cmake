@@ -11,6 +11,15 @@ include(CTest)
 include(${CMAKE_CURRENT_SOURCE_DIR}/Common.cmake)
 
 #-----------------------------------------------------------------------------
+# Where should the superbuild source files be downloaded to?
+# By keeping this outside of the build tree, you can share one
+# set of external source trees for multiple build trees
+#-----------------------------------------------------------------------------
+set( SOURCE_DOWNLOAD_CACHE ${CMAKE_CURRENT_BINARY_DIR}/src CACHE PATH
+    "The path for downloading external source directories" )
+mark_as_advanced( SOURCE_DOWNLOAD_CACHE )
+
+#-----------------------------------------------------------------------------
 # Git protocole option
 #-----------------------------------------------------------------------------
 option(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL "If behind a firewall turn this off to use http instead." ON)
@@ -25,8 +34,6 @@ find_package(Git REQUIRED)
 # Enable and setup External project global properties
 #-----------------------------------------------------------------------------
 include(ExternalProject)
-include(SlicerMacroEmptyExternalProject)
-include(SlicerMacroCheckExternalProjectDependency)
 
 # Compute -G arg for configuring external projects with the same CMake generator:
 if(CMAKE_EXTRA_GENERATOR)
@@ -191,7 +198,7 @@ _expand_external_project_vars()
 set(COMMON_EXTERNAL_PROJECT_ARGS ${${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_ARGS})
 set(extProjName ${PRIMARY_PROJECT_NAME})
 set(proj        ${PRIMARY_PROJECT_NAME})
-SlicerMacroCheckExternalProjectDependency(${proj})
+ExternalProject_Include_Dependencies(${proj} DEPENDS_VAR ${PRIMARY_PROJECT_NAME}_DEPENDENCIES)
 
 #-----------------------------------------------------------------------------
 # Set CMake OSX variable to pass down the external project
@@ -219,7 +226,7 @@ list(APPEND ${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_VARS
   ITK_VERSION_MAJOR:STRING
   ITK_DIR:PATH
   VTK_DIR:PATH
-  Teem_dir:PATH
+  Teem_DIR:PATH
   Eigen_INCLUDE_DIR:PATH
   SlicerExecutionModel_DIR:PATH
   ${PRIMARY_PROJECT_NAME}_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH

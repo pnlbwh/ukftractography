@@ -16,6 +16,7 @@ include(${SlicerExecutionModel_USE_FILE})
 endif()
 
 if(NOT Teem_FOUND)
+message("Teem_DIR:${Teem_DIR}")
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
 endif()

@@ -157,7 +157,7 @@ int main(int argc, char **argv)
       if (!simpleTensorModel) {
         setAndTell(l_Qm, 0.002, "Qm");//l_Qm = 0.002;
       } else {
-        setAndTell(l_Qm, 0.003, "Qm");//l_Qm = 0.003;
+        setAndTell(l_Qm, 0.001, "Qm");//l_Qm = 0.001; was 0.003, changed to 0.001 for new Interp3Signal
       }
     }
   } else {
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     if (numTensor == 1) {
       setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
     } else if (numTensor == 2) {
-      setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 100.0;
+      setAndTell(l_Ql, 50.0, "Ql");//was l_Ql = 100.0; for old Interp3Signal
     } else if (numTensor == 3) {
       setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 150.0;
     }
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
       if (!simpleTensorModel) {
         setAndTell(l_Rs, 0.01, "Rs");// = 0.01;
       } else {
-        setAndTell(l_Rs, 0.015, "Rs");//l_Rs = 0.015;
+        setAndTell(l_Rs, 0.02, "Rs");//was l_Rs = 0.015;for old Interp3Signal
       }
     }
   } else {
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
     if (numTensor == 1) {
       setAndTell(l_stepLength, 0.3, "stepLength");
     } else if (numTensor == 2) {
-      setAndTell(l_stepLength, 0.2, "stepLength");
+      setAndTell(l_stepLength, 0.3, "stepLength"); //was 0.2 for old Interp3Signal
     } else { // 3T
       setAndTell(l_stepLength, 0.15, "stepLength");
     }

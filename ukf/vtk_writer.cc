@@ -308,7 +308,7 @@ Write(const std::string& file_name,
   vtkSmartPointer<vtkFloatArray> norms = vtkSmartPointer<vtkFloatArray>::New();
   norms->SetNumberOfComponents(1);
   norms->Allocate(num_points);
-  norms->SetName("norm");
+  norms->SetName("EstimatedUncertainty");
   for( int i = 0; i < num_fibers; ++i )
     {
     int fiber_size = fibers[i].position.size();
@@ -327,7 +327,7 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> fa = vtkSmartPointer<vtkFloatArray>::New();
     fa->SetNumberOfComponents(1);
     fa->Allocate(num_points);
-    fa->SetName("FA");
+    fa->SetName("FA1");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
@@ -365,7 +365,7 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> trace = vtkSmartPointer<vtkFloatArray>::New();
     trace->SetNumberOfComponents(1);
     trace->Allocate(num_points);
-    trace->SetName("Trace");
+    trace->SetName("Trace1");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
@@ -422,7 +422,7 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> normMSE = vtkSmartPointer<vtkFloatArray>::New();
     normMSE->SetNumberOfComponents(1);
     normMSE->Allocate(num_points);
-    normMSE->SetName("NMSE");
+    normMSE->SetName("NormalizedSignalEstimationError");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();

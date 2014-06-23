@@ -98,7 +98,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
   // signal shouldn't be halved due to ukfPrecisionType occurance of the gradients
   // reinserted by CB, in order to match the MATLAB code.
   // CB: needs to removed in order to interpolate the signal correctly.
-  w_sum *= 2; // Double each occurance.
+  //w_sum *= 2; // Double each occurance.
   for( int i = 0; i < _num_gradients; ++i )
     {
     signal[i] /= w_sum;

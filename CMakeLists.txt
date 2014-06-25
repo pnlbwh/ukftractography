@@ -23,7 +23,7 @@ option(${PRIMARY_PROJECT_NAME}_SUPERBUILD "Build ${PRIMARY_PROJECT_NAME} and the
 mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 
 #-----------------------------------------------------------------------------
-set(EXTENSION_NAME  ${PRIMARY_PROJECT_NAME})
+set(EXTENSION_NAME  UKFTractography)
 set(EXTENSION_HOMEPAGE "http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage")
 set(EXTENSION_CATEGORY "Diffusion.Tractography")
 set(EXTENSION_CONTRIBUTORS "Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner")

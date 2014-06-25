@@ -23,6 +23,21 @@ option(${PRIMARY_PROJECT_NAME}_SUPERBUILD "Build ${PRIMARY_PROJECT_NAME} and the
 mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 
 #-----------------------------------------------------------------------------
+set(EXTENSION_NAME  ${PRIMARY_PROJECT_NAME})
+set(EXTENSION_HOMEPAGE "http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage")
+set(EXTENSION_CATEGORY "Diffusion.Tractography")
+set(EXTENSION_CONTRIBUTORS "Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner")
+set(EXTENSION_MAJOR_VERSION 1)
+set(EXTENSION_MINOR_VERSION 2)
+set(EXTENSION_PATCH_VERSION 0)
+set(EXTENSION_STATUS "Alpha")
+set(EXTENSION_DEPENDS "Eigen")
+set(EXTENSION_DESCRIPTION "This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. ")
+set(EXTENSION_LICENSE_SHORT_DESCRIPTION "Quadratic Programming Library QuadProg++ has LGPL or GPL")
+set(EXTENSION_ICONURL "http://viewvc.slicer.org/viewvc.cgi/Slicer4/trunk/Extensions/Testing/CLIExtensionTemplate/CLIExtensionTemplate.png?revision=19437&view=co")
+set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/a/ab/Slicer-r19441-CLIExtensionTemplate-screenshot.png http://wiki.slicer.org/slicerWiki/images/1/1e/Slicer-r19441-CLIExtensionTemplate-screenshot-2.png")
+
+#-----------------------------------------------------------------------------
 # Superbuild script
 #-----------------------------------------------------------------------------
 if(${PRIMARY_PROJECT_NAME}_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)

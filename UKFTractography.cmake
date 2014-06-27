@@ -29,18 +29,10 @@ if(NOT Eigen_INCLUDE_DIR)
     ${Eigen_DIR}/../Eigen)
 endif()
 
-if(NOT Teem_FOUND)
+#-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-endif()
-
-find_library(TEEM_LIB name teem PATHS ${Teem_LIBRARY_DIRS})
-if("${TEEM_LIB}" EQUAL "TEEM_LIB-NOTFOUND")
-  message(FATAL_ERROR "Can't find Teem library TEEM_LIB")
-else()
-  message("TEEM_LIB=${TEEM_LIB}")
-endif()
-
+set(TEEM_LIB teem)
 
 include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------

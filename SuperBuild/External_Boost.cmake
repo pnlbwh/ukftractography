@@ -26,15 +26,6 @@ ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj
 if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" ) )
   #message(STATUS "${__indent}Adding project ${proj}")
 
-  # Set CMake OSX variable to pass down the external project
-  set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
-  if(APPLE)
-    list(APPEND CMAKE_OSX_EXTERNAL_PROJECT_ARGS
-      -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
-      -DCMAKE_OSX_SYSROOT:STRING=${CMAKE_OSX_SYSROOT}
-      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET})
-  endif()
-
   ### --- Project specific additions here
   set(Boost_Install_Dir ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install)
   set(Boost_Configure_Script ${CMAKE_CURRENT_LIST_DIR}/External_Boost_configureboost.cmake)
@@ -50,20 +41,21 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
   endif()
   set(BOOST_SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/${proj})
   ExternalProject_Add(${proj}
+    ${${proj}_EP_ARGS}
     URL ${${proj}_URL}
     URL_MD5 ${${proj}_MD5}
     SOURCE_DIR ${BOOST_SOURCE_DIR}
     ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
     CONFIGURE_COMMAND ${CMAKE_COMMAND}
-    ${CLANG_ARG}
-    -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/${proj}
-    -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir}
-    -P ${Boost_Configure_Script}
+      ${CLANG_ARG}
+      -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/${proj}
+      -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir}
+      -P ${Boost_Configure_Script}
     INSTALL_COMMAND ""
     BUILD_IN_SOURCE 1
     BUILD_COMMAND ${CMAKE_COMMAND}
-    -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/Boost
-    -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir} -P ${Boost_Build_Script}
+      -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/Boost
+      -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir} -P ${Boost_Build_Script}
   )
   set(BOOST_ROOT        ${BOOST_SOURCE_DIR})
   set(BOOST_INCLUDE_DIR ${BOOST_SOURCE_DIR})

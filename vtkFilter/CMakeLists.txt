@@ -1,3 +1,4 @@
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME vtkFilter)
 
@@ -5,17 +6,17 @@ include_directories(${CMAKE_INSTALL_PREFIX}/include)
 link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 set(MODULE_SRCS
-    vtkFilter.cxx
-    vtkWriter.cc
-    FiberFilter.cc
-    Region.cc
-    ExpressionParser.cc
-    ExpressionEvaluator.cc
-    )
+  vtkFilter.cxx
+  vtkWriter.cc
+  FiberFilter.cc
+  Region.cc
+  ExpressionParser.cc
+  ExpressionEvaluator.cc
+  )
 
 set(MODULE_TARGET_LIBRARIES
-    ${ITK_LIBRARIES}
-    UKFCommonLib
+  ${ITK_LIBRARIES}
+  UKFCommonLib
   )
 
 SEMMacroBuildCLI(

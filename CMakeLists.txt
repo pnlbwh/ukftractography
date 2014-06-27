@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8.9) #2.8.9 needed for ExternalProject Simplification
-cmake_policy(VERSION 2.8.9)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)
 
@@ -19,8 +18,6 @@ set(PRIMARY_PROJECT_NAME UKFTractography)
 #                   Phase II: Build the ${PRIMARY_PROJECT_NAME}, referencing the support
 #                             packages built in Phase I.
 #-----------------------------------------------------------------------------
-option(${PRIMARY_PROJECT_NAME}_SUPERBUILD "Build ${PRIMARY_PROJECT_NAME} and the projects it depends on via SuperBuild.cmake." ON)
-mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 
 #-----------------------------------------------------------------------------
 set(EXTENSION_NAME  UKFTractography)
@@ -38,9 +35,20 @@ set(EXTENSION_ICONURL "http://viewvc.slicer.org/viewvc.cgi/Slicer4/trunk/Extensi
 set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/a/ab/Slicer-r19441-CLIExtensionTemplate-screenshot.png http://wiki.slicer.org/slicerWiki/images/1/1e/Slicer-r19441-CLIExtensionTemplate-screenshot-2.png")
 
 #-----------------------------------------------------------------------------
+if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  set(default_superbuild_value OFF)
+else()
+  set(default_superbuild_value ON)
+endif()
+
+#-----------------------------------------------------------------------------
+option(${PRIMARY_PROJECT_NAME}_SUPERBUILD "Build ${PRIMARY_PROJECT_NAME} and the projects it depends on via SuperBuild.cmake." ${default_superbuild_value})
+mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
+
+#-----------------------------------------------------------------------------
 # Superbuild script
 #-----------------------------------------------------------------------------
-if(${PRIMARY_PROJECT_NAME}_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   project(SuperBuild_${PRIMARY_PROJECT_NAME})  # <- NOTE: Project name for pre-requisites is different form main project
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()

@@ -5,13 +5,13 @@ include_directories(${CMAKE_INSTALL_PREFIX}/include)
 link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 set(MODULE_SRCS
-    vtk2mask.cxx
-    Converter.cc
-    )
+  vtk2mask.cxx
+  Converter.cc
+  )
 
 set(MODULE_TARGET_LIBRARIES
-    ${ITK_LIBRARIES}
-    UKFCommonLib
+  ${ITK_LIBRARIES}
+  UKFCommonLib
   )
 
 SEMMacroBuildCLI(

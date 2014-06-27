@@ -1,15 +1,14 @@
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME fibertractdispersion)
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    ${Teem_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common
-    ${CMAKE_CURRENT_SOURCE_DIR}/../ukf
- )
-
-include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
+  ${Teem_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common
+  ${CMAKE_CURRENT_SOURCE_DIR}/../ukf
+  )
 
 set(MODULE_SRCS
   fibertractdispersion.cxx
@@ -18,10 +17,10 @@ set(MODULE_SRCS
   )
 
 set(MODULE_TARGET_LIBRARIES
-    ${ITK_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${VTK_LIBRARIES}
-    ${TEEM_LIB}
+  ${ITK_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${VTK_LIBRARIES}
+  ${TEEM_LIB}
   )
 
 #-----------------------------------------------------------------------------

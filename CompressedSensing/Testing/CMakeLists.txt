@@ -12,4 +12,4 @@ add_test(NAME fibertractdispersion
   --writeUnCompressed
   --inputFiberBundle     ${BASELINE}/1T_fiber.vtk
   --outputFiberBundle ${TESTING_RESULTS_DIRECTORY}/${CLP}_1T_fiber.vtk
-)
+  )

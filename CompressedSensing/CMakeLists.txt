@@ -1,16 +1,17 @@
+
+#-----------------------------------------------------------------------------
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 message("Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME CompressedSensing)
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    ${Teem_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}
- )
-
-include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
+  ${Teem_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
 set(MODULE_SRCS
   CompressedSensing.cxx
@@ -27,10 +28,10 @@ set(MODULE_SRCS
   )
 
 set(MODULE_TARGET_LIBRARIES
-    ${ITK_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${TEEM_LIB}
-    ${VTK_LIBRARIES}
+  ${ITK_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${TEEM_LIB}
+  ${VTK_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------

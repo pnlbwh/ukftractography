@@ -63,6 +63,31 @@ option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined versio
 option(USE_SYSTEM_VTK "Build using an externally defined version of VTK" OFF)
 
 #------------------------------------------------------------------------------
+set(SlicerExecutionModel_INSTALL_BIN_DIR bin)
+set(SlicerExecutionModel_INSTALL_LIB_DIR lib)
+set(SlicerExecutionModel_INSTALL_NO_DEVELOPMENT 1)
+set(SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY bin)
+set(SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY lib)
+set(SlicerExecutionModel_DEFAULT_CLI_ARCHIVE_OUTPUT_DIRECTORY lib)
+set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION bin)
+set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION lib)
+set(SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION lib)
+
+mark_as_superbuild(
+  VARS
+    SlicerExecutionModel_INSTALL_BIN_DIR:STRING
+    SlicerExecutionModel_INSTALL_LIB_DIR:STRING
+    SlicerExecutionModel_INSTALL_NO_DEVELOPMENT
+    SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_ARCHIVE_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION:PATH
+  PROJECTS SlicerExecutionModel
+  )
+
+#------------------------------------------------------------------------------
 # ${PRIMARY_PROJECT_NAME} dependency list
 #------------------------------------------------------------------------------
 set(ITK_EXTERNAL_NAME ITKv${ITK_VERSION_MAJOR})
@@ -194,12 +219,6 @@ if(APPLE)
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
 endif()
 
-set(${PRIMARY_PROJECT_NAME}_CLI_RUNTIME_DESTINATION  bin)
-set(${PRIMARY_PROJECT_NAME}_CLI_LIBRARY_DESTINATION  lib)
-set(${PRIMARY_PROJECT_NAME}_CLI_ARCHIVE_DESTINATION  lib)
-set(${PRIMARY_PROJECT_NAME}_CLI_INSTALL_RUNTIME_DESTINATION  bin)
-set(${PRIMARY_PROJECT_NAME}_CLI_INSTALL_LIBRARY_DESTINATION  lib)
-set(${PRIMARY_PROJECT_NAME}_CLI_INSTALL_ARCHIVE_DESTINATION  lib)
 #-----------------------------------------------------------------------------
 # Add external project CMake args
 #-----------------------------------------------------------------------------
@@ -212,16 +231,6 @@ list(APPEND ${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_VARS
   Teem_DIR:PATH
   Eigen_INCLUDE_DIR:PATH
   SlicerExecutionModel_DIR:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_ARCHIVE_OUTPUT_DIRECTORY:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_RUNTIME_OUTPUT_DIRECTORY:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_INSTALL_LIBRARY_DESTINATION:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_INSTALL_ARCHIVE_DESTINATION:PATH
-  ${PRIMARY_PROJECT_NAME}_CLI_INSTALL_RUNTIME_DESTINATION:PATH
-
-  INSTALL_RUNTIME_DESTINATION:STRING
-  INSTALL_LIBRARY_DESTINATION:STRING
-  INSTALL_ARCHIVE_DESTINATION:STRING
   )
 
 _expand_external_project_vars()

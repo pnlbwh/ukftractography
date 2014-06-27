@@ -56,7 +56,6 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
-
 set(EXTERNAL_PROJECT_BUILD_TYPE "Release" CACHE STRING "Default build type for support libraries")
 
 option(USE_SYSTEM_ITK "Build using an externally defined version of ITK" OFF)
@@ -274,7 +273,7 @@ endif()
 #-----------------------------------------------------------------------------
 # CTestCustom
 #-----------------------------------------------------------------------------
-if(BUILD_TESTING AND NOT Slicer_BUILD_${PROJECT_NAME})
+if(BUILD_TESTING AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   configure_file(
     CMake/CTestCustom.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.cmake
@@ -296,7 +295,6 @@ ExternalProject_Add(${proj}
     ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
     ${${PROJECT_NAME}_EXTERNAL_PROJECT_ARGS}
     -D${PRIMARY_PROJECT_NAME}_SUPERBUILD:BOOL=OFF    #NOTE: VERY IMPORTANT reprocess top level CMakeList.txt
-    -DSlicer_SOURCE_DIR:BOOL=ON # dummy declaration for standalone build
   INSTALL_COMMAND ""
   )
 

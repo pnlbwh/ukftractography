@@ -10,6 +10,10 @@ enable_language(CXX)
 include(CMakeDependentOption)
 include(Artichoke)
 
+#-----------------------------------------------------------------------------
+# Build option(s)
+#-----------------------------------------------------------------------------
+
 option(${PRIMARY_PROJECT_NAME}_INSTALL_DEVELOPMENT "Install development support include and libraries for external packages." OFF)
 mark_as_advanced(${PRIMARY_PROJECT_NAME}_INSTALL_DEVELOPMENT)
 
@@ -24,10 +28,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   # Set the possible values of build type for cmake-gui
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
-
-#-----------------------------------------------------------------------------
-# Build option(s)
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Update CMake module path
@@ -74,7 +74,7 @@ endif()
 #
 # if you're building as a Slicer extension, this stuff
 # overrides the defaults being set up for the Extension.
-if(UKFTractography_SUPERBUILD AND NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+if(UKFTractography_SUPERBUILD)
 
   #-----------------------------------------------------------------------------
   SETIFEMPTY(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)

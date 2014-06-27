@@ -8,8 +8,6 @@ set(MODULE_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/../common
  )
 
-include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
-
 set(MODULE_SRCS
     BRAINSThreadControl.cxx
     tractography.cc
@@ -44,6 +42,8 @@ SEMMacroBuildCLI(
   ADDITIONAL_SRCS ${MODULE_SRCS}
   EXECUTABLE_ONLY
   )
+
+#-----------------------------------------------------------------------------
 SEMMacroBuildCLI(
   NAME ConvertVTK
   TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}

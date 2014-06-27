@@ -1,3 +1,4 @@
+
 #-----------------------------------------------------------------------------
 set(MODULE_NAME fibertractdispersion)
 
@@ -8,8 +9,6 @@ set(MODULE_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/../common
     ${CMAKE_CURRENT_SOURCE_DIR}/../ukf
  )
-
-include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
 
 set(MODULE_SRCS
   fibertractdispersion.cxx

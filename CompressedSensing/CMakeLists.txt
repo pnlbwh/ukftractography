@@ -10,8 +10,6 @@ set(MODULE_INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}
  )
 
-include_directories( ${MODULE_INCLUDE_DIRECTORIES} )
-
 set(MODULE_SRCS
   CompressedSensing.cxx
   SphericalHarmonics.cxx

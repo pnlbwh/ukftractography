@@ -3,31 +3,31 @@ set(MODULE_NAME UKFTractography)
 
 #-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
-    ${Teem_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../common
- )
+  ${Teem_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common
+  )
 
 set(MODULE_SRCS
-    BRAINSThreadControl.cxx
-    tractography.cc
-    unscented_kalman_filter.cc
-    filter_model.cc
-    seed.cc
-    ukffiber.cc
-    NrrdData.cc
-    vtk_writer.cc
-    dwi_normalize.cc
-    utilities.cc
-    thread.cc
-    QuadProg++_Eigen.cc
-    )
+  BRAINSThreadControl.cxx
+  tractography.cc
+  unscented_kalman_filter.cc
+  filter_model.cc
+  seed.cc
+  ukffiber.cc
+  NrrdData.cc
+  vtk_writer.cc
+  dwi_normalize.cc
+  utilities.cc
+  thread.cc
+  QuadProg++_Eigen.cc
+  )
 
 set(MODULE_TARGET_LIBRARIES
-    ${ITK_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${TEEM_LIB}
-    ${VTK_LIBRARIES}
+  ${ITK_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${TEEM_LIB}
+  ${VTK_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------

@@ -21,6 +21,7 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
 endif()
 include(${ITK_USE_FILE})
 
+#-----------------------------------------------------------------------------
 if(NOT Eigen_INCLUDE_DIR)
   if(NOT Eigen_DIR)
     message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
@@ -28,13 +29,13 @@ if(NOT Eigen_INCLUDE_DIR)
   set(Eigen_INCLUDE_DIR
     ${Eigen_DIR}/../Eigen)
 endif()
+include_directories(${Eigen_INCLUDE_DIR})
 
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
 set(TEEM_LIB teem)
 
-include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)

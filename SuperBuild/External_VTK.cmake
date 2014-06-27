@@ -172,7 +172,7 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       ${VTK_PYTHON_ARGS}
       ${VTK_QT_ARGS}
       ${VTK_MAC_ARGS}
-      INSTALL_COMMAND ""
+    INSTALL_COMMAND ""
     )
   ### --- End Project specific additions
   set(${proj}_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-build)

@@ -385,7 +385,7 @@ bool computeMeanVector(const MatrixType &xCoordinates,
                       double scale,
                       Eigen::Vector3d &meanVector /* out */)
 {
-  const double eps(-2.2204e-16); // that's what matlab thinks eps is.
+  const double eps(2.2204e-16); // that's what matlab thinks eps is.
 
 
   std::vector<bool> indexPointsInPlane(xCoordinates.cols(),false);
@@ -440,7 +440,7 @@ bool computeMeanVector(const MatrixType &xCoordinates,
   // this is a rearrangement of the matlab code;
   // if there are no points in the disk, there's no point
   // to computing the mean.
-  if(inDiskPointCount > 0)
+  if(inDiskPointCount > 10)
     {
     // vectorFieldInDisk = vectorFieldInDisk(:,indexPointsInDisk);
     // use second variable rather than overwrite in place
@@ -487,7 +487,7 @@ bool computeMeanVector(const MatrixType &xCoordinates,
   // if(~any(isnan(meanVector)) && (length(indexPointsInDisk) > 10) )
   //     n = norm(meanVector);
   //     if(n>0.1)
-  if(inPlanePointCount > 10 && n > 0.1)
+  if(inDiskPointCount > 10 && n > 0.1)
     {
     meanVector /= n;
     return true;
@@ -650,7 +650,7 @@ computedispersion(fiberbundle &bundle, double scale,
           double acosDot = acos(dot);
           if(acosDot < 0.0)
             {
-            acosDot -= -1.0;
+            acosDot *= -1.0;
             }
           dispersionDistributionValues(j,i) = acosDot;
           }
@@ -702,7 +702,7 @@ computedispersion(fiberbundle &bundle, double scale,
   if(outputFilename != "")
     {
     std::ofstream outfile(outputFilename.c_str());
-    PrintMat(DDFOutput);
+    PrintMat(DDFOutput, outfile);
     outfile.close();
     }
   return 0; // success

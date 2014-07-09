@@ -141,16 +141,28 @@ fiberbundle
   for(std::map<std::string,std::vector<float> >::const_iterator it = AllDecorators.begin();
       it != AllDecorators.end(); ++it)
     {
+#if 0
     vtkSmartPointer<vtkFloatArray> curAtt = vtkSmartPointer<vtkFloatArray>::New();
     curAtt->SetNumberOfComponents(1);
-    curAtt->Allocate(it->second.size());
     curAtt->SetName(it->first.c_str());
+    curAtt->Allocate(it->second.size());
     for(vtkIdType j = 0; j < static_cast<vtkIdType>(it->second.size()); ++j)
       {
       curAtt->InsertNextValue(it->second[j]);
       }
     int idx = pd->AddArray(curAtt);
     pd->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
+#else
+    vtkSmartPointer<vtkDoubleArray> curAtt = vtkSmartPointer<vtkDoubleArray>::New();
+    curAtt->SetNumberOfComponents(1);
+    curAtt->SetName(it->first.c_str());
+    for(unsigned int i = 0; i < it->second.size(); ++i)
+      {
+      double curVal = it->second[i];
+      curAtt->InsertNextTuple(&curVal);
+      }
+    pd->AddArray(curAtt);
+#endif
     }
   // TODO: do the tensors.
   for(std::map<std::string, stdMat_t>::const_iterator it = AllTensors.begin(); it != AllTensors.end(); ++it)

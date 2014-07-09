@@ -150,19 +150,7 @@ fiberbundle
       {
       curAtt->InsertNextValue(it->second[j]);
       }
-    int idx = pd->AddArray(curAtt);
-    pd->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
-#else
-    vtkSmartPointer<vtkDoubleArray> curAtt = vtkSmartPointer<vtkDoubleArray>::New();
-    curAtt->SetNumberOfComponents(1);
-    curAtt->SetName(it->first.c_str());
-    for(unsigned int i = 0; i < it->second.size(); ++i)
-      {
-      double curVal = it->second[i];
-      curAtt->InsertNextTuple(&curVal);
-      }
-    pd->AddArray(curAtt);
-#endif
+    pd->SetScalars(curAtt);
     }
   // TODO: do the tensors.
   for(std::map<std::string, stdMat_t>::const_iterator it = AllTensors.begin(); it != AllTensors.end(); ++it)
@@ -181,9 +169,7 @@ fiberbundle
           tmp[v] = (*it2)(i,j);
           }
         }
-      curAtt->InsertNextTuple(tmp);
-      int idx = pd->AddArray(curAtt);
-      pd->SetActiveAttribute(idx,vtkDataSetAttributes::TENSORS);
+      pd->SetTensors(curAtt);
       }
     }
 

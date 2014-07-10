@@ -98,12 +98,14 @@ void
 cell2mat(const MatrixVector &fibers /*in*/,MatrixType &tractMatrix /*out*/)
 {
   const unsigned int fibersSize(fibers.size());
-  tractMatrix.conservativeResize(fibers[0].rows(),fibers[0].cols() * fibersSize);
+  int rows = fibers[0].rows();
   for(unsigned int i = 0, offset = 0; i < fibersSize; ++i)
     {
     const MatrixType &curFiber = fibers[i];
+    int curCols = curFiber.cols();
+    tractMatrix.conservativeResize(rows,offset + curCols);
     tractMatrix.block(0,offset,curFiber.rows(),curFiber.cols()) = curFiber;
-    offset += curFiber.cols();;
+    offset += curCols;
     }
 }
 
@@ -653,11 +655,11 @@ computedispersion(fiberbundle &bundle, double scale,
       // take the median of the computed means
       MatrixType pointDDF = dispersionDistributionValues.block(0,i,numberOfSamplingDirections,1);
       std::vector<double> nonNegDDF;
-      for(unsigned int i = 0; i < pointDDF.rows(); ++i)
+      for(unsigned int k = 0; k < pointDDF.rows(); ++k)
         {
-        if(pointDDF(i,0) != -1)
+        if(pointDDF(k,0) != -1)
           {
-          nonNegDDF.push_back(pointDDF(i,0));
+          nonNegDDF.push_back(pointDDF(k,0));
           }
         }
       if(nonNegDDF.size() > 0)

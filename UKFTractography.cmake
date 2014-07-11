@@ -34,7 +34,11 @@ include_directories(${Eigen_INCLUDE_DIR})
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-set(TEEM_LIB teem)
+#
+# The way Teem gets built locally it puts the library in the
+# <superbuild-build>/lib instead of where teem expects it to be.
+# so add the lib in the parent of the current build directory
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/../lib)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(common)

@@ -26,10 +26,10 @@ set(MODULE_SRCS
 set(MODULE_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${TEEM_LIB}
+  ${Teem_LIBRARIES}
   ${VTK_LIBRARIES}
   )
-
+message("MODULE_TARGET_LIBRARIES:${MODULE_TARGET_LIBRARIES}")
 #-----------------------------------------------------------------------------
 enable_testing()
 add_subdirectory(Testing)

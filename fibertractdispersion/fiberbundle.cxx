@@ -149,8 +149,7 @@ fiberbundle
       {
       curAtt->InsertNextValue(it->second[j]);
       }
-    int idx = pd->AddArray(curAtt);
-    pd->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
+    pd->SetScalars(curAtt);
     }
   // TODO: do the tensors.
   for(std::map<std::string, stdMat_t>::const_iterator it = AllTensors.begin(); it != AllTensors.end(); ++it)
@@ -170,9 +169,8 @@ fiberbundle
           }
         }
       curAtt->InsertNextTuple(tmp);
-      int idx = pd->AddArray(curAtt);
-      pd->SetActiveAttribute(idx,vtkDataSetAttributes::TENSORS);
       }
+    pd->SetTensors(curAtt);
     }
 
   try

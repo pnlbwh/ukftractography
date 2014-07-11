@@ -41,7 +41,6 @@ add_test(NAME ${testname}
   --numThreads 1
   --minBranchingAngle 0.0
   --maxBranchingAngle 0.0
-  --simpleTensorModel
   --recordNMSE
   )
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
@@ -75,7 +74,6 @@ add_test(NAME ${testname}
   --numThreads 1
   --minBranchingAngle 0.0
   --maxBranchingAngle 0.0
-  --simpleTensorModel
   --recordNMSE
   --freeWater
   --recordFreeWater
@@ -110,7 +108,6 @@ add_test(NAME ${testname}
  --numThreads 1
  --minBranchingAngle 0.0
  --maxBranchingAngle 0.0
- --simpleTensorModel
  --recordNMSE
  --minFA 0.10
  --minGA 0.05
@@ -151,7 +148,6 @@ add_test(NAME ${testname}
   --numThreads 1
   --minBranchingAngle 0.0
   --maxBranchingAngle 0.0
-  --simpleTensorModel
   --recordNMSE
   --freeWater
   --recordFreeWater
@@ -188,7 +184,6 @@ add_test(NAME ${testname}
   --numThreads 1
   --minBranchingAngle 0.0
   --maxBranchingAngle 0.0
-  --simpleTensorModel
   --recordNMSE
   --freeWater
   --recordFreeWater
@@ -224,7 +219,6 @@ add_test(NAME ${testname}
   --numThreads 1
   --minBranchingAngle 0.0
   --maxBranchingAngle 0.0
-  --simpleTensorModel
   --recordNMSE
   --freeWater
   --recordFreeWater

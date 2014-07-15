@@ -9,7 +9,7 @@ set(CLP fibertractdispersion)
 add_test(NAME fibertractdispersion
   COMMAND $<TARGET_FILE:${CLP}>
   --writeAscii
-  --writeUnCompressed
+  --writeUncompressed
   --inputFiberBundle     ${BASELINE}/1T_fiber.vtk
   --outputFiberBundle ${TESTING_RESULTS_DIRECTORY}/${CLP}_1T_fiber.vtk
   )

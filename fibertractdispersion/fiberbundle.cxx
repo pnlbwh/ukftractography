@@ -149,7 +149,11 @@ fiberbundle
       {
       curAtt->InsertNextValue(it->second[j]);
       }
-    pd->SetScalars(curAtt);
+    if(it->first == "DDF")
+      {
+      pd->SetScalars(curAtt);
+      }
+    pd->AddArray(curAtt);
     }
   // TODO: do the tensors.
   for(std::map<std::string, stdMat_t>::const_iterator it = AllTensors.begin(); it != AllTensors.end(); ++it)

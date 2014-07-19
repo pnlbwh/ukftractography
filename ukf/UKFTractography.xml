@@ -13,8 +13,8 @@
   <version>1.0</version>
   <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
   <license></license>
-  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams</contributor>
-  <acknowledgements></acknowledgements>
+  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin.</contributor>
+  <acknowledgements><![CDATA[The development of this module was supported by NIH grants R01 MH097979 (PI Rathi), R01 MH092862 (PIs Westin and Verma), U01 NS083223 (PI Westin), R01 MH074794 (PI Westin) and P41 EB015902 (PI Kikinis).]]></acknowledgements>
 
 
   <parameters>
@@ -117,7 +117,7 @@
 
   </parameters>
 
-<parameters>
+<parameters advanced="true">
     <label>Advanced Options</label>
     <description></description>
 
@@ -150,7 +150,7 @@
       <longflag>recordTensors</longflag>
       <label>Record the tensors</label>
       <description>Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. The fields will be called 'TensorN', where N is the tensor number. </description>
-      <default>false</default>
+      <default>true</default>
     </boolean>
 
     <boolean>

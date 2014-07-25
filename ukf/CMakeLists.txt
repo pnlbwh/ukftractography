@@ -1,4 +1,5 @@
-#-----------------------------------------------------------------------------
+how notes View
+
 set(MODULE_NAME UKFTractography)
 
 #-----------------------------------------------------------------------------
@@ -26,10 +27,10 @@ set(MODULE_SRCS
 set(MODULE_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
-  ${Teem_LIBRARIES}
+  ${TEEM_LIB}
   ${VTK_LIBRARIES}
   )
-message("MODULE_TARGET_LIBRARIES:${MODULE_TARGET_LIBRARIES}")
+
 #-----------------------------------------------------------------------------
 enable_testing()
 add_subdirectory(Testing)

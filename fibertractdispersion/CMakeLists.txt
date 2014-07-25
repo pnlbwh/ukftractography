@@ -20,7 +20,7 @@ set(MODULE_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${VTK_LIBRARIES}
-  ${Teem_LIBRARIES}
+  ${TEEM_LIB}
   )
 
 #-----------------------------------------------------------------------------

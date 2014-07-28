@@ -207,7 +207,7 @@
   </parameters>
 
 
-  <parameters>
+  <parameters advanced="true">
 
     <label>Expert Settings</label>
     <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>

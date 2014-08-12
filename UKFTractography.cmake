@@ -37,12 +37,16 @@ find_package(ZLIB REQUIRED)
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-#
-# due to forcing all dependcy builds to put outputs into lib and bin at the
-# top level build directory, the Teem_LIBRARY_DIRS var is wrong; have to add
-# top level build dir here
-find_library(TEEM_LIB teem PATHS ${CMAKE_CURRENT_BINARY_DIR}/../lib)
-message("TEEM_LIB:${TEEM_LIB}")
+if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  set(TEEM_LIB teem)
+else()
+  #
+  # due to forcing all dependcy builds to put outputs into lib and bin at the
+  # top level build directory, the Teem_LIBRARY_DIRS var is wrong; have to add
+  # top level build dir here
+  find_library(TEEM_LIB teem PATHS ${CMAKE_CURRENT_BINARY_DIR}/../lib)
+  message("TEEM_LIB:${TEEM_LIB}")
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(common)

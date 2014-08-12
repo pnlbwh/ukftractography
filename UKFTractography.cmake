@@ -31,18 +31,37 @@ if(NOT Eigen_INCLUDE_DIR)
 endif()
 include_directories(${Eigen_INCLUDE_DIR})
 
+find_package(ZLIB REQUIRED)
+
+#
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-set(TEEM_LIB teem)
+if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  set(TEEM_LIB teem)
+else()
+  #
+  # due to forcing all dependcy builds to put outputs into lib and bin at the
+  # top level build directory, the Teem_LIBRARY_DIRS var is wrong; have to add
+  # top level build dir here
+  find_library(TEEM_LIB teem PATHS ${CMAKE_CURRENT_BINARY_DIR}/../lib)
+  message("TEEM_LIB:${TEEM_LIB}")
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
+
 if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
-  add_subdirectory(fibertractdispersion)
-  add_subdirectory(CompressedSensing)
+  option(USE_fibertractdispersion "Build the fibertractdispersion program" OFF)
+  if(USE_fibertractdispersion)
+    add_subdirectory(fibertractdispersion)
+  endif()
+  option(USE_CompressedSensing "Build the CompressedSensing program" OFF)
+  if(USE_CompressedSensing)
+    add_subdirectory(CompressedSensing)
+  endif()
   add_subdirectory(vtk2mask)
   add_subdirectory(vtkFilter)
 endif()

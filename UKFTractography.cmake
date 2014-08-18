@@ -37,7 +37,7 @@ find_package(ZLIB REQUIRED)
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   set(TEEM_LIB teem)
 else()
   #

@@ -172,7 +172,7 @@ void VtkWriter
       curTensor->SetNumberOfComponents(9);
       curTensor->Allocate(num_points * 9);
       std::stringstream ss;
-      ss << local_tensorNumber;
+      ss << "tensor" << local_tensorNumber;
       curTensor->SetName(ss.str().c_str());
       for( int i = 0; i < num_fibers; i++ )
         {

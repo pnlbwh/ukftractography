@@ -98,7 +98,7 @@ public:
   void Follow1T(const int thread_id, const SeedPointInfo& seed, UKFFiber& fiber);
 
   void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
-  void SetWriteCompressed(bool wb) { this->_writeBinary = wb; }
+  void SetWriteCompressed(bool wb) { this->_writeCompressed = wb; }
 private:
   /**
    * Calculate six tensor coefficients by solving B * d = log(s), where d are

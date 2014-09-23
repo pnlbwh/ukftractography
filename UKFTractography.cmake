@@ -11,15 +11,27 @@ find_package(SlicerExecutionModel REQUIRED)
 include(${SlicerExecutionModel_USE_FILE})
 
 #-----------------------------------------------------------------------------
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
-
-#-----------------------------------------------------------------------------
 find_package(ITK REQUIRED)
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   set(ITK_NO_IO_FACTORY_REGISTER_MANAGER 1) # Incorporate with Slicer nicely
 endif()
 include(${ITK_USE_FILE})
+
+#-----------------------------------------------------------------------------
+set(VTK_FOUND OFF)
+find_package(VTK COMPONENTS
+      vtkCommonSystem
+      vtkCommonCore
+      vtkCommonSystem
+      vtkCommonMath
+      vtkCommonMisc
+      vtkCommonTransforms
+      vtkIOLegacy
+      vtkIOXML
+      REQUIRED)
+if(VTK_USE_FILE)
+  include(${VTK_USE_FILE})
+endif()
 
 #-----------------------------------------------------------------------------
 if(NOT Eigen_INCLUDE_DIR)

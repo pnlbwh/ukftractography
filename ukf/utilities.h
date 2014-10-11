@@ -17,6 +17,6 @@ ukfPrecisionType l2fa(ukfPrecisionType l1, ukfPrecisionType l2, ukfPrecisionType
 ukfPrecisionType s2ga(const ukfMatrixType& signal);
 
 /** Calculate curve radius from fiber */
-ukfPrecisionType curve_radius(const stdVec_t& fiber);
+ukfPrecisionType curve_radius(const stdVec_t& fiber, int size);
 
 #endif  // UTILITIES_H_

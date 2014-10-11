@@ -137,8 +137,11 @@ private:
    * file at the end.
   */
   void Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state, const ukfMatrixType p, UKFFiber& fiber,
-              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2);
+              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2, int pos);
 
+  /**  Reserving fiber array memory so as to avoid resizing at every step*/
+  void FiberReserve(UKFFiber& fiber, int fiber_size);
+  
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
 

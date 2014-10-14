@@ -47,7 +47,8 @@ public:
                const int num_tensors, const int seeds_per_voxel,
                const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                const bool is_full_model, const bool free_water,
-               const ukfPrecisionType stepLength, const ukfPrecisionType maxHalfFiberLength,
+               const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
+               const ukfPrecisionType maxHalfFiberLength,
                const std::vector<int>& labels,
 
                ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
@@ -137,8 +138,11 @@ private:
    * file at the end.
   */
   void Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state, const ukfMatrixType p, UKFFiber& fiber,
-              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2);
+              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2, int pos);
 
+  /**  Reserving fiber array memory so as to avoid resizing at every step*/
+  void FiberReserve(UKFFiber& fiber, int fiber_size);
+  
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
 
@@ -207,6 +211,7 @@ private:
   const bool             _is_full_model;
   const bool             _free_water;
   const ukfPrecisionType           _stepLength;
+  const int                 _steps_per_record;
   const std::vector<int> _labels;
 
   bool _writeBinary;

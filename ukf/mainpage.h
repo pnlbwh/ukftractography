@@ -198,6 +198,10 @@
  *   <td width=67%>Step length of tractography, in millimeters. (If not set, defined during runtime)</td>
  * </tr>
  * <tr>
+ *   <td width=33%>--recordLength <ukfPrecisionType></td>
+ *   <td width=67%>Record length of tractography, in millimeters. (If not set, defined during runtime)</td>
+ * </tr>
+ * <tr>
  *   <td width=33%>--weightsOnTensors <std::vector<ukfPrecisionType>></td>
  *   <td width=67%>Weights on different tensors when using multiple tensors. There must be one weight for each tensor, and the weights must sum up to 1. Defaults to equally weighted.</td>
  * </tr>

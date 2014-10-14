@@ -47,17 +47,15 @@ ukfPrecisionType s2ga(const ukfMatrixType& signal)
   return sqrt(mu_sub * n) / sqrt( (n - 1) * mu_sq);
 }
 
-ukfPrecisionType curve_radius(const stdVec_t& fiber)
+ukfPrecisionType curve_radius(const stdVec_t& fiber, int size)
 {
-  int length = fiber.size();
-
-  if( length < 3 )
+  if( size < 3 )
     {
     return ukfOne;
     }
 
-  vec3_t v1 = fiber[length - 2] - fiber[length - 3];
-  vec3_t v2 = fiber[length - 1] - fiber[length - 2];
+  vec3_t v1 = fiber[size - 2] - fiber[size - 3];
+  vec3_t v2 = fiber[size - 1] - fiber[size - 2];
 
   // Normalize
   v1.normalize();

@@ -43,6 +43,7 @@ int main(int argc, char **argv)
   ukfPrecisionType l_minFA = minFA;
   ukfPrecisionType l_minGA = minGA;
   ukfPrecisionType l_stepLength = stepLength;
+  ukfPrecisionType l_recordLength = recordLength;  
   ukfPrecisionType l_maxHalfFiberLength = maxHalfFiberLength;
   ukfPrecisionType l_seedFALimit = seedFALimit;
   ukfPrecisionType l_Qm = Qm;
@@ -121,6 +122,10 @@ int main(int argc, char **argv)
     return 1 ;
   }
 
+  if (l_recordLength < l_stepLength) {
+    std::cout << "recordLength should be greater than stepLength" << std::endl;
+    return 1 ;
+  }
 
   // SETTING THE DEFAULT PARAMETERS
   std::string strModel = simpleTensorModel ? "simple model" : "full model";
@@ -202,6 +207,18 @@ int main(int argc, char **argv)
     }
   } else {
     tell(l_stepLength, "stepLength");
+  }
+
+  if (l_recordLength == 0.0) {
+    if (numTensor == 1) {
+      setAndTell(l_recordLength, 0.9, "recordLength");
+    } else if (numTensor == 2) {
+      setAndTell(l_recordLength, 0.9, "recordLength"); //was 0.2 for old Interp3Signal
+    } else { // 3T
+      setAndTell(l_recordLength, 0.45, "recordLength");
+    }
+  } else {
+    tell(l_recordLength, "recordLength");
   }
 
   if (freeWater) {
@@ -320,7 +337,7 @@ int main(int argc, char **argv)
                                          l_minBranchingAngle, l_maxBranchingAngle,
                                          !simpleTensorModel, freeWater,
 
-                                         l_stepLength, l_maxHalfFiberLength,
+                                         l_stepLength, l_recordLength, l_maxHalfFiberLength,
                                          labels,
 
                                          P0,  SIGMA_SIGNAL, SIGMA_MASK,

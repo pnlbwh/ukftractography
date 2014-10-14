@@ -237,6 +237,14 @@
     </double>
 
     <double>
+      <name>recordLength</name>
+      <longflag>recordLength</longflag>
+      <label>Record length of tractography (in mm)</label>
+      <description>Record length of tractography, in millimeters</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
       <name>maxHalfFiberLength</name>
       <longflag>maxHalfFiberLength</longflag>
       <label>Maximum tract length (in mm)</label>

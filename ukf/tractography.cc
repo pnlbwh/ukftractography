@@ -36,7 +36,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const int num_tensors, const int seeds_per_voxel,
                            const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                            const bool is_full_model, const bool free_water,
-                           const ukfPrecisionType stepLength, const ukfPrecisionType maxHalfFiberLength,
+                           const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
+                           const ukfPrecisionType maxHalfFiberLength,
                            const std::vector<int>& labels,
 
                            ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
@@ -60,6 +61,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _cos_theta_min(minBranchingAngle), _cos_theta_max(maxBranchingAngle),
   _is_full_model(is_full_model), _free_water(free_water),
   _stepLength(stepLength),
+  _steps_per_record(recordLength/stepLength),
   _labels(labels),
   _writeBinary(true),
   _writeCompressed(true),
@@ -679,6 +681,7 @@ void Tractography::Follow3T(const int thread_id,
                             std::vector<BranchingSeedAffiliation>& branching_seed_affiliation)
 {
   int fiber_size = 100;
+  int fiber_length = 0;
   assert(_model->signal_dim() == _signal_data->GetSignalDimension() * 2);
 
   // Unpack the fiberStartSeed information.
@@ -695,7 +698,7 @@ void Tractography::Follow3T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, 0);
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
 
   vec3_t m1 = fiberStartSeed.start_dir;
   vec3_t l1, m2, l2, m3, l3;
@@ -721,7 +724,7 @@ void Tractography::Follow3T(const int thread_id,
 
     const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
-    const bool   is_curving = curve_radius(fiber.position, stepnr) < _min_radius;
+    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
 
     if( !is_brain || in_csf
         || stepnr > _max_length  // Stop if the fiber is too long
@@ -732,14 +735,18 @@ void Tractography::Follow3T(const int thread_id,
 
       }
 
-    if(stepnr>=fiber_size)
+    if(fiber_length>=fiber_size)
       {
         // If fibersize is more than initally allocated size resizing further
         fiber_size += 100;
         FiberReserve(fiber, fiber_size);
       }
 
-    Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, stepnr);
+    if((stepnr+1)%_steps_per_record == 0)
+      {
+        fiber_length++;
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+      }
 
     // Record branch if necessary.
     if( is_branching )
@@ -853,7 +860,7 @@ void Tractography::Follow3T(const int thread_id,
       }
 
     }
-  FiberReserve(fiber, stepnr);
+  FiberReserve(fiber, fiber_length);
 }
 
 void Tractography::Follow2T(const int thread_id,
@@ -865,6 +872,7 @@ void Tractography::Follow2T(const int thread_id,
                             std::vector<BranchingSeedAffiliation>& branching_seed_affiliation)
 {
   int fiber_size = 100;
+  int fiber_length = 0;
   // Unpack the fiberStartSeed information.
   vec3_t x = fiberStartSeed.point;   // NOTICE that the x here is in ijk coordinate system
   State state = fiberStartSeed.state;
@@ -881,7 +889,7 @@ void Tractography::Follow2T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, 0); // writes state to fiber.state
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length); // writes state to fiber.state
 
   vec3_t m1, l1, m2, l2;
   m1 = fiberStartSeed.start_dir;
@@ -892,7 +900,7 @@ void Tractography::Follow2T(const int thread_id,
 
   int stepnr = 0;
 
-  // useful for debugging
+  // useful for debuggingo
 //   std::ofstream stateFile;
 //   stateFile.open("states.txt", std::ios::app);
 
@@ -916,7 +924,7 @@ void Tractography::Follow2T(const int thread_id,
     ukfPrecisionType ga = s2ga(signal_tmp);
     bool   in_csf = ga < _ga_min || fa < _fa_min;
     // bool in_csf = ga < _ga_min || fa < _fa_min ;
-    bool is_curving = curve_radius(fiber.position, stepnr) < _min_radius;
+    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
 
     if( !is_brain
         || in_csf
@@ -926,14 +934,18 @@ void Tractography::Follow2T(const int thread_id,
       break;
       }
 
-    if(stepnr>=fiber_size)
+    if(fiber_length>=fiber_size)
       {
         // If fibersize is more than initally allocated size resizing further
         fiber_size += 100;
         FiberReserve(fiber, fiber_size);
       }
 
-    Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, stepnr);
+    if((stepnr+1)%_steps_per_record == 0)
+      {
+        fiber_length++;
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+      }  
 
     // Record branch if necessary.
     if( is_branching )
@@ -970,7 +982,7 @@ void Tractography::Follow2T(const int thread_id,
         }
       }
     }
-    FiberReserve(fiber, stepnr);
+    FiberReserve(fiber, fiber_length);
 //   stateFile.close();
 }
 
@@ -981,6 +993,7 @@ void Tractography::Follow1T(const int thread_id,
                             UKFFiber& fiber)
 {
   int fiber_size = 100;
+  int fiber_length = 0;
   assert(_model->signal_dim() == _signal_data->GetSignalDimension() * 2);
 
   vec3_t x = fiberStartSeed.point;
@@ -1006,7 +1019,7 @@ void Tractography::Follow1T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, 0);
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
 
   // Tract the fiber.
   ukfMatrixType signal_tmp(_model->signal_dim(), 1);
@@ -1027,7 +1040,7 @@ void Tractography::Follow1T(const int thread_id,
 
     const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
-    const bool   is_curving = curve_radius(fiber.position, stepnr) < _min_radius;
+    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
 
     if( !is_brain
         || in_csf
@@ -1039,17 +1052,22 @@ void Tractography::Follow1T(const int thread_id,
 
       }
 
-    if(stepnr>=fiber_size)
+    if(fiber_length>=fiber_size)
       {
         // If fibersize is more than initally allocated size resizing further
         fiber_size += 100;
         FiberReserve(fiber, fiber_size);
       }
 
-    Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, stepnr);
+    if((stepnr+1)%_steps_per_record == 0)
+      {
+        fiber_length++;
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+      }  
+
 
     }
-    FiberReserve(fiber, stepnr);
+    FiberReserve(fiber, fiber_length);
 }
 
 void Tractography::Step3T(const int thread_id,

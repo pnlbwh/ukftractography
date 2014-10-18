@@ -698,7 +698,7 @@ void Tractography::Follow3T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
   vec3_t m1 = fiberStartSeed.start_dir;
   vec3_t l1, m2, l2, m3, l3;
@@ -724,7 +724,7 @@ void Tractography::Follow3T(const int thread_id,
 
     const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
-    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
+    bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain || in_csf
         || stepnr > _max_length  // Stop if the fiber is too long
@@ -745,7 +745,7 @@ void Tractography::Follow3T(const int thread_id,
     if((stepnr+1)%_steps_per_record == 0)
       {
         fiber_length++;
-        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
       }
 
     // Record branch if necessary.
@@ -889,7 +889,7 @@ void Tractography::Follow2T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length); // writes state to fiber.state
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2); // writes state to fiber.state
 
   vec3_t m1, l1, m2, l2;
   m1 = fiberStartSeed.start_dir;
@@ -924,7 +924,7 @@ void Tractography::Follow2T(const int thread_id,
     ukfPrecisionType ga = s2ga(signal_tmp);
     bool   in_csf = ga < _ga_min || fa < _fa_min;
     // bool in_csf = ga < _ga_min || fa < _fa_min ;
-    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
+    bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
@@ -944,7 +944,7 @@ void Tractography::Follow2T(const int thread_id,
     if((stepnr+1)%_steps_per_record == 0)
       {
         fiber_length++;
-        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
       }  
 
     // Record branch if necessary.
@@ -1019,7 +1019,7 @@ void Tractography::Follow1T(const int thread_id,
   FiberReserve(fiber, fiber_size);
 
   // Record start point.
-  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+  Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
 
   // Tract the fiber.
   ukfMatrixType signal_tmp(_model->signal_dim(), 1);
@@ -1040,7 +1040,7 @@ void Tractography::Follow1T(const int thread_id,
 
     const ukfPrecisionType ga = s2ga(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
-    bool is_curving = curve_radius(fiber.position, (stepnr+1)/_steps_per_record ) < _min_radius;
+    bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
@@ -1062,7 +1062,7 @@ void Tractography::Follow1T(const int thread_id,
     if((stepnr+1)%_steps_per_record == 0)
       {
         fiber_length++;
-        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2, fiber_length);
+        Record(x, fa, fa2, state, p, fiber, dNormMSE, trace, trace2);
       }  
 
 
@@ -1406,7 +1406,7 @@ void Tractography::SwapState2T( State& state,
 
 void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state,
                           const ukfMatrixType p,
-                          UKFFiber& fiber, ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2, int pos)
+                          UKFFiber& fiber, ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2)
 {
   
   assert(_model->state_dim() == static_cast<int>(state.size() ) );
@@ -1414,29 +1414,29 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
          p.cols() == static_cast<unsigned int>(state.size() ) );
 
   // std::cout << "x: " << x[0] << " " << x[1] << " " << x[2] << std::endl;
-  fiber.position[pos] = x;
-  fiber.norm[pos] = p.norm();
+  fiber.position.push_back(x);
+  fiber.norm.push_back(p.norm());
 
   if( _record_nmse )
     {
-    fiber.normMSE[pos] = dNormMSE;
+    fiber.normMSE.push_back(dNormMSE);
     }
 
   if( _record_trace )
     {
-    fiber.trace[pos] = trace;
+    fiber.trace.push_back(trace);
     if( _num_tensors >= 2 )
       {
-      fiber.trace2[pos] = trace2;
+      fiber.trace2.push_back(trace2);
       }
     }
 
   if( _record_fa )
     {
-    fiber.fa[pos] = fa;
+    fiber.fa.push_back(fa);
     if( _num_tensors >= 2 )
       {
-      fiber.fa2[pos] = fa2;
+      fiber.fa2.push_back(fa2);
       }
     }
 
@@ -1458,7 +1458,7 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
         exit(1);
         }
       }
-    fiber.free_water[pos] = fw;
+    fiber.free_water.push_back(fw);
     }
 
   // Record the state
@@ -1485,18 +1485,18 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
       store_state[11] = dir[1];
       store_state[12] = dir[2];
       }
-    fiber.state[pos] = store_state;
+    fiber.state.push_back(store_state);
 
     }
   else
     {
     // Normal state
-    fiber.state[pos] = state;
+    fiber.state.push_back(state);
     }
 
   if( _record_cov )
     {
-    fiber.covariance[pos] = p;
+    fiber.covariance.push_back(p);
     }
 }
 
@@ -1504,37 +1504,37 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
 void Tractography::FiberReserve(UKFFiber& fiber, int fiber_size)
 {
   // Reserving space for fiber
-  fiber.position.resize(fiber_size);
-  fiber.norm.resize(fiber_size);
-  fiber.state.resize(fiber_size);
+  fiber.position.reserve(fiber_size);
+  fiber.norm.reserve(fiber_size);
+  fiber.state.reserve(fiber_size);
   if( _record_nmse )
     {
-    fiber.normMSE.resize(fiber_size);
+    fiber.normMSE.reserve(fiber_size);
     }
 
   if( _record_trace )
     {
-    fiber.trace.resize(fiber_size);
+    fiber.trace.reserve(fiber_size);
     if( _num_tensors >= 2 )
       {
-      fiber.trace2.resize(fiber_size);
+      fiber.trace2.reserve(fiber_size);
       }
     }
 
   if( _record_fa )
     {
-    fiber.fa.resize(fiber_size);
+    fiber.fa.reserve(fiber_size);
     if( _num_tensors >= 2 )
       {
-      fiber.fa2.resize(fiber_size);
+      fiber.fa2.reserve(fiber_size);
       }
     }
   if( _record_free_water)
     {
-    fiber.free_water.resize(fiber_size);
+    fiber.free_water.reserve(fiber_size);
     }
   if( _record_cov)
     {
-      fiber.covariance.resize(fiber_size);
+      fiber.covariance.reserve(fiber_size);
     }
 }

@@ -52,14 +52,16 @@ int main(int argc, char **argv)
   ukfPrecisionType l_Rs = Rs;
   ukfPrecisionType l_maxBranchingAngle = maxBranchingAngle;
   ukfPrecisionType l_minBranchingAngle = minBranchingAngle;
-
+  
+  // If sigmaSignal is not set minimum of voxel size is used for interpolation
+  ukfPrecisionType SIGMA_SIGNAL = sigmaSignal;
+  
   bool simpleTensorModel = !fullTensorModel;
 
 
   std::cout << std::endl;
 
   // CONSTANTS
-  const ukfPrecisionType SIGMA_SIGNAL       = 1.66;
   const ukfPrecisionType SIGMA_MASK 	      = 0.5;
   const ukfPrecisionType P0 			          = 0.01;
   const ukfPrecisionType MIN_RADIUS 		    = 0.87;

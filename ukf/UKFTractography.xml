@@ -245,6 +245,14 @@
     </double>
 
     <double>
+      <name>sigmaSignal</name>
+      <longflag>sigmaSignal</longflag>
+      <label>Sigma for gaussian interpolation of signal</label>
+      <description>Sigma for gaussian interpolation of signal</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
       <name>maxHalfFiberLength</name>
       <longflag>maxHalfFiberLength</longflag>
       <label>Maximum tract length (in mm)</label>

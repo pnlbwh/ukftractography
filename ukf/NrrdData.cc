@@ -38,6 +38,13 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
   const int ny = static_cast<const int>(_dim[1]);
   const int nz = static_cast<const int>(_dim[2]);
 
+  // If sigmaSignal is not set minimum of voxel size is used for interpolation  
+  ukfPrecisionType sigma = _sigma_signal;
+  if (sigma == 0)
+    {
+    sigma = std::min(std::min(_voxel[0], _voxel[1]), _voxel[2]);
+    }
+
   ukfPrecisionType w_sum = 1e-16; // this != 0 also doesnt seem to be the problem
 
   assert(signal.size() == static_cast<unsigned int>(_num_gradients * 2) );
@@ -81,7 +88,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
         const ukfPrecisionType dzz = dz * dz;
 
         // gaussian smoothing
-        const ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_signal);
+        const ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / sigma);
         // for each gradient direction
         for( int i = 0; i < _num_gradients; ++i )
           {

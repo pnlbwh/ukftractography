@@ -265,7 +265,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         // GA is bigger than 0.18.
         ukfMatrixType signal_tmp(signal_dim * 2, 1);
         signal_tmp.col(0) = signal;
-        if( _full_brain && s2ga(signal_tmp) < _full_brain_ga_min )
+        if( _full_brain && s2ga(signal_tmp) < _seedFALimit )
           {
           keep = false;
           ++num_ga_too_low;

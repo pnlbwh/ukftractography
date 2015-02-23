@@ -152,7 +152,7 @@ int main(int argc, char **argv)
   }
 
   if (l_seedFALimit == 0.0) {
-    setAndTell(l_seedFALimit, l_minFA, "seedFALimit");  // Used to default to 2 times the FA threshold.
+    setAndTell(l_seedFALimit, FULL_BRAIN_GA_MIN, "seedFALimit");  // Used to default to 2 times the FA threshold.
   } else {
     tell(l_seedFALimit, "seedFALimit");
   }

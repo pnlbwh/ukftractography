@@ -1,12 +1,8 @@
 
 set(proj VTK)
 
-option(USE_VTK_6 "Build using VTK version 6" OFF)
-if(USE_VTK_6)
-  set(${proj}_REQUIRED_VERSION "6.10")  #If a required version is necessary, then set this, else leave blank
-else()
-  set(${proj}_REQUIRED_VERSION "5.10")  #If a required version is necessary, then set this, else leave blank
-endif()
+set(${proj}_REQUIRED_VERSION "6.10")  #If a required version is necessary, then set this, else leave blank
+set(VTK_VERSION_MAJOR 6)
 
 # Set dependency list
 set(${proj}_DEPENDENCIES "zlib")
@@ -57,45 +53,31 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       )
   endif()
 
-  if(${PRIMARY_PROJECT_NAME}_USE_QT)
-    if(NOT APPLE)
-      list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
-        #-DDESIRED_QT_VERSION:STRING=4 # Unused
-        -DVTK_USE_GUISUPPORT:BOOL=ON
-        -DVTK_USE_QVTK_QTOPENGL:BOOL=ON
-        -DVTK_USE_QT:BOOL=ON
-        -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
-        )
-    else()
-      list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
-        -DVTK_USE_CARBON:BOOL=OFF
-        -DVTK_USE_COCOA:BOOL=ON # Default to Cocoa, VTK/CMakeLists.txt will enable Carbon and disable cocoa if needed
-        -DVTK_USE_X:BOOL=OFF
-        #-DVTK_USE_RPATH:BOOL=ON # Unused
-        #-DDESIRED_QT_VERSION:STRING=4 # Unused
-        -DVTK_USE_GUISUPPORT:BOOL=ON
-        -DVTK_USE_QVTK_QTOPENGL:BOOL=ON
-        -DVTK_USE_QT:BOOL=ON
-        -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
-        )
-    endif()
-    if(USE_VTK_6)
-      list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
-        -DModule_vtkGUISupportQt:BOOL=ON
-        -DModule_vtkGUISupportQtOpenGL:BOOL=ON)
-    endif()
+  if(NOT APPLE)
+    list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
+      #-DDESIRED_QT_VERSION:STRING=4 # Unused
+      -DVTK_USE_GUISUPPORT:BOOL=ON
+      -DVTK_USE_QVTK_QTOPENGL:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT}
+      -DVTK_Group_Qt:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT} ##VTK6
+      -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
+      -DVTK_REQUIRED_OBJCXX_FLAGS:STRING="" # Should not be needed, but is always causing problems on mac
+                                            # This is to prevent the garbage collection errors from creeping back in
+      )
   else()
     list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
-        -DVTK_USE_GUISUPPORT:BOOL=OFF
-        -DVTK_USE_QT:BOOL=OFF
-        )
+      -DVTK_USE_CARBON:BOOL=OFF
+      -DVTK_USE_COCOA:BOOL=ON # Default to Cocoa, VTK/CMakeLists.txt will enable Carbon and disable cocoa if needed
+      -DVTK_USE_X:BOOL=OFF
+      -DVTK_USE_GUISUPPORT:BOOL=ON
+      -DVTK_USE_QVTK_QTOPENGL:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT}
+      -DVTK_Group_Qt:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT}  ## VTK6
+      -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
+      )
   endif()
 
-  if(USE_VTK_6)
-    list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
-      -DModule_vtkGUISupportQt:BOOL=ON
-      -DModule_vtkGUISupportQtOpenGL:BOOL=ON)
-  endif()
+  list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
+      -DModule_vtkGUISupportQt:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT}
+      -DModule_vtkGUISupportQtOpenGL:BOOL=${${PRIMARY_PROJECT_NAME}_USE_QT})
 
   # Disable Tk when Python wrapping is enabled
   if(${PRIMARY_PROJECT_NAME}_USE_PYTHONQT)
@@ -131,7 +113,7 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
   endif()
 
   # Slicer settings
-  # set(${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY 
+  # set(${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
   #   "github.com/Slicer/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
   # set(${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
   #   "c88dfedb277969e5f1f6c5349d8f7898610e75f4" CACHE STRING "VTK git tag to use" FORCE)
@@ -140,19 +122,19 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
   if(NOT DEFINED git_protocol)
     set(git_protocol "git")
   endif()
-  if(USE_VTK_6)
-    set(${proj}_REPOSITORY ${git_protocol}://vtk.org/VTK.git)
-    set(${proj}_GIT_TAG "3702626745922c5677a4562a00eb2d58dda17f52")
-  else()
-    set(${proj}_REPOSITORY ${git_protocol}://github.com/BRAINSia/VTK.git)
-    set(${proj}_GIT_TAG "80b124ff13bbab363bece53e850ba50f139a9d93")
-  endif()
+  # set(${proj}_GIT_REPOSITORY "${git_protocol}://github.com/Slicer/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
+  # set(${proj}_GIT_TAG "ea7cdc4e0b399be244e79392c67fed068c33e454")  # VTK 20141221
+  set(${proj}_GIT_REPOSITORY "${git_protocol}://vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
+  set(${proj}_GIT_TAG "af02b2f95a0477d3bd7dabb06967b111ca926a86")  # VTK 20150421
+
+## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./
+## to identify necessary modules for VTK
 
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/${proj}
-    BINARY_DIR ${proj}-build
-    GIT_REPOSITORY "${${proj}_REPOSITORY}"
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-build
+    GIT_REPOSITORY "${${proj}_GIT_REPOSITORY}"
     GIT_TAG ${${proj}_GIT_TAG}
     ${CUSTOM_BUILD_COMMAND}
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
@@ -169,10 +151,25 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       -DVTK_LEGACY_REMOVE:BOOL=ON
       -DVTK_WRAP_TCL:BOOL=${VTK_WRAP_TCL}
       -DVTK_WRAP_PYTHON:BOOL=${VTK_WRAP_PYTHON}
+      -DVTK_BUILD_ALL_MODULES_FOR_TESTS:BOOL=OFF
+      -DVTK_Group_Rendering:BOOL=OFF
+      -DVTK_Group_StandAlone:BOOL=OFF
+      -DModule_vtkCommonCore:BOOL=ON
+      -DModule_vtkCommonDataModel:BOOL=ON
+      -DModule_vtkCommonExecutionModel:BOOL=ON
+      -DModule_vtkCommonMath:BOOL=ON
+      -DModule_vtkCommonMisc:BOOL=ON
+      -DModule_vtkCommonSystem:BOOL=ON
+      -DModule_vtkCommonTransforms:BOOL=ON
+      -DModule_vtkIOCore:BOOL=ON
+      -DModule_vtkIOGeometry:BOOL=ON
+      -DModule_vtkIOLegacy:BOOL=ON
+      -DModule_vtkIOXML:BOOL=ON
+      -DModule_vtkIOXMLParser:BOOL=ON
       ${VTK_PYTHON_ARGS}
       ${VTK_QT_ARGS}
       ${VTK_MAC_ARGS}
-    INSTALL_COMMAND ""
+      INSTALL_COMMAND ""
     )
   ### --- End Project specific additions
   set(${proj}_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-build)
@@ -200,6 +197,6 @@ endif()
 mark_as_superbuild(VTK_SOURCE_DIR:PATH)
 
 mark_as_superbuild(
-  VARS VTK_DIR:PATH
+  VARS ${proj}_DIR:PATH VTK_VERSION_MAJOR:STRING
   LABELS "FIND_PACKAGE"
   )

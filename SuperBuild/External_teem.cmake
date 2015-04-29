@@ -17,10 +17,11 @@ endif()
 
 # Sanity checks
 if(DEFINED Teem_DIR AND NOT EXISTS ${Teem_DIR})
-  message(FATAL_ERROR "Teem_DIR variable is defined but corresponds to non-existing directory")
+  message(FATAL_ERROR "Teem_DIR variable is defined but corresponds to nonexistent directory")
 endif()
 
 if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
+
   set(EXTERNAL_PROJECT_OPTIONAL_ARGS)
 
   set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)
@@ -43,38 +44,15 @@ if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       )
   endif()
 
-  set(${proj}_REPOSITORY "${git_protocol}://github.com/BRAINSia/teem.git")
-  set(${proj}_TAG "bcf5abb8edf862566aabd6b0fb8f8f78155c8d8f")
-
-  #
-  # the Teem build makes a TeemConfig.cmake, but it is incorrect, because it assumes
-  # library files go into <builddir>/bin or <builddir>/lib
-  set(Teem_Ep_Args)
-  foreach(eparg ${COMMENT_EXTERNAL_PROJECT_ARGS})
-    set(skipvar)
-    foreach(pat ".*CMAKE_LIBRARY_OUTPUT_DIRECTORY.*"
-        ".*CMAKE_ARCHIVE_OUTPUT_DIRECTORY.*"
-        ".*CMAKE_RUNTIME_OUTPUT_DIRECTORY.*")
-      if("${eparg}" MATCHES ${pat})
-        list(APPEND skipvar "${eparg}")
-      endif()
-    endforeach()
-    if(NOT skipvar)
-      list(APPEND Teem_Ep_args "${eparg}")
-    endif()
-  endforeach()
-
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
-    GIT_REPOSITORY ${${proj}_REPOSITORY}
-    GIT_TAG ${${proj}_TAG}
-    URL_MD5 ${teem_MD5}
-    DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/teem
+    GIT_REPOSITORY "${git_protocol}://github.com/Slicer/teem"
+    GIT_TAG slicer-2015-04-14-r6245
+    SOURCE_DIR teem
     BINARY_DIR teem-build
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
-      ${Teem_EP_ARGS}
+      ${COMMON_EXTERNAL_PROJECT_ARGS}
       -DBUILD_TESTING:BOOL=OFF
       -DBUILD_SHARED_LIBS:BOOL=OFF
       ${CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG}
@@ -97,17 +75,30 @@ if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       ${${proj}_DEPENDENCIES}
     )
 
-  # ExternalProject_Add_Step(${proj} fix_AIR_EXISTS
-  #     COMMAND ${CMAKE_COMMAND} -DAIR_FILE=${SOURCE_DOWNLOAD_CACHE}/teem/src/air/air.h
-  #     -P ${CMAKE_CURRENT_LIST_DIR}/TeemPatch.cmake
-  #     COMMAND ${CMAKE_COMMAND} -E make_directory ${SOURCE_DOWNLOAD_CACHE}/teem/include/teem
-  #     COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE_DOWNLOAD_CACHE}/teem/src/bane/bane.h
-  #     ${SOURCE_DOWNLOAD_CACHE}/teem/include/teem/bane.h
-  #     DEPENDEES download
-  #     DEPENDERS configure
-  #     )
-
   set(Teem_DIR ${CMAKE_BINARY_DIR}/teem-build)
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to build tree
+
+  # library paths
+  set(${proj}_LIBRARY_PATHS_LAUNCHER_BUILD ${Teem_DIR}/bin/<CMAKE_CFG_INTDIR>)
+  mark_as_superbuild(
+    VARS ${proj}_LIBRARY_PATHS_LAUNCHER_BUILD
+    LABELS "LIBRARY_PATHS_LAUNCHER_BUILD" "PATHS_LAUNCHER_BUILD"
+    )
+
+  #-----------------------------------------------------------------------------
+  # Launcher setting specific to install tree
+
+  # library paths
+  if(UNIX AND NOT APPLE)
+    set(${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED <APPLAUNCHER_DIR>/lib/Teem-1.12.0)
+    mark_as_superbuild(
+      VARS ${proj}_LIBRARY_PATHS_LAUNCHER_INSTALLED
+      LABELS "LIBRARY_PATHS_LAUNCHER_INSTALLED"
+      )
+  endif()
+
 else()
   ExternalProject_Add_Empty(${proj} DEPENDS ${${proj}_DEPENDENCIES})
 endif()

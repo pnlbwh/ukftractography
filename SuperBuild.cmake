@@ -20,7 +20,7 @@ set( SOURCE_DOWNLOAD_CACHE ${CMAKE_CURRENT_BINARY_DIR}/src CACHE PATH
 mark_as_advanced( SOURCE_DOWNLOAD_CACHE )
 
 #-----------------------------------------------------------------------------
-# Git protocole option
+# Git protocol option
 #-----------------------------------------------------------------------------
 option(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL "If behind a firewall turn this off to use http instead." ON)
 set(git_protocol "git")
@@ -34,6 +34,14 @@ find_package(Git REQUIRED)
 # Enable and setup External project global properties
 #-----------------------------------------------------------------------------
 include(ExternalProject)
+
+# Compute -G arg for configuring external projects with the same CMake generator:
+if(CMAKE_EXTRA_GENERATOR)
+  set(gen "${CMAKE_EXTRA_GENERATOR} - ${CMAKE_GENERATOR}")
+else()
+  set(gen "${CMAKE_GENERATOR}")
+endif()
+
 
 # With CMake 2.8.9 or later, the UPDATE_COMMAND is required for updates to occur.
 # For earlier versions, we nullify the update state to prevent updates and
@@ -49,6 +57,8 @@ endif()
 
 #-----------------------------------------------------------------------------
 set(EXTERNAL_PROJECT_BUILD_TYPE "Release" CACHE STRING "Default build type for support libraries")
+set_property(CACHE EXTERNAL_PROJECT_BUILD_TYPE PROPERTY
+  STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
 option(USE_SYSTEM_ITK "Build using an externally defined version of ITK" OFF)
 option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined version of SlicerExecutionModel"  OFF)
@@ -70,12 +80,6 @@ mark_as_superbuild(
     SlicerExecutionModel_INSTALL_BIN_DIR:STRING
     SlicerExecutionModel_INSTALL_LIB_DIR:STRING
     SlicerExecutionModel_INSTALL_NO_DEVELOPMENT
-    SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY:PATH
-    SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH
-    SlicerExecutionModel_DEFAULT_CLI_ARCHIVE_OUTPUT_DIRECTORY:PATH
-    SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION:PATH
-    SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION:PATH
-    SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION:PATH
   PROJECTS SlicerExecutionModel
   )
 
@@ -129,11 +133,17 @@ mark_as_superbuild(
     CMAKE_SHARED_LINKER_FLAGS_MINSIZEREL:STRING
     CMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING
     CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO:STRING
+    CMAKE_GENERATOR:STRING
+    CMAKE_EXTRA_GENERATOR:STRING
+    CMAKE_EXPORT_COMPILE_COMMANDS:BOOL
     CMAKE_INSTALL_PREFIX:PATH
     CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH
     CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH
     CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH
     CMAKE_BUNDLE_OUTPUT_DIRECTORY:PATH
+    CMAKE_INSTALL_RUNTIME_DESTINATION:PATH
+    CMAKE_INSTALL_LIBRARY_DESTINATION:PATH
+    CMAKE_INSTALL_ARCHIVE_DESTINATION:PATH
     CTEST_NEW_FORMAT:BOOL
     MEMORYCHECK_COMMAND_OPTIONS:STRING
     MEMORYCHECK_COMMAND:PATH
@@ -148,11 +158,25 @@ mark_as_superbuild(
     PYTHON_LIBRARY:FILEPATH
     BOOST_ROOT:PATH
     BOOST_INCLUDE_DIR:PATH
+    SlicerExecutionModel_DIR:PATH
+    SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_ARCHIVE_OUTPUT_DIRECTORY:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_LIBRARY_DESTINATION:PATH
+    SlicerExecutionModel_DEFAULT_CLI_INSTALL_ARCHIVE_DESTINATION:PATH
   ALL_PROJECTS
   )
 
 if(${PRIMARY_PROJECT_NAME}_USE_QT)
-  mark_as_superbuild(VARS QT_QMAKE_EXECUTABLE QT_MOC_EXECUTABLE QT_UIC_EXECUTABLE)
+  mark_as_superbuild(
+    VARS
+      ${PRIMARY_PROJECT_NAME}_USE_QT:BOOL
+      QT_QMAKE_EXECUTABLE:PATH
+      QT_MOC_EXECUTABLE:PATH
+      QT_UIC_EXECUTABLE:PATH
+    ALL_PROJECTS
+    )
 endif()
 mark_as_superbuild(${PRIMARY_PROJECT_NAME}_USE_QT)
 
@@ -161,7 +185,10 @@ mark_as_superbuild(${PRIMARY_PROJECT_NAME}_USE_QT)
 #-----------------------------------------------------------------------------
 if(APPLE)
   mark_as_superbuild(
-    VARS CMAKE_OSX_ARCHITECTURES:STRING CMAKE_OSX_SYSROOT:PATH CMAKE_OSX_DEPLOYMENT_TARGET:STRING
+    VARS
+      CMAKE_OSX_ARCHITECTURES:STRING
+      CMAKE_OSX_SYSROOT:PATH
+      CMAKE_OSX_DEPLOYMENT_TARGET:STRING
     ALL_PROJECTS
     )
 endif()
@@ -214,9 +241,16 @@ ExternalProject_Add(${proj}
   DOWNLOAD_COMMAND ""
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   BINARY_DIR ${PRIMARY_PROJECT_NAME}-build
+  CMAKE_GENERATOR ${gen}
   CMAKE_ARGS
     --no-warn-unused-cli    # HACK Only expected variables should be passed down.
     -D${PRIMARY_PROJECT_NAME}_SUPERBUILD:BOOL=OFF    #NOTE: VERY IMPORTANT reprocess top level CMakeList.txt
+    -DRUNTIME_OUTPUT_DIRECTORY:PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    -DLIBRARY_OUTPUT_DIRECTORY:PATH=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+    -DARCHIVE_OUTPUT_DIRECTORY:PATH=${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+    -DINSTALL_RUNTIME_DESTINATION:PATH=${CMAKE_INSTALL_RUNTIME_DESTINATION}
+    -DINSTALL_LIBRARY_DESTINATION:PATH=${CMAKE_INSTALL_LIBRARY_DESTINATION}
+    -DINSTALL_ARCHIVE_DESTINATION:PATH=${CMAKE_INSTALL_ARCHIVE_DESTINATION}
   INSTALL_COMMAND ""
   )
 

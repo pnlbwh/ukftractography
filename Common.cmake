@@ -8,7 +8,7 @@ enable_language(C)
 enable_language(CXX)
 
 include(CMakeDependentOption)
-include(Artichoke)
+include(ExternalProjectDependency)
 
 #-----------------------------------------------------------------------------
 # Build option(s)

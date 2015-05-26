@@ -59,7 +59,8 @@ successfully)
 
     mkdir s4ext_build
     cd s4ext_build
-    cmake -DCMAKE_BUILD_TYPE:String=Release -DSlicer_DIR:PATH=/path/to/Slicer-SuperBuild-Debug/Slicer-build ../ukftractography 
+    cmake -DCMAKE_BUILD_TYPE:String=Release \
+      -DSlicer_DIR:PATH=/path/to/Slicer-SuperBuild-Debug/Slicer-build ../ukftractography 
     make
 
 Extension build, test, package and upload using ExperimentalUpload target

@@ -59,10 +59,7 @@ successfully)
 
     mkdir s4ext_build
     cd s4ext_build
-    ccmake -DUKFTractography_SUPERBUILD:BOOL=OFF \
-           -DSlicer_DIR=$soft/slicer/Slicer4-Superbuild/Slicer-build \
-           -DSlicer_EXTENSION_DESCRIPTION_DIR:PATH=$soft/ukftractography/ukf_tractography \
-            $soft/slicer/Slicer4/Extensions/CMake
+    cmake -DCMAKE_BUILD_TYPE:String=Release -DSlicer_DIR:PATH=/path/to/Slicer-SuperBuild-Debug/Slicer-build ../ukftractography 
     make
 
 Extension build, test, package and upload using ExperimentalUpload target

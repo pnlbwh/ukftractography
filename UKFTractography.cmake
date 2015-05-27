@@ -66,7 +66,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
 
 if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
-  option(USE_fibertractdispersion "Build the fibertractdispersion program" OFF)
+  option(USE_fibertractdispersion "Build the fibertractdispersion program" ON)
   if(USE_fibertractdispersion)
     add_subdirectory(fibertractdispersion)
   endif()

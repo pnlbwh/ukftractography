@@ -39,6 +39,8 @@ is more of a test than anything).
 
 #### a) Standalone Superbuild
 
+**To use previous version of unscented Kalman filter rename unscented_kalman_filter_previous.cc to unscented_kalman_filter.cc **
+
     cd <build-dir>
     cmake <path-to-source>
     make

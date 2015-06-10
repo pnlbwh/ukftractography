@@ -40,6 +40,7 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   assert(static_cast<unsigned int>( (m_FilterModel->Q() ).rows() ) == dim &&
          static_cast<unsigned int>( (m_FilterModel->Q() ).cols() ) == dim);
 
+
   //DUMMY VARIABLES TAHT ARE ALWAYS ZERO and not used.
   m_DummyZeroCE.resize(dim, 1);
   m_DummyZeroCE.setConstant(ukfZero);
@@ -68,6 +69,7 @@ void UnscentedKalmanFilter::SigmaPoints(const State& x,
   Eigen::LLT<ukfMatrixType> lltOfA(p); // compute the Cholesky decomposition of A
   ukfMatrixType NewM = ( lltOfA.matrixL() ); // retrieve factor L  in the decomposition
   NewM *= m_Scale;
+
   // Create dim x (2 * dim + 1) matrix (x, x + m, x - m).
   x_spread.col(0) = x;
   x_spread.block(0,    1,dim,dim) = X_tmp + NewM;
@@ -149,7 +151,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   X.setConstant(ukfZero);
   // Create sigma points.
   SigmaPoints(x, p, X); // doesnt change p, its const
-  // std::cout <<"\n state:"<<x;
+
   if( localConstFilterModel->isConstrained() )
     {
     // ukfMatrixType p_tmp = p; // will be changed in QuadProg
@@ -165,12 +167,10 @@ void UnscentedKalmanFilter::Filter(const State& x,
   {
     z_Eigen[i]=z[i];
   }
-  // std::cout<<"recorded signal: "<<z_Eigen;
 
   /** Used for the estimation of the new state */
   ukfMatrixType dim_dimext(dim, 2 * dim + 1);
   dim_dimext.setConstant(ukfZero);
-  // std::cout << "\n X:"<<X <<"\n Weigths" << this->m_Weights;  
   const ukfVectorType X_hat = X * this->m_Weights;
   for( unsigned int i = 0; i < dim_dimext.cols(); ++i )
     {
@@ -182,61 +182,50 @@ void UnscentedKalmanFilter::Filter(const State& x,
   const ukfMatrixType &X_ = X - dim_dimext;
   // Use const reference to avoid copying
   p_new = X_ * m_WeightsRepeated * X_.transpose() + Q;
-  // std::cout<<"\n intitial P:"<<p_new;
+
   /** The signal */
-  const ukfMatrixType Yk = p_new.inverse();
-  const ukfMatrixType yhat = Yk * X_hat;
-  // std::cout << "\n P: " << p_new << "\n yhat: " << yhat <<"\n Q: "<<Q;
-  // exit(1);
-  ukfMatrixType Z(signal_dim, 2 * dim + 1);
-  Z.setConstant(ukfZero);
-  localConstFilterModel->H(X, Z);
+  ukfMatrixType Y(signal_dim, 2 * dim + 1);
+  Y.setConstant(ukfZero);
+  localConstFilterModel->H(X, Y);
+
   /** Used for the estimation of the signal */
 
   ukfMatrixType     signaldim_dimext(signal_dim, 2 * dim + 1);
   signaldim_dimext.setConstant(ukfZero);
-  const ukfVectorType Z_hat = Z * this->m_Weights;
+  const ukfVectorType Y_hat = Y * this->m_Weights;
   for( unsigned int i = 0; i < signaldim_dimext.cols(); ++i )
     {
-    signaldim_dimext.col(i) = Z_hat;
+    signaldim_dimext.col(i) = Y_hat;
     }
 
-  Z -= signaldim_dimext;
-  const ukfMatrixType Z_ = Z;
-  //const ukfMatrixType WeightsRepeated_Y_Transpose =m_WeightsRepeated*Y_.transpose();
+  Y -= signaldim_dimext;
+  const ukfMatrixType Y_ = Y;
+  const ukfMatrixType WeightsRepeated_Y_Transpose =m_WeightsRepeated*Y_.transpose();
 
-  const ukfMatrixType temp = localConstFilterModel->R();
-  int R = 1/temp(0,0);
+  const ukfMatrixType R = localConstFilterModel->R();
 
   /** Covariance of the signal */
-  //const ukfMatrixType Pyy = Y_ * WeightsRepeated_Y_Transpose + R;
+  const ukfMatrixType Pyy = Y_ * WeightsRepeated_Y_Transpose + R;
 
   // Predict cross-correlation between state and observation.
   /** Covariance matrix state/signal */
-  const ukfMatrixType Pxz = X_ * m_WeightsRepeated * Z_.transpose();
+  const ukfMatrixType Pxy = X_ * WeightsRepeated_Y_Transpose;
 
   // Kalman gain KalmanGainMatrix, estimate state/observation, compute covariance.
   // Solve KalmanGainMatrix = Pyy \ Pxy'
   // Solve Ax = b. Result stored in x. Matlab: x = A \ b.
   //x = A.ldlt().solve(b));
-  const ukfMatrixType Ht = Yk * Pxz;
+  const ukfMatrixType KalmanGainMatrix = Pyy.ldlt().solve(Pxy.transpose());
 
-  dNormMSE = ( (z_Eigen - Z_hat).squaredNorm() ) / (z_Eigen.squaredNorm() );
+  dNormMSE = ( (z_Eigen - Y_hat).squaredNorm() ) / (z_Eigen.squaredNorm() );
 
-  const ukfMatrixType I = Ht * R * Ht.transpose();
-  const ukfMatrixType i = Ht * R * ((z_Eigen - Z_hat) + (Pxz.transpose() * yhat));
-  // std::cout <<"\n I:"<<I<<"\n i :"<<i;
-  p_new = (Yk+I).inverse();
-  // std::cout <<"\n p_new:"<<p_new;
-  ukfVectorType x_new_Eigen = p_new * (i + yhat);
+  p_new = p_new - KalmanGainMatrix.transpose() * Pyy * KalmanGainMatrix;
+  const ukfVectorType Y_hat2 = z_Eigen - Y_hat; // z is the real signal
+
+  ukfVectorType x_new_Eigen = KalmanGainMatrix.transpose() * Y_hat2 + X_hat;
   if( localConstFilterModel->isConstrained() )
     {
-    Constrain(x_new_Eigen, Yk+I);
+    Constrain(x_new_Eigen, p_new);
     }
   x_new = x_new_Eigen;
-  // std::cout << "\n x_new:" << x_new;
-  // static int counter;
-  // counter++;
-  // if (counter==3)
-  //   exit(1);
 }

@@ -16,7 +16,7 @@ void PostProcessFibers( const std::vector<UKFFiber>& raw_primary,
   assert(fibers.empty() );
   const int num_half_fibers = static_cast<int>(raw_primary.size() );
   assert( (num_half_fibers > 0) && (num_half_fibers % 2 == 0) );
-
+  // if Noddi model is used Kappa is stored in trace, Vic in fa and Viso in freewater
   const bool record_fa = !raw_primary[0].fa.empty();
   const bool record_fa2 = !raw_primary[0].fa2.empty();
   const bool record_trace = !raw_primary[0].trace.empty();

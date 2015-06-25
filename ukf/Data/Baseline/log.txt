@@ -1,0 +1,197 @@
+
+Found 8 cores on your system.
+Running tractography with 8 thread(s).
+
+Using the 2T simple model. Setting the default parameters accordingly:
+"*": set by user
+"-": default setting
+- minFA: 0.15
+* seedFALimit: 0.18
+- Qm: 0.001
+- Ql: 50
+- Rs: 0.02
+- stepLength: 0.3
+* recordLength: 0.3
+* minGA: 0.1
+* seedsPerVoxel: 5
+Using 2-tensor simple model.
+Using unconstrained filter
+
+Branching disabled
+
+Number of non-zero gradients: 51
+Number of zero gradients: 8
+Permuting the axis order to: 3 0 1 2
+Resizing the data to: 51 144 144 85
+Computing the baseline image
+Dividing the signal by baseline image
+Converting the world coordinate system to RAS
+Data normalization finished!
+
+
+Estimating seed tensors:
+Tracing 200 primary fibers:
+branch_seeds size: 0
+fiber size after postprocessibers: 98
+nmse_avg=0.0193973
+H count = 0
+Output file name ./seeds_tc.vtk
+CPU Runtime was 10
+
+Found 8 cores on your system.
+Running tractography with 8 thread(s).
+
+Using the 2T simple model. Setting the default parameters accordingly:
+"*": set by user
+"-": default setting
+- minFA: 0.15
+* seedFALimit: 0.18
+- Qm: 0.001
+- Ql: 50
+- Rs: 0.02
+- stepLength: 0.3
+* recordLength: 0.3
+* minGA: 0.1
+* seedsPerVoxel: 5
+Using 2-tensor simple model.
+Using unconstrained filter
+
+Branching disabled
+
+Number of non-zero gradients: 51
+Number of zero gradients: 8
+Permuting the axis order to: 3 0 1 2
+Resizing the data to: 51 144 144 85
+Computing the baseline image
+Dividing the signal by baseline image
+Converting the world coordinate system to RAS
+Data normalization finished!
+
+
+Estimating seed tensors:
+Tracing 200 primary fibers:
+branch_seeds size: 0
+fiber size after postprocessibers: 98
+nmse_avg=0.0193973
+H count = 0
+Output file name ./2T_fiber.vtk
+CPU Runtime was 11
+
+Found 8 cores on your system.
+Running tractography with 8 thread(s).
+
+Using the 1T simple model. Setting the default parameters accordingly:
+"*": set by user
+"-": default setting
+- minFA: 0.15
+* seedFALimit: 0.18
+- Qm: 0.005
+- Ql: 300
+- Rs: 0.01
+- stepLength: 0.3
+* recordLength: 0.3
+* minGA: 0.1
+* seedsPerVoxel: 5
+Using 1-tensor simple model.
+Using unconstrained filter
+
+Branching disabled
+
+Number of non-zero gradients: 51
+Number of zero gradients: 8
+Permuting the axis order to: 3 0 1 2
+Resizing the data to: 51 144 144 85
+Computing the baseline image
+Dividing the signal by baseline image
+Converting the world coordinate system to RAS
+Data normalization finished!
+
+
+Estimating seed tensors:
+Tracing 200 primary fibers:
+branch_seeds size: 0
+fiber size after postprocessibers: 98
+nmse_avg=0.0109772
+H count = 0
+Output file name ./1T_fiber.vtk
+CPU Runtime was 10
+
+Found 8 cores on your system.
+Running tractography with 8 thread(s).
+
+Using the 1T simple model with free water estimation. Setting the default parameters accordingly:
+"*": set by user
+"-": default setting
+- minFA: 0.15
+* seedFALimit: 0.18
+- Qm: 0.005
+- Ql: 300
+- Rs: 0.01
+- stepLength: 0.3
+* recordLength: 0.3
+- Qw: 0.0025
+* minGA: 0.1
+* seedsPerVoxel: 5
+Using 1-tensor simple model with free water estimation.
+Using constrained filter
+
+Branching disabled
+
+Number of non-zero gradients: 51
+Number of zero gradients: 8
+Permuting the axis order to: 3 0 1 2
+Resizing the data to: 51 144 144 85
+Computing the baseline image
+Dividing the signal by baseline image
+Converting the world coordinate system to RAS
+Data normalization finished!
+
+
+Estimating seed tensors:
+Tracing 200 primary fibers:
+branch_seeds size: 0
+fiber size after postprocessibers: 98
+nmse_avg=0.010702
+H count = 0
+Output file name ./1T_fw_fiber.vtk
+CPU Runtime was 10
+
+Found 8 cores on your system.
+Running tractography with 8 thread(s).
+
+Using the 2T simple model with free water estimation. Setting the default parameters accordingly:
+"*": set by user
+"-": default setting
+- minFA: 0.15
+* seedFALimit: 0.18
+- Qm: 0.001
+- Ql: 50
+- Rs: 0.02
+- stepLength: 0.3
+* recordLength: 0.3
+- Qw: 0.0015
+* minGA: 0.1
+* seedsPerVoxel: 5
+Using 2-tensor simple model with free water estimation.
+Using constrained filter
+
+Branching disabled
+
+Number of non-zero gradients: 51
+Number of zero gradients: 8
+Permuting the axis order to: 3 0 1 2
+Resizing the data to: 51 144 144 85
+Computing the baseline image
+Dividing the signal by baseline image
+Converting the world coordinate system to RAS
+Data normalization finished!
+
+
+Estimating seed tensors:
+Tracing 200 primary fibers:
+branch_seeds size: 0
+fiber size after postprocessibers: 98
+nmse_avg=0.0151843
+H count = 0
+Output file name ./2T_fw_fiber.vtk
+CPU Runtime was 12

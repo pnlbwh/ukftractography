@@ -2,6 +2,9 @@ start=`date +%s`
 
 SRC="../ukftractography"
 
+#logFile Name
+logFile="log.txt"
+
 # BINARY
 BINARY='bin/UKFTractography'
 
@@ -23,11 +26,11 @@ eval $BINARY \
  --tracts $output_path \
  --seedsFile $seeds_path \
  --seedsPerVoxel 5 \
- --numTensor 2
+ --numTensor 2 | tee -a $logFile
  end=`date +%s`
 
 runtime=$(python -c "print(${end} - ${start})")
-echo "Output file name $output_path"
-echo "CPU Runtime was $runtime" | tee -a "log.txt"
+echo "Output file name $output_path" | tee -a $logFile
+echo "CPU Runtime was $runtime"  | tee -a $logFile
 
 #diff $output_path $SRC/ukf/Data/Baseline/seeds_tc.vtk

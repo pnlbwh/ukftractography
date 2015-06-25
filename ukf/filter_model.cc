@@ -5,6 +5,7 @@
 
 #include "filter_model.h"
 #include <iostream>
+#include "utilities.h"
 
 ukfPrecisionType FilterModel::CheckZero(const ukfPrecisionType & local_d) const
 {
@@ -1092,5 +1093,233 @@ void Full2T_FW::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1,
   if( l1[0] < 0 || l1[1] < 0 ||  l1[2] < 0 || l2[0] < 0 || l2[1] < 0 ||  l2[2] < 0 )
     {
     std::cout << "Warning: eigenvalues became negative " << __LINE__ << " " << __FILE__ << std::endl;
+    }
+}
+
+void createProtocol(const ukfVectorType& _b_values,
+                    ukfVectorType& _gradientStrength, ukfVectorType& _pulseSeparation)
+{
+  static int count=0;
+  static ukfVectorType gradientStrength, pulseSeparation;
+  std::vector<double> Bunique, tmpG;
+  ukfPrecisionType Bmax = 0;
+  ukfPrecisionType tmp, Gmax, GAMMA;
+  
+  _gradientStrength.resize(_b_values.size());
+  _pulseSeparation.resize(_b_values.size());
+  
+  // set maximum G = 40 mT/m
+  Gmax = 0.04;
+  GAMMA = 267598700;
+  if(count ==1)
+  {
+     // gradient strength and pulseSeparation are once
+     // same values are returned
+    _gradientStrength = gradientStrength;
+    _pulseSeparation = pulseSeparation;
+  }
+  else{
+    for(int i = 0; i < _b_values.size(); ++i )
+    {
+      int unique = 1;
+      for(int j = 0; j < Bunique.size(); ++j )
+      { 
+        if (_b_values[i] == Bunique[j])
+        {
+          unique = 0;
+          break;
+        }
+      }
+      if(unique == 1)
+      {
+        Bunique.push_back(_b_values[i]);
+      }
+      if(Bmax < _b_values[i])
+      {
+        Bmax = _b_values[i];
+      }
+    }
+
+    tmp = cbrt(3*Bmax*1000000/(2*GAMMA*GAMMA*Gmax*Gmax));
+
+    for(int i = 0; i < _b_values.size(); ++i )
+    {
+      _pulseSeparation[i] = tmp;
+    }
+
+    for(int i = 0; i < Bunique.size(); ++i )
+    {
+      tmpG.push_back(std::sqrt(Bunique[i]/Bmax) * Gmax);
+    }
+
+    for(int i = 0; i < Bunique.size(); ++i )
+    {
+      for(int j=0; j < _b_values.size(); j++)
+      {
+        if(_b_values[j] == Bunique[i])
+        {
+          _gradientStrength[j] = tmpG[i];
+        }
+      }
+    }
+    gradientStrength = _gradientStrength;
+    pulseSeparation = _pulseSeparation;
+    count = 1;
+  }
+}
+
+// Functions for 1-fiber NODDI model.
+void NODDI1F::F(ukfMatrixType& X) const
+{
+  assert(_signal_dim > 0);
+  assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
+         X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
+  for( unsigned int i = 0; i < X.cols(); ++i )
+    {
+    // Normalize the direction vector.
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
+    norm_inv += X(0, i) * X(0, i);
+    norm_inv += X(1, i) * X(1, i);
+    norm_inv += X(2, i) * X(2, i);
+
+    norm_inv = ukfOne / sqrt(norm_inv);
+    X(0, i) *= norm_inv;
+    X(1, i) *= norm_inv;
+    X(2, i) *= norm_inv;
+    }
+}
+
+void NODDI1F::H(const  ukfMatrixType& X, ukfMatrixType& Y) const
+{
+  assert(_signal_dim > 0);
+  assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
+         (X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
+          X.cols() == 1) );
+  assert(Y.rows() == static_cast<unsigned int>(_signal_dim) &&
+         (Y.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
+          Y.cols() == 1) );
+  assert(_signal_data);
+
+  ukfPrecisionType dPar, dIso;
+  dPar = 0.0000000017;
+  dIso = 0.000000003;
+  const stdVec_t&   gradients = _signal_data->gradients();
+  ukfVectorType gradientStrength, pulseSeparation ;
+  createProtocol(_signal_data->GetBValues(),gradientStrength,pulseSeparation);
+  for( unsigned int i = 0; i < X.cols(); ++i )
+    {
+    ukfVectorType Eec, Eic, Eiso;
+    // Normalize direction.
+    vec3_t m;
+    initNormalized(m, X(0, i), X(1, i), X(2, i));
+
+    // Clamp lambdas.
+    const ukfPrecisionType Vic =X(3, i);
+    const ukfPrecisionType kappa = X(4, i);
+    const ukfPrecisionType Viso =X(5, i);
+    ExtraCelluarModel(dPar, Vic, kappa, gradientStrength,
+                          pulseSeparation, gradients, m, Eec);
+    IntraCelluarModel(dPar, kappa, gradientStrength, pulseSeparation,
+                          gradients, m, Eic);
+    IsoModel(dIso, gradientStrength, pulseSeparation, Eiso);
+    assert(Eic.size() == _signal_dim);
+    for( int j = 0; j < _signal_dim; ++j )
+      {
+      Y(j, i) = Viso*Eiso[j] + (1- Viso)*(Vic*Eic[j] + (1 - Vic)*Eec[j]);
+      }
+    }
+}
+
+// Functions for 2-fiber noddi model.
+void NODDI2F::F(ukfMatrixType& X) const
+{
+  assert(_signal_dim > 0);
+  assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
+         X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) );
+  // Clamp lambdas.
+  for( unsigned int i = 0; i < X.cols(); ++i )
+    {
+    // Normalize the direction vectors.
+    ukfPrecisionType norm_inv = ukfZero; // 1e-16;
+    norm_inv += X(0, i) * X(0, i);
+    norm_inv += X(1, i) * X(1, i);
+    norm_inv += X(2, i) * X(2, i);
+
+    norm_inv = ukfOne / sqrt(norm_inv);
+    X(0, i) *= norm_inv;
+    X(1, i) *= norm_inv;
+    X(2, i) *= norm_inv;
+
+    norm_inv = ukfZero; // 1e-16;
+    norm_inv += X(5, i) * X(5, i);
+    norm_inv += X(6, i) * X(6, i);
+    norm_inv += X(7, i) * X(7, i);
+
+    norm_inv = ukfOne / sqrt(norm_inv);
+    X(5, i) *= norm_inv;
+    X(6, i) *= norm_inv;
+    X(7, i) *= norm_inv;
+    }
+}
+
+void NODDI2F::H(const  ukfMatrixType& X,
+                 ukfMatrixType& Y) const
+{
+  assert(_signal_dim > 0);
+  assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
+         (X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
+          X.cols() == 1) );
+  assert(Y.rows() == static_cast<unsigned int>(_signal_dim) &&
+         (Y.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||
+          Y.cols() == 1) );
+  assert(_signal_data);
+
+  ukfPrecisionType dPar, dIso;
+  dPar = 0.0000000017;
+  dIso = 0.000000003;
+  const stdVec_t&   gradients = _signal_data->gradients();
+  ukfVectorType gradientStrength, pulseSeparation ;
+  createProtocol(_signal_data->GetBValues(),gradientStrength,pulseSeparation);
+  for( unsigned int i = 0; i < X.cols(); ++i )
+    {
+    // Normalize directions.
+    vec3_t m1;
+    initNormalized(m1, X(0, i), X(1, i), X(2, i));
+    vec3_t m2;
+    initNormalized(m2, X(5, i), X(6, i), X(7, i));
+
+    // Flip if necessary.
+    if( m1[0] < 0 )
+      {
+      m1 = -m1;
+      }
+    if( m2[0] < 0 )
+      {
+      m2 = -m2;
+      }
+
+    ukfVectorType Eec1, Eic1, Eec2, Eic2, Eiso;
+    const ukfPrecisionType Vic1 = X(3, i);
+    const ukfPrecisionType kappa1 = X(4, i);
+    const ukfPrecisionType Vic2 = X(8, i);
+    const ukfPrecisionType kappa2 = X(9, i);
+    const ukfPrecisionType Viso = X(10, i);        
+
+    ExtraCelluarModel(dPar, Vic1, kappa1, gradientStrength,
+                          pulseSeparation, gradients, m1, Eec1);
+    IntraCelluarModel(dPar, kappa1, gradientStrength, pulseSeparation,
+                          gradients, m1, Eic1 );
+
+    ExtraCelluarModel(dPar, Vic2, kappa2, gradientStrength,
+                          pulseSeparation, gradients, m2, Eec2);
+    IntraCelluarModel(dPar, kappa2, gradientStrength, pulseSeparation,
+                          gradients, m2, Eic2 );
+    IsoModel(dIso, gradientStrength, pulseSeparation, Eiso);
+    // Reconstruct signal.
+    for( int j = 0; j < _signal_dim; ++j )
+      {
+      Y(j, i) = Viso*Eiso[j]+(1-Viso)*((Vic1*Eic1[j] + (1 - Vic1)*Eec1[j]) * weights_on_tensors_[0] +
+                         (Vic2*Eic2[j] + (1 - Vic2)*Eec2[j]) * weights_on_tensors_[1]);
+      }
     }
 }

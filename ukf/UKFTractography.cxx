@@ -49,6 +49,8 @@ int main(int argc, char **argv)
   ukfPrecisionType l_Qm = Qm;
   ukfPrecisionType l_Ql = Ql;
   ukfPrecisionType l_Qw = Qw;
+  ukfPrecisionType l_Qkappa = Qkappa;
+  ukfPrecisionType l_Qvic = Qvic;
   ukfPrecisionType l_Rs = Rs;
   ukfPrecisionType l_maxBranchingAngle = maxBranchingAngle;
   ukfPrecisionType l_minBranchingAngle = minBranchingAngle;
@@ -157,8 +159,17 @@ int main(int argc, char **argv)
     tell(l_seedFALimit, "seedFALimit");
   }
 
+  if(!noddi){
+    if(recordVic || recordKappa || recordViso){
+      std::cout << "Can use recordVic or recordKappa or recordViso parameters only with noddi model";
+      exit(1);
+    }
+  }
+
   if (l_Qm == 0.0) {
-    if (numTensor == 1) {
+    if (noddi){
+      setAndTell(l_Qm, 0.001, "Qm");
+    } else if (numTensor == 1) {
       setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
       if (!simpleTensorModel) {
@@ -172,16 +183,24 @@ int main(int argc, char **argv)
   }
 
 
-  if (l_Ql == 0.0) {
-    if (numTensor == 1) {
-      setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
-    } else if (numTensor == 2) {
-      setAndTell(l_Ql, 50.0, "Ql");//was l_Ql = 100.0; for old Interp3Signal
-    } else if (numTensor == 3) {
-      setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 150.0;
+  if (noddi){
+    if ( l_Qkappa == 0.0)
+      setAndTell (l_Qkappa, 0.01, "Qkappa");
+    else
+      tell(l_Qkappa, "Qkappa");
+  }
+  else {
+    if (l_Ql == 0.0) {
+      if (numTensor == 1) {
+        setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
+      } else if (numTensor == 2) {
+        setAndTell(l_Ql, 50.0, "Ql");//was l_Ql = 100.0; for old Interp3Signal
+      } else if (numTensor == 3) {
+        setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 150.0;
+      }
+    } else {
+        tell(l_Ql, "Ql");
     }
-  } else {
-    tell(l_Ql, "Ql");
   }
 
 
@@ -223,17 +242,24 @@ int main(int argc, char **argv)
     tell(l_recordLength, "recordLength");
   }
 
-  if (freeWater) {
-    if (l_Qw == 0.0) {
-      if (numTensor == 1) {
-        setAndTell(l_Qw, 0.0025, "Qw"); // estimated in a paramsearch // 0.0025
-      } else if (numTensor == 2) {
-        setAndTell(l_Qw, 0.0015, "Qw"); // 0.0015
+  if (noddi){
+    if (l_Qvic == 0.0)
+      setAndTell(l_Qvic, 0.004, "Qvic = Qviso");
+    else
+      tell(l_Qvic, "Qvic = Qviso");
+  } 
+  else 
+    if (freeWater) {
+      if (l_Qw == 0.0) {
+        if (numTensor == 1) {
+          setAndTell(l_Qw, 0.0025, "Qw"); // estimated in a paramsearch // 0.0025
+        } else if (numTensor == 2) {
+          setAndTell(l_Qw, 0.0015, "Qw"); // 0.0015
+        }
+      } else {
+          tell(l_Qw, "Qw");
       }
-    } else {
-      tell(l_Qw, "Qw");
     }
-  }
 
   tell(l_minGA, "minGA");
 
@@ -276,7 +302,17 @@ int main(int argc, char **argv)
   FilterModel *filter_model = NULL; //Silence warnings.  This will cause segfault if it ever reaches this point.
   Tractography::model_type filter_model_type = Tractography::_1T;
 
-  if (numTensor == 1) {
+  if (noddi){
+    if (numTensor == 1){
+      std::cout << "Using NODDI 1-Fiber model." << std::endl;
+      filter_model = new NODDI1F(l_Qm, l_Qkappa, l_Qvic, l_Rs, weightsOnTensors, noddi);
+      filter_model_type = Tractography::_1T_FW; // same vtk writer can be used
+    } else if (numTensor == 2){
+      std::cout << "Using NODDI 2-Fiber model." << std::endl;
+      filter_model = new NODDI2F(l_Qm, l_Qkappa, l_Qvic, l_Rs, weightsOnTensors, noddi);
+      filter_model_type = Tractography::_2T_FW; // same vtk writer can be used
+    }
+  }else if (numTensor == 1) {
     if (simpleTensorModel && !freeWater) {
       std::cout << "Using 1-tensor simple model." << std::endl;
       filter_model = new Simple1T(l_Qm, l_Ql, l_Rs, weightsOnTensors, freeWater);
@@ -332,12 +368,13 @@ int main(int argc, char **argv)
                                          tracts, tractsWithSecondTensor,
                                          recordFA, recordNMSE, recordTrace, recordState,
                                          recordCovariance, recordFreeWater, recordTensors,
+                                         recordVic, recordKappa, recordViso,
                                          !noTransformPosition, storeGlyphs, branchesOnly,
 
                                          l_minFA, l_minGA, l_seedFALimit,
                                          numTensor, seedsPerVoxel,
                                          l_minBranchingAngle, l_maxBranchingAngle,
-                                         !simpleTensorModel, freeWater,
+                                         !simpleTensorModel, freeWater, noddi,
 
                                          l_stepLength, l_recordLength, l_maxHalfFiberLength,
                                          labels,

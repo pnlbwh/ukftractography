@@ -115,6 +115,13 @@
       <default>false</default>
     </boolean>
 
+    <boolean>
+      <name>noddi</name>
+      <longflag>noddi</longflag>
+      <label>Use Noddi model</label>
+      <description>If checked will use noddi model instead of 1T simple model</description>
+      <default>false</default>
+    </boolean>
   </parameters>
 
 <parameters advanced="true">
@@ -158,6 +165,30 @@
       <longflag>recordNMSE</longflag>
       <label>Record normalized MSE</label>
       <description>Whether to store NMSE. Attaches field 'NMSE' to fiber. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordVic</name>
+      <longflag>recordVic</longflag>
+      <label>Volume Fraction of intra-cellular Compartment</label>
+      <description>Volume Fraction of intra-cellular Compartment. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordKappa</name>
+      <longflag>recordKappa</longflag>
+      <label>Concentration Parameter</label>
+      <description>Concentration Parameter that measures the extent of orientation dispersion. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordViso</name>
+      <longflag>recordViso</longflag>
+      <label>Volume Fraction of CSF Compartment</label>
+      <description>Volume Fraction of CSF Compartment. </description>
       <default>false</default>
     </boolean>
 
@@ -265,7 +296,7 @@
       <longflag>seedFALimit</longflag>
       <label>Minimum seed FA</label>
       <description>Seed points whose FA are below this value are excluded</description>
-      <default>0.0</default>
+      <default>0.18</default>
     </double>
 
     <double>
@@ -289,6 +320,22 @@
       <longflag>Qw</longflag>
       <label>Rate of change of freewater weight</label>
       <description>Process noise for free water weights, ignored if no free water estimation</description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>Qkappa</name>
+      <longflag>Qkappa</longflag>
+      <label>Rate of change of kappa value</label>
+      <description></description>
+      <default>0.0</default>
+    </double>
+
+    <double>
+      <name>Qvic</name>
+      <longflag>Qvic</longflag>
+      <label>Rate of change of Volume fraction of Intracellular Component</label>
+      <description></description>
       <default>0.0</default>
     </double>
 

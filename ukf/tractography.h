@@ -41,12 +41,13 @@ public:
                const std::string& output_file, const std::string & output_file_with_second_tensor,
                const bool record_fa, const bool record_nmse, const bool record_trace,
                const bool record_state, const bool record_cov, const bool record_free_water, const bool record_tensors,
+               const bool record_Vic, const bool record_kappa,  const bool record_Viso,
                const bool transform_position, const bool store_glyphs, const bool branchesOnly,
 
                const ukfPrecisionType fa_min, const ukfPrecisionType ga_min, const ukfPrecisionType seedFALimit,
                const int num_tensors, const int seeds_per_voxel,
                const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
-               const bool is_full_model, const bool free_water,
+               const bool is_full_model, const bool free_water, const bool noddi,
                const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
                const ukfPrecisionType maxHalfFiberLength,
                const std::vector<int>& labels,
@@ -108,6 +109,12 @@ private:
   void UnpackTensor(const ukfVectorType& b, const stdVec_t& u, stdEigVec_t& s,
                     stdEigVec_t& ret);
 
+  /**
+  * Creates necessary variable for noddi
+  */
+  void createProtocol(const ukfVectorType& b, ukfVectorType& gradientStrength,
+                                  ukfVectorType& pulseSeparation);
+  
   /** One step along the fiber for the 3-tensor case. */
   void Step3T(const int thread_id, vec3_t& x, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3, vec3_t& l3,
               ukfPrecisionType& fa, ukfPrecisionType& fa2, State& state, ukfMatrixType& covariance, ukfPrecisionType& dNormMSE, ukfPrecisionType& trace,
@@ -173,6 +180,13 @@ private:
   const bool _record_cov;
   /** Switch for attaching the free water percentage to the fiber at each point of the tractography */
   const bool _record_free_water;
+  // Noddi Model parameters
+  /** Switch for attaching the Vic to the fiber at each point of the tractography */
+  const bool _record_Vic;
+  /** Switch for attaching the kappa to the fiber at each point of the tractography */
+  const bool _record_kappa;
+  /** Switch for attaching the Viso to the fiber at each point of the tractography */
+  const bool _record_Viso;
   /**
    * Switch for attaching the diffusion tensors to the fiber at each point of the tractography.
    * This is important for visualizing the fiber properties in Slicer.
@@ -197,6 +211,8 @@ private:
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;
+  bool _noddi;
+  ukfVectorType _gradientStrength, _pulseSeparation;
   /** Index of the weight in the state for the free water cases */
   int _nPosFreeWater;
 

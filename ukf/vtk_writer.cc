@@ -259,7 +259,8 @@ Write(const std::string& file_name,
       const std::string & tractsWithSecondTensor,
       const std::vector<UKFFiber>& fibers,
       bool write_state,
-      bool store_glyphs)
+      bool store_glyphs,
+      bool if_noddi)
 {
   if( fibers.size() == 0 )
     {
@@ -327,7 +328,10 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> fa = vtkSmartPointer<vtkFloatArray>::New();
     fa->SetNumberOfComponents(1);
     fa->Allocate(num_points);
-    fa->SetName("FA1");
+    if(if_noddi)
+      fa->SetName("Vic1");
+    else
+      fa->SetName("FA1");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
@@ -344,7 +348,10 @@ Write(const std::string& file_name,
   if(fibers[0].fa2.size() > 0)
     {
     vtkSmartPointer<vtkFloatArray> fa2 = vtkSmartPointer<vtkFloatArray>::New();
-    fa2->SetName("FA2");
+    if(if_noddi)
+      fa2->SetName("Vic2");
+    else
+      fa2->SetName("FA2");
     fa2->SetNumberOfComponents(1);
     fa2->Allocate(num_points);
     for( int i = 0; i < num_fibers; ++i )
@@ -365,7 +372,10 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> trace = vtkSmartPointer<vtkFloatArray>::New();
     trace->SetNumberOfComponents(1);
     trace->Allocate(num_points);
-    trace->SetName("Trace1");
+    if(if_noddi)
+      trace->SetName("Kappa1");
+    else
+      trace->SetName("trace1");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
@@ -384,7 +394,10 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> trace2 = vtkSmartPointer<vtkFloatArray>::New();
     trace2->SetNumberOfComponents(1);
     trace2->Allocate(num_points);
-    trace2->SetName("Trace2");
+    if(if_noddi)
+      trace2->SetName("Kappa2");
+    else
+      trace2->SetName("trace2");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();
@@ -402,7 +415,10 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> free_water = vtkSmartPointer<vtkFloatArray>::New();
     free_water->SetNumberOfComponents(1);
     free_water->Allocate(num_points);
-    free_water->SetName("FreeWater");
+    if(if_noddi)
+      free_water->SetName("Viso");
+    else
+      free_water->SetName("FreeWater");
     for( int i = 0; i < num_fibers; ++i )
       {
       int fiber_size = fibers[i].position.size();

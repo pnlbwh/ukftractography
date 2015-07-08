@@ -105,6 +105,12 @@ int main(int argc, char **argv)
     return 1 ;
   }
 
+  if (noddi) {
+    if (recordFA || recordTrace || recordFreeWater || recordTensors) {
+        std::cout << "recordFA, recordTrace, recordFreeWater, recordTensors parameters can only be used with tensor models\n";
+        return 1 ;
+    }
+  }
 //   if (l_stepLength <= 0){
 //     std::cout << "Invalid step length!" << std::endl ;
 //     return 1 ;

@@ -421,7 +421,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
           tmp_info_inv_state[4] = kappas[a]; // Kappa
        }
       }
-      std::cout <<"nmse of initialization "<< minnmse << "\n";
+      // std::cout <<"nmse of initialization "<< minnmse << "\n";
       if(_num_tensors > 1)
       {
         tmp_info_state.resize(10);

@@ -8,13 +8,13 @@
     UKF Tractography
   </title>
   <description>
-    This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. For more informations check the documentation.
+    This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methodology. For more information, please reference: Malcolm, James G., Martha E. Shenton, and Yogesh Rathi. "Filtered multitensor tractography." Medical Imaging, IEEE Transactions on 29.9 (2010): 1664-1675.
   </description>
   <version>1.0</version>
   <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
   <license></license>
-  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin.</contributor>
-  <acknowledgements><![CDATA[The development of this module was supported by NIH grants R01 MH097979 (PI Rathi), R01 MH092862 (PIs Westin and Verma), U01 NS083223 (PI Westin), R01 MH074794 (PI Westin) and P41 EB015902 (PI Kikinis).]]></acknowledgements>
+  <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin, Lauren O'Donnell, Jessica Lee.</contributor>
+  <acknowledgements><![CDATA[The development of this module was supported by NIH grants R01 MH097979 (PI Rathi), R01 MH092862 (PIs Westin and Verma), U01 NS083223 (PI Westin), R01 MH074794 (PI Westin) and P41 EB015902 (PI Kikinis), and P41 EB015898 (NCIGT).]]></acknowledgements>
 
 
   <parameters>
@@ -26,7 +26,7 @@
       <longflag alias="dwiData">dwiFile</longflag>
       <label>Input DWI volume</label>
       <channel>input</channel>
-      <description>Input DWI volume</description>
+      <description>Input diffusion weighted (DWI) volume</description>
     </image>
 
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
@@ -41,7 +41,7 @@
       <name>labels</name>
       <longflag>labels</longflag>
       <label>ROI label to use for seeding</label>
-      <description>A vector of the ROI labels to be used</description>
+      <description>A vector of the ROI labels to be used. There are the voxel values where tractography should be seeded. </description>
       <default>1</default>
     </integer-vector>
 
@@ -50,7 +50,7 @@
       <longflag alias="maskData">maskFile</longflag>
       <label>Brain mask</label>
       <channel>input</channel>
-      <description>Mask for diffusion tractography</description>
+      <description>Brain mask for diffusion tractography. Tracking will only be performed inside this mask.</description>
     </image>
 
     <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
@@ -58,326 +58,397 @@
       <longflag>tracts</longflag>
       <label>Output Fibers</label>
       <channel>output</channel>
-      <description>Tracts generated, with first tensor output</description>
+      <description>Output fiber tracts.</description>
     </geometry>
 
-    <boolean>
-      <name>writeAsciiTracts</name>
-      <flag>a</flag>
-      <longflag>writeAsciiTracts</longflag>
-      <label>Write Binary Tracts File</label>
-      <description>Write tract file as a VTK binary data file</description>
-      <default>false</default>
-    </boolean>
-    <boolean>
-      <name>writeUncompressedTracts</name>
-      <flag>u</flag>
-      <longflag>writeUncompressedTracts</longflag>
-      <label>Write uncompressed Tracts File</label>
-      <description>Write tract file as a VTK uncompressed data file</description>
-      <default>false</default>
-    </boolean>
+
   </parameters>
 
+
   <parameters>
-	<label>Basic Options</label>
+  <label>Tractography Options</label>
     <description>Basic Parameters</description>
 
     <integer>
       <name>seedsPerVoxel</name>
       <longflag>seedsPerVoxel</longflag>
-      <label>Number of seeds per voxel</label>
-      <description> Each seed generates a fiber, thus using more seeds generates more fibers. In general use 1 or 2 seeds, and for a more thorough result use 5 or 10 (depending on your machine this may take up to 2 days to run).
+      <label>Seeding: Number of seeds per voxel</label>
+      <description> Tractography parameter used in all models. Each seed generates a fiber, thus using more seeds generates more fibers. In general use 1 or 2 seeds, and for a more thorough result use 5 or 10 (depending on your machine this may take up to 2 days to run). Default: 1. Range: 0-50.
       </description>
       <default>1</default>
       <constraints>
         <minimum>0</minimum>
-	    <maximum>50</maximum>
-	    <step>1</step>
-	  </constraints>
+      <maximum>50</maximum>
+      <step>1</step>
+    </constraints>
+    </integer>
+
+    <double>
+      <name>seedFALimit</name>
+      <longflag>seedFALimit</longflag>
+      <label>Seeding: Minimum seed FA</label>
+      <description>Tractography parameter used in all models. Seed points whose fractional anisotropy (FA) are below this value are excluded. Default: 0.18. Range: 0-1.</description>
+      <default>0.18</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum> 1</maximum>
+        <step> 0.01</step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>minFA</name>
+      <longflag>minFA</longflag>
+      <label>Stopping Criterion: Terminating FA </label>
+      <description>Tractography parameter used in tensor model. Tractography will stop when the fractional anisotropy (FA) of the tensor being tracked is less than this value. Note: make sure to also decrease the GA to track through lower anisotropy areas. This parameter is used only in tensor models. Default: 0.15. Range: 0-1.</description>
+      <default>0.15</default>
+      <constraints>
+        <minimum>0</minimum>
+      <maximum>1</maximum>
+      <step>0.01</step>
+    </constraints>
+    </double>
+
+    <double>
+      <name>minGA</name>
+      <longflag>minGA</longflag>
+      <label>Stopping Criterion: Terminating GA </label>
+      <description>Tractography parameter used in all models. Tractography will stop when the generalized anisotropy (GA) is less than this value. GA is a normalized variance of the input signals (so it does not depend on any model). Note: to extend tracking through low anisotropy areas, this parameter is often more effective than the minFA. This parameter is used by both tensor and NODDI models. Default: 0.1. Range: 0-1. </description>
+      <default>0.1</default>
+      <constraints>
+    <minimum>0</minimum>
+      <maximum>1</maximum>
+      <step>0.01</step>
+    </constraints>
+    </double>
+
+    <integer>
+      <name>numThreads</name>
+      <longflag>numThreads</longflag>
+      <label>Tracking: Number of threads</label>
+      <description>Tractography parameter used in all models. Number of threads used during computation. Set to the number of cores on your workstation for optimal speed. If left undefined, the number of cores detected will be used. </description>
+      <default>-1</default>
     </integer>
 
     <integer-enumeration>
       <name>numTensor</name>
       <longflag>numTensor</longflag>
-      <label>Number of tensors used</label>
-      <description>Number of tensors used</description>
+      <label>Tracking: Number of tensors/orientations in model</label>
+      <description>Number of tensors (tensor model) or orientations (NODDI model) used</description>
       <default>2</default>
       <element>1</element>
       <element>2</element>
     </integer-enumeration>
 
+
+    <double>
+      <name>stepLength</name>
+      <longflag>stepLength</longflag>
+      <label>Tracking: Step length of tractography (in mm)</label>
+      <description>Tractography parameter used in all models. Step size when conducting tractography. Default: 0.3. Range: 0.1-1. </description>
+      <default>0.3</default>
+      <constraints> 
+        <minimum> 0.1 </minimum>
+        <maximum> 1 </maximum>
+        <step> 0.1 </step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>Qm</name>
+      <longflag>Qm</longflag>
+      <label>Tracking: Rate of change of tensor direction/orientation</label>
+      <description>UKF data fitting parameter for tensor or NODDI model: Process noise for angles/direction. Defaults: Noddi-0.001; Single tensor-0.005; other-0.001. Suggested Range: 0.00001 - 0.25. Default of 0.0 indicates the program will assign value based on other model parameters. </description>
+      <default>0.0</default>
+      <constraints>
+        <minimum> 0.0 </minimum>
+        <maximum> 0.25 </maximum>
+        <step> 0.00001 </step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>recordLength</name>
+      <longflag>recordLength</longflag>
+      <label>Output: Step length of output tractography (in mm)</label>
+      <description>Tractography parameter used in all models. Step size between points saved along fibers. Default: 0.9. Range: 0.1-4. </description>
+      <default>0.9</default>
+      <constraints>
+        <minimum> 0.1 </minimum>
+        <maximum> 4 </maximum>
+        <step> 0.1 </step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>maxHalfFiberLength</name>
+      <longflag>maxHalfFiberLength</longflag>
+      <label>Output: Maximum tract length (in mm)</label>
+      <description>Tractography parameter used in all models. The max length limit of the half fibers generated during tractography. A fiber is "half" when the tractography goes in only one direction from one seed point at a time. Default: 250 mm. Range: 1-500 mm.</description>
+      <default>250</default>
+      <constraints>
+        <minimum>1 </minimum>
+        <maximum> 500 </maximum>
+        <step> 1 </step>
+      </constraints>
+    </double>
+
+    <boolean>
+      <name>recordNMSE</name>
+      <longflag>recordNMSE</longflag>
+      <label>Output: Save Normalized Mean Square Error </label>
+      <description>Record output from data fitting: Store normalized mean square error (NMSE) along fibers. </description>
+      <default>false</default>
+    </boolean>
+
+  </parameters>
+
+
+  <parameters>
+  <label>Tensor Model </label>
+    <description>Use for tensor model</description>
+
     <boolean>
       <name>freeWater</name>
       <longflag>freeWater</longflag>
-      <label>Estimate term for free water</label>
-      <description>Adds a term for free water difusion to the model. (Note for experts: if checked, the 1T simple model is forced) </description>
+      <label>Tensor Model: Estimate term for free water</label>
+      <description>Adds a term for free water diffusion to the model. The free water model is a tensor with all 3 eigenvalues equal to the diffusivity of free water (0.003). To output the free water fraction, make sure to use the "save free water" parameter.  </description>
       <default>false</default>
     </boolean>
-
-    <boolean>
-      <name>noddi</name>
-      <longflag>noddi</longflag>
-      <label>Use Noddi model</label>
-      <description>If checked will use noddi model instead of 1T simple model</description>
-      <default>false</default>
-    </boolean>
-  </parameters>
-
-<parameters advanced="true">
-    <label>Advanced Options</label>
-    <description></description>
 
     <boolean>
       <name>recordFA</name>
       <longflag>recordFA</longflag>
-      <label>Record FA</label>
-      <description>Whether to store FA. Attaches field 'FA', and 'FA2' for 2-tensor case to fiber. </description>
+      <label>Output: Save tensor FA</label>
+      <description>Record output from tensor model: Save fractional anisotropy (FA) of the tensor(s). Attaches field 'FA' or 'FA1' and 'FA2' for 2-tensor case to fiber. </description>
       <default>true</default>
-    </boolean>
-
-    <boolean>
-      <name>recordFreeWater</name>
-      <longflag>recordFreeWater</longflag>
-      <label>Record Free Water</label>
-      <description>Whether to store the fraction of free water. Attaches field 'FreeWater' to fiber.</description>
-      <default>false</default>
     </boolean>
 
     <boolean>
       <name>recordTrace</name>
       <longflag>recordTrace</longflag>
-      <label>Record Trace</label>
-      <description>Whether to store Trace. Attaches field 'Trace', and 'Trace2' for 2-tensor case to fiber.</description>
+      <label>Output: Save tensor trace</label>
+      <description>Record output from tensor model: Save the trace of the tensor(s). Attaches field 'Trace' or 'Trace1' and 'Trace2' for 2-tensor case to fiber.</description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordFreeWater</name>
+      <longflag>recordFreeWater</longflag>
+      <label>Output: Save free water fraction</label>
+      <description>Record output from tensor plus free water model: Save the fraction of free water. Attaches field 'FreeWater' to fiber.</description>
       <default>false</default>
     </boolean>
 
     <boolean>
       <name>recordTensors</name>
       <longflag>recordTensors</longflag>
-      <label>Record the tensors</label>
-      <description>Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. The fields will be called 'TensorN', where N is the tensor number. </description>
+      <label>Output: Save tensors</label>
+      <description>Record output from tensor model: Save the tensors that were computed during tractography (if using tensor model). The fields will be called 'TensorN', where N is the tensor number. Recording the tensors enables Slicer to color the fiber bundles by FA, orientation, and so on. Recording the tensors also enables quantitative analyses. </description>
       <default>true</default>
     </boolean>
 
+    <double>
+      <name>Ql</name>
+      <longflag>Ql</longflag>
+      <label>UKF Parameter (Advanced): Rate of change of eigenvalues</label>
+      <description>UKF data fitting parameter for tensor model: Process noise for eigenvalues. Defaults: 1 tensor-300 ; 2 tensor-50 ; 3 tensor-100. Suggested Range: 1-1000. Default of 0.0 indicates the program will assign value based on other model parameters.</description>
+      <default>0.0</default>
+      <constraints>
+        <minimum> 0 </minimum>
+        <maximum> 1000</maximum>
+        <step> 1 </step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>Qw</name>
+      <longflag>Qw</longflag>
+      <label>UKF Parameter (Advanced): Rate of change of freewater weight</label>
+      <description>UKF data fitting parameter for tensor plus free water model: Process noise for free water weights, ignored if no free water estimation. Defaults: 1 tensor-0.0025; 2 tensor-0.0015. Suggested Range: 0.00001-0.25. Default of 0.0 indicates the program will assign value based on other model parameters.</description>
+      <default>0.0</default>
+      <constraints>
+        <minimum> 0.0 </minimum>
+        <maximum> 0.25 </maximum>
+        <step> 0.00001 </step>
+      </constraints>
+    </double>
+
+  </parameters>
+
+<parameters advanced="true">
+    <label>NODDI Model</label>
+    <description>Use NODDI model</description>
+
     <boolean>
-      <name>recordNMSE</name>
-      <longflag>recordNMSE</longflag>
-      <label>Record normalized MSE</label>
-      <description>Whether to store NMSE. Attaches field 'NMSE' to fiber. </description>
+      <name>noddi</name>
+      <longflag>noddi</longflag>
+      <label>NODDI Model: Use NODDI Model </label>
+      <description>Use neurite orientation dispersion and density imaging (NODDI) model instead of tensor model. </description>
       <default>false</default>
     </boolean>
+
 
     <boolean>
       <name>recordVic</name>
       <longflag>recordVic</longflag>
-      <label>Volume Fraction of intra-cellular Compartment</label>
-      <description>Volume Fraction of intra-cellular Compartment. </description>
+      <label>Output: Save NODDI intra-cellular volume fraction. </label>
+      <description>Record output from NODDI model: Store volume fraction of intra-cellular compartment along fibers. </description>
       <default>false</default>
     </boolean>
 
     <boolean>
       <name>recordKappa</name>
       <longflag>recordKappa</longflag>
-      <label>Concentration Parameter</label>
-      <description>Concentration Parameter that measures the extent of orientation dispersion. </description>
+      <label>Output: Save NODDI dispersion parameter (kappa)</label>
+      <description>Record output from NODDI model: concentration parameter that measures the extent of orientation dispersion. </description>
       <default>false</default>
     </boolean>
 
     <boolean>
       <name>recordViso</name>
       <longflag>recordViso</longflag>
-      <label>Volume Fraction of CSF Compartment</label>
-      <description>Volume Fraction of CSF Compartment. </description>
+      <label>Output: Save NODDI CSF volume fraction. </label>
+      <description>Record output from NODDI model: Store volume fraction of CSF compartment along fibers. </description>
       <default>false</default>
     </boolean>
 
-    <boolean>
-      <name>recordState</name>
-      <longflag>recordState</longflag>
-      <label>Record states</label>
-      <description>Whether to attach the states to the fiber. Will generate field 'state'.</description>
-      <default>false</default>
-    </boolean>
-
-    <boolean>
-      <name>recordCovariance</name>
-      <longflag>recordCovariance</longflag>
-      <label>Record the covariance</label>
-      <description>Whether to store the covariance. Will generate field 'covariance' in fiber.</description>
-      <default>false</default>
-    </boolean>
-
-	<double>
-      <name>minFA</name>
-      <longflag>minFA</longflag>
-      <label>Stopping Criterion: Terminating FA (defaults set runtime)</label>
-      <description>Abort the tractography when the Fractional Anisotropy is less than this value</description>
-      <default>0.15</default>
-      <constraints>
-        <minimum>0</minimum>
-	    <maximum>1</maximum>
-	    <step>0.01</step>
-	  </constraints>
+    <double>
+      <name>Qkappa</name>
+      <longflag>Qkappa</longflag>
+      <label>UKF Parameter (Advanced): Rate of change of kappa value</label>
+      <description>UKF data fitting parameter for NODDI model: Rate of change of kappa (orientation dispersion) value. Higher kappa values indicate more fiber dispersion. Default: 0.01. </description>
+      <default>0.01</default>
     </double>
 
     <double>
-      <name>minGA</name>
-      <longflag>minGA</longflag>
-      <label>Stopping Criterion: Terminating minimum Generalized Anisotropy</label>
-      <description>Abort the tractography when the Generalized Anisotropy is less than this value</description>
-      <default>0.1</default>
-      <constraints>
-		<minimum>0</minimum>
-	  	<maximum>1</maximum>
-	  	<step>0.01</step>
-	  </constraints>
+      <name>Qvic</name>
+      <longflag>Qvic</longflag>
+      <label>UKF Parameter (Advanced): Rate of change of intracellular volume fraction</label>
+      <description>UKF data fitting parameter for NODDI model: Rate of change of volume fraction of intracellular component. Default: 0.004. </description>
+      <default>0.004</default>
     </double>
-
 
   </parameters>
 
 
   <parameters advanced="true">
 
-    <label>Expert Settings</label>
-    <description>Parameters for tractography. Note: Some values are set runtime. However, if set to a value here, this value will be used.</description>
+    <label>Signal Parameters (Expert Only)</label>
+    <description></description>
+
+    <double>
+      <name>Rs</name>
+      <longflag>Rs</longflag>
+      <label>Signal Parameter (Advanced): Expected noise in signal</label>
+      <description>UKF Data Term: Measures expected noise in signal. This is used by the UKF method to decide how much to trust the data. This should be increased for very noisy data or reduced for high quality data. Defaults: single tensor/orientation-0.01; other-0.02. Suggested Range: 0.001-0.25. Default of 0.0 indicates the program will assign value based on other model parameters.</description>
+      <default> 0.0 </default>
+      <constraints>
+        <minimum> 0.0 </minimum>
+        <maximum> 0.25 </maximum>
+        <step> 0.001 </step>
+      </constraints>
+    </double>
+
+
+</parameters>
+
+<parameters advanced="true">
+  <label>Not Used: Debug/Develop Only </label>
+  <description> </description>
+
+    <double>
+      <name>sigmaSignal</name>
+      <longflag>sigmaSignal</longflag>
+      <label>Signal Parameter (Advanced): Sigma for Gaussian interpolation of signal</label>
+      <description>UKF Data Term: Sigma for Gaussian kernel used to interpolate the signal at sub-voxel locations. Default: 0.0</description>
+      <default>0.0</default>
+    </double>
+
+    <boolean>
+      <name>recordState</name>
+      <longflag>recordState</longflag>
+      <label>Record states</label>
+      <description>Develop/Debug Only: Store the states along the fiber. Will generate field 'state'. The state is the model for UKF. In the case of the two tensor model, it is a ten-parameter vector. </description>
+      <default>false</default>
+    </boolean>
+
+    <boolean>
+      <name>recordCovariance</name>
+      <longflag>recordCovariance</longflag>
+      <label>Record the covariance matrix</label>
+      <description>Develop/Debug Only: Store the covariance matrix along the fiber. Will generate field 'covariance' in fiber. This is the covariance from the unscented Kalman filter.</description>
+      <default>false</default>
+    </boolean>
 
     <boolean>
       <name>fullTensorModel</name>
       <longflag>fullTensorModel</longflag>
       <label>Use full tensor model</label>
-      <description>Whether to use the full tensor model. If unchecked, use the default simple tensor model</description>
+      <description>Develop/Debug Only: Use the full tensor model instead of the default model. The default model has both smaller eigenvalues equal, whereas the full model allows 3 different eigenvalues. </description>
       <default>false</default>
     </boolean>
-
-    <integer>
-      <name>numThreads</name>
-      <longflag>numThreads</longflag>
-      <label>Number of threads</label>
-      <description>Number of threads used during computation. Set to the number of cores on your workstation for optimal speed. If left undefined the number of cores detected will be used. </description>
-      <default>-1</default>
-    </integer>
-
-    <double>
-      <name>stepLength</name>
-      <longflag>stepLength</longflag>
-      <label>Step length of tractography (in mm)</label>
-      <description>Step length of tractography, in millimeters</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>recordLength</name>
-      <longflag>recordLength</longflag>
-      <label>Record length of tractography (in mm)</label>
-      <description>Record length of tractography, in millimeters</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>sigmaSignal</name>
-      <longflag>sigmaSignal</longflag>
-      <label>Sigma for gaussian interpolation of signal</label>
-      <description>Sigma for gaussian interpolation of signal</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>maxHalfFiberLength</name>
-      <longflag>maxHalfFiberLength</longflag>
-      <label>Maximum tract length (in mm)</label>
-      <description>The max length limit of the half fibers generated during tractography. Here the fiber is "half" because the tractography goes in only one direction from one seed point at a time</description>
-      <default>10000.0</default>
-    </double>
-
-    <double>
-      <name>seedFALimit</name>
-      <longflag>seedFALimit</longflag>
-      <label>Minimum seed FA</label>
-      <description>Seed points whose FA are below this value are excluded</description>
-      <default>0.18</default>
-    </double>
-
-    <double>
-      <name>Qm</name>
-      <longflag>Qm</longflag>
-      <label>Rate of change of tensor direction</label>
-      <description>Process noise for angles/direction</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>Ql</name>
-      <longflag>Ql</longflag>
-      <label>Rate of change of eigenvalues</label>
-      <description>Process noise for eigenvalues</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>Qw</name>
-      <longflag>Qw</longflag>
-      <label>Rate of change of freewater weight</label>
-      <description>Process noise for free water weights, ignored if no free water estimation</description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>Qkappa</name>
-      <longflag>Qkappa</longflag>
-      <label>Rate of change of kappa value</label>
-      <description></description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>Qvic</name>
-      <longflag>Qvic</longflag>
-      <label>Rate of change of Volume fraction of Intracellular Component</label>
-      <description></description>
-      <default>0.0</default>
-    </double>
-
-    <double>
-      <name>Rs</name>
-      <longflag>Rs</longflag>
-      <label>Expected noise in signal</label>
-      <description>Measurement noise</description>
-      <default>0.0</default>
-    </double>
 
     <double>
       <name>maxBranchingAngle</name>
       <longflag>maxBranchingAngle</longflag>
       <label>Maximum branching angle</label>
-      <description>Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle). Branching is supressed when this maxBranchingAngle is set to 0.0</description>
+      <description>Develop/Debug Only: Maximum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle). Branching is supressed when this maxBranchingAngle is set to 0.0. Default: 0.0. Range: 0-90.</description>
       <default>0.0</default>
+      <constraints>
+        <minimum>0 </minimum>
+        <maximum> 90</maximum>
+        <step> 1</step>
+      </constraints>
     </double>
 
     <double>
       <name>minBranchingAngle</name>
       <longflag>minBranchingAngle</longflag>
       <label>Minimum branching angle</label>
-      <description>Minimum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle)</description>
+      <description>Develop/Debug Only: Minimum branching angle, in degrees. When using multiple tensors, a new branch will be created when the tensors' major directions form an angle between (minBranchingAngle, maxBranchingAngle). Default: 0. Range: 0-90.</description>
       <default>0.0</default>
+      <constraints>
+        <minimum> 0 </minimum>
+        <maximum> 90 </maximum>
+        <step> 1 </step>
+      </constraints>
     </double>
 
     <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
       <name>tractsWithSecondTensor</name>
       <longflag>tractsWithSecondTensor</longflag>
-      <label>Output Fibers (second tensor, optional)</label>
+      <label>Branched Fibers (second tensor, optional)</label>
       <channel>output</channel>
-      <description>Tracts generated, with second tensor output (if there is one)</description>
+      <description>Develop/Debug Only: Tracts generated, with second tensor output (if there is one)</description>
     </geometry>
 
     <boolean>
       <name>storeGlyphs</name>
       <longflag>storeGlyphs</longflag>
       <label>Store tensors' main directions</label>
-      <description>Store tensors' main directions as two-point lines in a separate file named glyphs_{tracts}. When using multiple tensors, only the major tensors' main directions are stored</description>
+      <description>Develop/Debug Only: Store tensors' main directions as two-point lines in a separate file named glyphs_{tracts}. When using multiple tensors, only the major tensors' main directions are stored</description>
       <default>false</default>
     </boolean>
+
+    <boolean>
+      <name>writeAsciiTracts</name>
+      <flag>a</flag>
+      <longflag>writeAsciiTracts</longflag>
+      <label>Write Binary Tracts File</label>
+      <description>Develop/Debug Only: Write tract file as ASCII text format. Default is not ASCII. Default tracts are written on VTK binary data file.</description>
+      <default>false</default>
+    </boolean>
+    
+    <boolean>
+      <name>writeUncompressedTracts</name>
+      <flag>u</flag>
+      <longflag>writeUncompressedTracts</longflag>
+      <label>Write uncompressed Tracts File</label>
+      <description>Develop/Debug Only: Write tract file as a VTK uncompressed data file</description>
+      <default>false</default>
+    </boolean>
+
 
 </parameters>
 

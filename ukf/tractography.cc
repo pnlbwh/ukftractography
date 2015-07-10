@@ -1629,7 +1629,25 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
       }
     }
 
-  if( _record_free_water || _record_Viso)
+  if ( _record_Viso )
+    {
+    ukfPrecisionType viso = state[_nPosFreeWater];
+    if( viso < 0 )
+      {
+      if( viso >= -1.0e-4 ) // for small errors just round it to 0
+        {
+        viso = 0;
+        }
+      else   // for too big errors exit with exception.
+        {
+        std::cout << "Error: program produced negative free water.\n";
+        exit(1);
+        }
+      }
+    fiber.free_water.push_back(viso);
+    }
+
+  if( _record_free_water )
     {
     ukfPrecisionType fw = 1 - state[_nPosFreeWater];
     // sometimes QP produces slightly negative results due to numerical errors in Quadratic Programming, the weight is

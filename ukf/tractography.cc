@@ -395,9 +395,9 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       double kappas[5] = {0.5, 1, 2, 4, 8};
       double Vic[5] = {0, 0.25, 0.5, 0.75, 1};
       double Visoperm[5] = {0, 0.25, 0.5, 0.75, 1};
-      for( unsigned int a = 0; a < n; ++a )
-      for( unsigned int b = 0; b < n; ++b )
-      for( unsigned int c = 0; c < n; ++c )
+      for( int a = 0; a < n; ++a )
+      for( int b = 0; b < n; ++b )
+      for( int c = 0; c < n; ++c )
       {
         ukfVectorType Eec, Eic, Eiso, E;
         ExtraCelluarModel(dPar, Vic[b], kappas[a], _gradientStrength,
@@ -421,7 +421,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
           tmp_info_inv_state[4] = kappas[a]; // Kappa
        }
       }
-      // std::cout <<"nmse of initialization "<< minnmse << "\n";
+      // xstd::cout <<"nmse of initialization "<< minnmse << "\n";
       if(_num_tensors > 1)
       {
         tmp_info_state.resize(10);
@@ -646,7 +646,7 @@ void Tractography::createProtocol(const ukfVectorType& _b_values,
   for(int i = 0; i < _b_values.size(); ++i )
   {
     int unique = 1;
-    for(int j = 0; j < Bunique.size(); ++j )
+    for(unsigned int j = 0; j < Bunique.size(); ++j )
     { 
       if (_b_values[i] == Bunique[j])
       {
@@ -671,13 +671,13 @@ void Tractography::createProtocol(const ukfVectorType& _b_values,
     _pulseSeparation[i] = tmp;
   }
 
-  for(int i = 0; i < Bunique.size(); ++i )
+  for(unsigned int i = 0; i < Bunique.size(); ++i )
   {
     tmpG.push_back(std::sqrt(Bunique[i]/Bmax) * Gmax);
     // std::cout<< "\n tmpG:" << std::sqrt(Bunique[i]/Bmax) * Gmax;
   }
 
-  for(int i = 0; i < Bunique.size(); ++i )
+  for(unsigned int i = 0; i < Bunique.size(); ++i )
   {
     for(int j=0; j < _b_values.size(); j++)
     {
@@ -1613,10 +1613,10 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
 
   if( _record_trace || _record_kappa)
     {
-    fiber.trace.push_back(trace);
+    fiber.trace.push_back(2*(atan(1/trace)/3.14));
     if( _num_tensors >= 2 )
       {
-      fiber.trace2.push_back(trace2);
+      fiber.trace2.push_back(2*(atan(1/trace2)/3.14));
       }
     }
 
@@ -1629,7 +1629,25 @@ void Tractography::Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType
       }
     }
 
-  if( _record_free_water || _record_Viso)
+  if ( _record_Viso )
+    {
+    ukfPrecisionType viso = state[_nPosFreeWater];
+    if( viso < 0 )
+      {
+      if( viso >= -1.0e-4 ) // for small errors just round it to 0
+        {
+        viso = 0;
+        }
+      else   // for too big errors exit with exception.
+        {
+        std::cout << "Error: program produced negative free water.\n";
+        exit(1);
+        }
+      }
+    fiber.free_water.push_back(viso);
+    }
+
+  if( _record_free_water )
     {
     ukfPrecisionType fw = 1 - state[_nPosFreeWater];
     // sometimes QP produces slightly negative results due to numerical errors in Quadratic Programming, the weight is

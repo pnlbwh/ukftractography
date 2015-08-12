@@ -24,7 +24,6 @@ UnscentedKalmanFilter::UnscentedKalmanFilter(FilterModel *filter_model)
   const unsigned int dim = m_FilterModel->state_dim();
 
   m_Scale = sqrt(dim + m_SigmaPointSpread);
-
   m_Weights.resize((2 * dim) + 1);
   m_Weights(0) = m_SigmaPointSpread / (dim + m_SigmaPointSpread);
   // Create diagonal matrix.
@@ -234,9 +233,4 @@ void UnscentedKalmanFilter::Filter(const State& x,
     Constrain(x_new_Eigen, Yk+I);
     }
   x_new = x_new_Eigen;
-  // std::cout << "\n x_new:" << x_new;
-  // static int counter;
-  // counter++;
-  // if (counter==3)
-  //   exit(1);
 }

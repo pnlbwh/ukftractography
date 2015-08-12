@@ -174,9 +174,12 @@ int main(int argc, char **argv)
 
   if (l_Qm == 0.0) {
     if (noddi){
-      setAndTell(l_Qm, 0.001, "Qm");
+      if (numTensor == 1)
+        setAndTell(l_Qm, 0.0025, "Qm");
+      else
+        setAndTell(l_Qm, 0.001, "Qm");
     } else if (numTensor == 1) {
-      setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
+        setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
       if (!simpleTensorModel) {
         setAndTell(l_Qm, 0.002, "Qm");//l_Qm = 0.002;
@@ -250,7 +253,10 @@ int main(int argc, char **argv)
 
   if (noddi){
     if (l_Qvic == 0.0)
-      setAndTell(l_Qvic, 0.004, "Qvic = Qviso");
+      if (numTensor == 1)
+        setAndTell(l_Qvic, 0.0005, "Qvic = Qviso");
+      else
+        setAndTell(l_Qvic, 0.004, "Qvic = Qviso");
     else
       tell(l_Qvic, "Qvic = Qviso");
   } 

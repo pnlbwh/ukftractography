@@ -373,7 +373,7 @@ Write(const std::string& file_name,
     trace->SetNumberOfComponents(1);
     trace->Allocate(num_points);
     if(if_noddi)
-      trace->SetName("Kappa1");
+      trace->SetName("OrientationDispersionIndex1");
     else
       trace->SetName("trace1");
     for( int i = 0; i < num_fibers; ++i )
@@ -395,7 +395,7 @@ Write(const std::string& file_name,
     trace2->SetNumberOfComponents(1);
     trace2->Allocate(num_points);
     if(if_noddi)
-      trace2->SetName("Kappa2");
+      trace2->SetName("OrientationDispersionIndex2");
     else
       trace2->SetName("trace2");
     for( int i = 0; i < num_fibers; ++i )

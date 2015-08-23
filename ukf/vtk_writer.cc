@@ -754,6 +754,6 @@ void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorN
   float L1= state[_tensor_space*(tensorNumber-1)+_p_l1];
   float L2= state[_tensor_space*(tensorNumber-1)+_p_l2];
 
-  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * I)*1e-6;
+  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * I)*GLOBAL_TENSOR_UNPACK_VALUE;
 
 }

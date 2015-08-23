@@ -13,6 +13,9 @@ typedef float ukfPrecisionType;
 typedef double ukfPrecisionType;
 #endif
 
+static const ukfPrecisionType GLOBAL_TENSOR_PACK_VALUE=1e6;
+static const ukfPrecisionType GLOBAL_TENSOR_UNPACK_VALUE=1e-6;
+
 static const ukfPrecisionType ukfZero(static_cast<ukfPrecisionType>(0.0));
 static const ukfPrecisionType ukfOne(static_cast<ukfPrecisionType>(1.0));
 static const ukfPrecisionType ukfHalf(static_cast<ukfPrecisionType>(0.5));

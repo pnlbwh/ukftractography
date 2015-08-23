@@ -70,7 +70,7 @@ inline mat33_t diffusion_euler(const ukfPrecisionType theta, const ukfPrecisionT
                              const ukfPrecisionType l1, const ukfPrecisionType l2, const ukfPrecisionType l3)
 {
   const mat33_t & Q = rotation(theta, phi, psi);
-  return Q * diag(l1, l2, l3) * Q.transpose() * 1e-6;
+  return Q * diag(l1, l2, l3) * Q.transpose() * GLOBAL_TENSOR_UNPACK_VALUE; //NOTE: Scale factor to offset Tensor::UnpackTensor scaling
 }
 
 /** Make a diffusion tensor matrix from one principal direction, and major and minor EV */
@@ -81,7 +81,7 @@ inline mat33_t diffusion(const vec3_t &m, const ukfPrecisionType l1, const ukfPr
     m[1], m[1] * m[1] / (1 + m[0]) - 1, m[1] * m[2] / (1 + m[0]),
     m[2], m[1] * m[2] / (1 + m[0]), m[2] * m[2] / (1 + m[0]) - 1;
 
-  return R * diag(l1, l2, l2) * R.transpose() * 1e-6;
+  return R * diag(l1, l2, l2) * R.transpose() * GLOBAL_TENSOR_UNPACK_VALUE;
 }
 
 inline void initNormalized(vec3_t &m, const ukfPrecisionType &a, const ukfPrecisionType &b, const ukfPrecisionType &c)

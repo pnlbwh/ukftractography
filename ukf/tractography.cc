@@ -804,7 +804,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     ret[i][3] = theta;
     ret[i][4] = phi;
     ret[i][5] = psi;
-    sigma = sigma * 1.0e6; // NOTICE this scaling of eigenvalues. The values are scaled back in diffusion_euler()
+    sigma = sigma * GLOBAL_TENSOR_PACK_VALUE; // NOTICE this scaling of eigenvalues. The values are scaled back in diffusion_euler()
     ret[i][6] = sigma[0];
     ret[i][7] = sigma[1];
     ret[i][8] = sigma[2];

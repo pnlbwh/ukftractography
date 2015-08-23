@@ -1122,7 +1122,7 @@ void createProtocol(const ukfVectorType& _b_values,
     for(int i = 0; i < _b_values.size(); ++i )
     {
       int unique = 1;
-      for(int j = 0; j < Bunique.size(); ++j )
+      for(size_t j = 0; j < Bunique.size(); ++j )
       { 
         if (_b_values[i] == Bunique[j])
         {
@@ -1147,12 +1147,12 @@ void createProtocol(const ukfVectorType& _b_values,
       _pulseSeparation[i] = tmp;
     }
 
-    for(int i = 0; i < Bunique.size(); ++i )
+    for(size_t i = 0; i < Bunique.size(); ++i )
     {
       tmpG.push_back(std::sqrt(Bunique[i]/Bmax) * Gmax);
     }
 
-    for(int i = 0; i < Bunique.size(); ++i )
+    for(size_t i = 0; i < Bunique.size(); ++i )
     {
       for(int j=0; j < _b_values.size(); j++)
       {

@@ -53,15 +53,17 @@ void Full1T::H(const  ukfMatrixType& X,
 
   const ukfVectorType& b        = _signal_data->GetBValues();
   const stdVec_t&  gradients = _signal_data->gradients();
+ 
+  diagmat3_t lambdas;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const ukfPrecisionType l1 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l2 = std::max(X(4, i), _lambda_min);
-    const ukfPrecisionType l3 = std::max(X(5, i), _lambda_min);
+    lambdas.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas.diagonal()[2] = std::max(X(5, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    const mat33_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat33_t & local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), lambdas);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -114,20 +116,22 @@ void Full2T::H(const  ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
-    const ukfPrecisionType l13 = std::max(X(5, i), _lambda_min);
-    const ukfPrecisionType l21 = std::max(X(9, i), _lambda_min);
-    const ukfPrecisionType l22 = std::max(X(10, i), _lambda_min);
-    const ukfPrecisionType l23 = std::max(X(11, i), _lambda_min);
+    lambdas1.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas1.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[2] = std::max(X(5, i), _lambda_min);
+    lambdas2.diagonal()[0] = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[1] = std::max(X(10, i), _lambda_min);
+    lambdas2.diagonal()[2] = std::max(X(11, i), _lambda_min);
 
     // Calculate diffusion matrix.
     //HACK: TODO :%s/mat33_t *D/const mat33_t \&D/g
-    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), lambdas1);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), lambdas2);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -207,23 +211,26 @@ void Full3T::H(const  ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
+  diagmat3_t lambdas3;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Clamp lambdas.
-    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
-    const ukfPrecisionType l13 = std::max(X(5, i), _lambda_min);
-    const ukfPrecisionType l21 = std::max(X(9, i), _lambda_min);
-    const ukfPrecisionType l22 = std::max(X(10, i), _lambda_min);
-    const ukfPrecisionType l23 = std::max(X(11, i), _lambda_min);
-    const ukfPrecisionType l31 = std::max(X(15, i), _lambda_min);
-    const ukfPrecisionType l32 = std::max(X(16, i), _lambda_min);
-    const ukfPrecisionType l33 = std::max(X(17, i), _lambda_min);
+    lambdas1.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas1.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[2] = std::max(X(5, i), _lambda_min);
+    lambdas2.diagonal()[0] = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[1] = std::max(X(10, i), _lambda_min);
+    lambdas2.diagonal()[2] = std::max(X(11, i), _lambda_min);
+    lambdas3.diagonal()[0] = std::max(X(15, i), _lambda_min);
+    lambdas3.diagonal()[1] = std::max(X(16, i), _lambda_min);
+    lambdas3.diagonal()[2] = std::max(X(17, i), _lambda_min);
 
     // Calculate diffusion matrix.
-    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
-    const mat33_t &D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), l31, l32, l33);
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), lambdas1);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), lambdas2);
+    const mat33_t &D3 = diffusion_euler(X(12, i), X(13, i), X(14, i), lambdas3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -322,6 +329,7 @@ void Simple1T::H(const  ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
@@ -329,8 +337,9 @@ void Simple1T::H(const  ukfMatrixType& X,
     initNormalized(m, X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-    const ukfPrecisionType l1 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l2 = std::max(X(4, i), _lambda_min);
+    lambdas.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas.diagonal()[2] = lambdas.diagonal()[1];
 
     // Flip if necessary.
     // Why is that???
@@ -340,7 +349,7 @@ void Simple1T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    const mat33_t & local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat33_t & local_D = diffusion(m, lambdas); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -415,6 +424,8 @@ void Simple2T::H(const  ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -424,11 +435,13 @@ void Simple2T::H(const  ukfMatrixType& X,
     initNormalized(m2, X(5, i), X(6, i), X(7, i));
 
     // Clamp lambdas.
-    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas1.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[2] = lambdas1.diagonal()[1];
 
-    const ukfPrecisionType l21 = std::max(X(8, i), _lambda_min);
-    const ukfPrecisionType l22 = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[0] = std::max(X(8, i), _lambda_min);
+    lambdas2.diagonal()[1] = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[2] = lambdas2.diagonal()[1];
 
     // Flip if necessary.
     if( m1[0] < 0 )
@@ -441,8 +454,8 @@ void Simple2T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    const mat33_t &D1 = diffusion(m1, l11, l12);
-    const mat33_t &D2 = diffusion(m2, l21, l22);
+    const mat33_t &D1 = diffusion(m1, lambdas1);
+    const mat33_t &D2 = diffusion(m2, lambdas2);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -546,6 +559,10 @@ void Simple3T::H(const  ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
+  diagmat3_t lambdas3;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -557,14 +574,17 @@ void Simple3T::H(const  ukfMatrixType& X,
     initNormalized(m3,X(10, i), X(11, i), X(12, i));
 
     // Clamp lambdas.
-    const ukfPrecisionType l11 = std::max(X(3, i), _lambda_min);
-    const ukfPrecisionType l12 = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[0] = std::max(X(3, i), _lambda_min);
+    lambdas1.diagonal()[1] = std::max(X(4, i), _lambda_min);
+    lambdas1.diagonal()[2] = lambdas1.diagonal()[1];
 
-    const ukfPrecisionType l21 = std::max(X(8, i), _lambda_min);
-    const ukfPrecisionType l22 = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[0] = std::max(X(8, i), _lambda_min);
+    lambdas2.diagonal()[1] = std::max(X(9, i), _lambda_min);
+    lambdas2.diagonal()[2] = lambdas2.diagonal()[1];
 
-    const ukfPrecisionType l31 = std::max(X(13, i), _lambda_min);
-    const ukfPrecisionType l32 = std::max(X(14, i), _lambda_min);
+    lambdas3.diagonal()[0] = std::max(X(13, i), _lambda_min);
+    lambdas3.diagonal()[1] = std::max(X(14, i), _lambda_min);
+    lambdas3.diagonal()[2] = lambdas3.diagonal()[1];
 
     // flip if necessary
     if( m1[0] < 0 )
@@ -581,9 +601,9 @@ void Simple3T::H(const  ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    const mat33_t &D1 = diffusion(m1, l11, l12);
-    const mat33_t &D2 = diffusion(m2, l21, l22);
-    const mat33_t &D3 = diffusion(m3, l31, l32);
+    const mat33_t &D1 = diffusion(m1, lambdas1);
+    const mat33_t &D2 = diffusion(m2, lambdas2);
+    const mat33_t &D3 = diffusion(m3, lambdas3);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -685,6 +705,7 @@ void Simple1T_FW::H(const ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b     = _signal_data->GetBValues();
+  diagmat3_t lambdas;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize direction.
@@ -692,14 +713,12 @@ void Simple1T_FW::H(const ukfMatrixType& X,
     initNormalized(m,X(0, i), X(1, i), X(2, i));
 
     // Clamp lambdas.
-    //     const ukfPrecisionType l1 = std::max(X(3, i), ukfZero);
-    //     const ukfPrecisionType l2 = std::max(X(4, i), ukfZero);
-
-    const ukfPrecisionType l1 = CheckZero(X(3, i) );
-    const ukfPrecisionType l2 = CheckZero(X(4, i) );
-    if( l1 < 0 || l2 < 0 )
+    lambdas.diagonal()[0]= CheckZero(X(3, i) );
+    lambdas.diagonal()[1]= CheckZero(X(4, i) );
+    lambdas.diagonal()[2]= lambdas.diagonal()[1];
+    if( lambdas.diagonal()[0] < 0 ||  lambdas.diagonal()[1]  < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative l1= " << l1 << "l2= " << l2  << std::endl;
+      std::cout << "Warning: eigenvalues became negative l1= " << lambdas.diagonal()[0] << "l2= " << lambdas.diagonal()[1] << std::endl;
       }
 
     // get weight from state
@@ -726,7 +745,7 @@ void Simple1T_FW::H(const ukfMatrixType& X,
       }
 
     // Calculate diffusion matrix.
-    const mat33_t &local_D = diffusion(m, l1, l2); // l3 == l2
+    const mat33_t &local_D = diffusion(m, lambdas); // l3 == l2
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -790,12 +809,12 @@ void Full1T_FW::H(const ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
-
-    const ukfPrecisionType l1 = CheckZero(X(3, i) );
-    const ukfPrecisionType l2 = CheckZero(X(4, i) );
-    const ukfPrecisionType l3 = CheckZero(X(5, i) );
+    lambdas.diagonal()[0] = CheckZero(X(3, i) );
+    lambdas.diagonal()[1] = CheckZero(X(4, i) );
+    lambdas.diagonal()[2] = CheckZero(X(5, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 || X(5, i) < 0 )
       {
@@ -806,7 +825,7 @@ void Full1T_FW::H(const ukfMatrixType& X,
     const ukfPrecisionType w = CheckZero(X(6, i) );
 
     // Calculate diffusion matrix.
-    const mat33_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), l1, l2, l3);
+    const mat33_t &local_D = diffusion_euler(X(0, i), X(1, i), X(2, i), lambdas);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -891,6 +910,8 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
     // Normalize directions.
@@ -899,16 +920,19 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
     vec3_t m2;
     initNormalized(m2,X(5, i), X(6, i), X(7, i) );
 
-    const ukfPrecisionType l11 = CheckZero(X(3, i) );
-    const ukfPrecisionType l12 = CheckZero(X(4, i) );
+    lambdas1.diagonal()[0] = CheckZero(X(3, i) );
+    lambdas1.diagonal()[1] = CheckZero(X(4, i) );
+    lambdas1.diagonal()[2] = lambdas1.diagonal()[1];
 
-    const ukfPrecisionType l21 = CheckZero(X(8, i) );
-    const ukfPrecisionType l22 = CheckZero(X(9, i) );
+    lambdas2.diagonal()[0] = CheckZero(X(8, i) );
+    lambdas2.diagonal()[1] = CheckZero(X(9, i) );
+    lambdas2.diagonal()[2] = lambdas2.diagonal()[1];
 
-    if( l11 < 0 || l12 < 0 || l21 < 0 || l22 < 0 )
+    if( lambdas1.diagonal()[0] < 0 || lambdas1.diagonal()[1] < 0 || lambdas2.diagonal()[0] < 0 || lambdas2.diagonal()[1] < 0 )
       {
-      std::cout << "Warning: eigenvalues became negative 2: " << l11 << " " << l12 << " " << l21 << " " << l22
-                << std::endl;
+      std::cout << "Warning: eigenvalues became negative 2: "
+                << lambdas1.diagonal()[0] << " " << lambdas1.diagonal()[1] << " "
+                << lambdas2.diagonal()[0] << " " << lambdas2.diagonal()[1] << std::endl;
       }
 
     // Flip if necessary.
@@ -925,8 +949,8 @@ void Simple2T_FW::H(const   ukfMatrixType& X,
     const ukfPrecisionType w = CheckZero(X(10, i) );
 
     // Calculate diffusion matrix.
-    const mat33_t &D1 = diffusion(m1, l11, l12);
-    const mat33_t &D2 = diffusion(m2, l21, l22);
+    const mat33_t &D1 = diffusion(m1, lambdas1);
+    const mat33_t &D2 = diffusion(m2, lambdas2);
     // Reconstruct signal.
     for( int j = 0; j < _signal_dim; ++j )
       {
@@ -1016,15 +1040,17 @@ void Full2T_FW::H(const   ukfMatrixType& X,
 
   const stdVec_t&   gradients = _signal_data->gradients();
   const ukfVectorType & b       = _signal_data->GetBValues();
+  diagmat3_t lambdas1;
+  diagmat3_t lambdas2;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
 
-    const ukfPrecisionType l11 = CheckZero(X(3, i) );
-    const ukfPrecisionType l12 = CheckZero(X(4, i) );
-    const ukfPrecisionType l13 = CheckZero(X(5, i) );
-    const ukfPrecisionType l21 = CheckZero(X(9, i) );
-    const ukfPrecisionType l22 = CheckZero(X(10, i) );
-    const ukfPrecisionType l23 = CheckZero(X(11, i) );
+    lambdas1.diagonal()[0]= CheckZero(X(3, i) );
+    lambdas1.diagonal()[1]= CheckZero(X(4, i) );
+    lambdas1.diagonal()[2]= CheckZero(X(5, i) );
+    lambdas2.diagonal()[0]= CheckZero(X(9, i) );
+    lambdas2.diagonal()[1]= CheckZero(X(10, i) );
+    lambdas2.diagonal()[2]= CheckZero(X(11, i) );
 
     if( X(3, i) < 0 || X(4, i) < 0 ||  X(5, i) < 0 || X(9, i) < 0 || X(10, i) < 0 ||  X(11, i) < 0 )
       {
@@ -1035,8 +1061,8 @@ void Full2T_FW::H(const   ukfMatrixType& X,
     const ukfPrecisionType w = CheckZero(X(12, i) );
 
     // Calculate diffusion matrix.
-    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), l11, l12, l13);
-    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), l21, l22, l23);
+    const mat33_t &D1 = diffusion_euler(X(0, i), X(1, i), X(2, i), lambdas1);
+    const mat33_t &D2 = diffusion_euler(X(6, i), X(7, i), X(8, i), lambdas2);
 
     // Reconstruct signal.
     ukfMatrixType valMatrix(_signal_dim,3);

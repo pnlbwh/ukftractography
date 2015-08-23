@@ -24,6 +24,7 @@ typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,1> ukfVectorType;
 typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,Eigen::Dynamic> ukfMatrixType;
 typedef Eigen::Matrix<ukfPrecisionType,3,1> vec3_t;
 typedef Eigen::Matrix<ukfPrecisionType,3,3> mat33_t;
+typedef Eigen::DiagonalMatrix<ukfPrecisionType,3> diagmat3_t;
 
 
 /** Short hand for the state vector */

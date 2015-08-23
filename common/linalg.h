@@ -14,12 +14,6 @@
 #include <cmath>
 #include "ukf_types.h"
 
-/** Make a diagonal matrix */
-inline mat33_t diag(const ukfPrecisionType a, const ukfPrecisionType b, const ukfPrecisionType c)
-{
-  return mat33_t(vec3_t(a,b,c).asDiagonal());
-}
-
 /** Assemble rotation matrix given the rotation angles */
 inline mat33_t rotation(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi)
 {
@@ -67,21 +61,21 @@ inline vec3_t rotation_main_dir(const ukfPrecisionType theta, const ukfPrecision
 
 /** Calculate a diffusion matrix from euler angles */
 inline mat33_t diffusion_euler(const ukfPrecisionType theta, const ukfPrecisionType phi, const ukfPrecisionType psi,
-                             const ukfPrecisionType l1, const ukfPrecisionType l2, const ukfPrecisionType l3)
+                             const diagmat3_t & lambdas)
 {
   const mat33_t & Q = rotation(theta, phi, psi);
-  return Q * diag(l1, l2, l3) * Q.transpose() * GLOBAL_TENSOR_UNPACK_VALUE; //NOTE: Scale factor to offset Tensor::UnpackTensor scaling
+  return Q * lambdas * Q.transpose() * GLOBAL_TENSOR_UNPACK_VALUE; //NOTE: Scale factor to offset Tensor::UnpackTensor scaling
 }
 
 /** Make a diffusion tensor matrix from one principal direction, and major and minor EV */
-inline mat33_t diffusion(const vec3_t &m, const ukfPrecisionType l1, const ukfPrecisionType l2)
+inline mat33_t diffusion(const vec3_t &m, const diagmat3_t & lambdas)
 {
   mat33_t  R;
   R << m[0], m[1], m[2],
     m[1], m[1] * m[1] / (1 + m[0]) - 1, m[1] * m[2] / (1 + m[0]),
     m[2], m[1] * m[2] / (1 + m[0]), m[2] * m[2] / (1 + m[0]) - 1;
 
-  return R * diag(l1, l2, l2) * R.transpose() * GLOBAL_TENSOR_UNPACK_VALUE;
+  return R * lambdas * R.transpose() * GLOBAL_TENSOR_UNPACK_VALUE;
 }
 
 inline void initNormalized(vec3_t &m, const ukfPrecisionType &a, const ukfPrecisionType &b, const ukfPrecisionType &c)

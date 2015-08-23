@@ -42,7 +42,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const std::vector<int>& labels,
 
                            ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
-                           ukfPrecisionType min_radius, ukfPrecisionType full_brain_ga_min,
+                           ukfPrecisionType min_radius,
+                           ukfPrecisionType /* UNUSED full_brain_ga_min */,
 
                            const int num_threads
                            ) :
@@ -57,7 +58,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _transform_position(transform_position), _store_glyphs(store_glyphs), _branches_only(branchesOnly),
 
   _p0(p0), _sigma_signal(sigma_signal), _sigma_mask(sigma_mask), _min_radius(min_radius),
-  _full_brain_ga_min(full_brain_ga_min),
+  //UNUSED _full_brain_ga_min(full_brain_ga_min),
   _max_length(static_cast<int>(std::ceil(maxHalfFiberLength / stepLength) ) ),
   _full_brain(false),
   _noddi(noddi),

@@ -31,7 +31,6 @@ set(MODULE_TARGET_LIBRARIES
   )
 
 #-----------------------------------------------------------------------------
-enable_testing()
 add_subdirectory(Testing)
 
 message( STATUS "XXXX ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}")

@@ -52,7 +52,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
     {
     _full = true;
     _p_l1 = 3,
-      _p_l2 = 4;
+    _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 1;
     _tensor_space = 6;
@@ -72,7 +72,8 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
   else if( filter_model_type == Tractography::_2T_FULL || filter_model_type == Tractography::_2T_FW_FULL )
     {
     _full = true;
-    _p_l1 = 3, _p_l2 = 4;
+    _p_l1 = 3,
+    _p_l2 = 4;
     _p_l3 = 5;
     _num_tensors = 2;
     _tensor_space = 6;
@@ -118,17 +119,17 @@ void VtkWriter
   polyData = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
-  int num_fibers = fibers.size();
-  int num_points = 0;
-  for( int i = 0; i < num_fibers; ++i )
+  size_t num_fibers = fibers.size();
+  size_t num_points = 0;
+  for( size_t i = 0; i < num_fibers; ++i )
     {
     num_points += fibers[i].position.size();
     }
 
-  for( int i = 0; i < num_fibers; ++i )
+  for( size_t i = 0; i < num_fibers; ++i )
     {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j )
+    size_t fiber_size = fibers[i].position.size();
+    for( size_t j = 0; j < fiber_size; ++j )
       {
       vec3_t current = PointConvert(fibers[i].position[j]);
       points->InsertNextPoint(current[0],current[1],current[2]);
@@ -140,11 +141,11 @@ void VtkWriter
   vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
 
   vtkIdType counter = 0;
-  for(int i = 0; i < num_fibers; ++i)
+  for(size_t i = 0; i < num_fibers; ++i)
     {
-    int fiber_size = fibers[i].position.size();
+    size_t fiber_size = fibers[i].position.size();
     vtkIdType *ids = new vtkIdType[fiber_size];
-    for(int j = 0; j < fiber_size; ++j)
+    for(size_t j = 0; j < fiber_size; ++j)
       {
       ids[j] = counter;
       counter++;
@@ -166,21 +167,23 @@ void VtkWriter
     counter = 0;
     vtkPointData *pointData = polyData->GetPointData();
 
+    mat33_t D;
     for( int local_tensorNumber = 1; local_tensorNumber <= _num_tensors; ++local_tensorNumber )
       {
       vtkSmartPointer<vtkFloatArray> curTensor = vtkSmartPointer<vtkFloatArray>::New();
       curTensor->SetNumberOfComponents(9);
       curTensor->Allocate(num_points * 9);
-      std::stringstream ss;
-      ss << "tensor" << local_tensorNumber;
-      curTensor->SetName(ss.str().c_str());
-      for( int i = 0; i < num_fibers; i++ )
         {
-        const int fiber_size = static_cast<int>(fibers[i].position.size() );
-        for( int j = 0; j < fiber_size; ++j )
+        std::stringstream ss;
+        ss << "tensor" << local_tensorNumber;
+        curTensor->SetName(ss.str().c_str());
+        }
+      for( size_t i = 0; i < num_fibers; i++ )
+        {
+        const size_t fiber_size = fibers[i].position.size();
+        for( size_t j = 0; j < fiber_size; ++j )
           {
           const State & state = fibers[i].state[j];
-          mat33_t         D;
           State2Tensor(state, D, local_tensorNumber);
           ukfPrecisionType tmp[9];
           for(unsigned ii = 0, v = 0; ii < 3; ++ii)
@@ -193,7 +196,7 @@ void VtkWriter
           curTensor->InsertNextTuple(tmp);
           }
         }
-      int idx = pointData->AddArray(curTensor);
+      const size_t idx = pointData->AddArray(curTensor);
       pointData->SetActiveAttribute(idx,vtkDataSetAttributes::TENSORS);
       }
     }
@@ -709,32 +712,38 @@ PointConvert(const vec3_t& point)
 
 void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorNumber) const
 {
-  static const size_t local_phi_index = 0;
-  static const size_t local_theta_index = 1;
-  static const size_t local_psi_index =2;
+  vec3_t eigenVec1;
+  const int tensorIndex= ( tensorNumber - 1 );
+  const size_t after_tensor_offset_index = _tensor_space * (tensorIndex);
 
-  vec3_t eigenVec1, eigenVec2, eigenVec3;
 
   if( _full )
     {
-    const size_t local_start_index = 6 * (tensorNumber - 1);
+    static const size_t local_phi_index = 0;
+    static const size_t local_theta_index = 1;
+    static const size_t local_psi_index =2;
+
     const mat33_t & R =
       rotation(
-        state[local_start_index + local_phi_index],
-        state[local_start_index + local_theta_index],
-        state[local_start_index + local_psi_index]);
+        state[after_tensor_offset_index + local_phi_index],
+        state[after_tensor_offset_index + local_theta_index],
+        state[after_tensor_offset_index + local_psi_index]);
 
     // Extract eigenvectors
     eigenVec1 << R(0,0), R(1,0), R(2,0);
+/* HACK THIS SEEMS WRONG!  Why have eigenVec2 or eigenVec3?
+    vec3_t eigenVec2;
+    vec3_t eigenVec3;
     eigenVec2 << R(0,1), R(1,1), R(2,1);
     eigenVec3 << R(0,2), R(1,2), R(2,2);
-
+*/
     }
   else
   {
       eigenVec1 <<
-          state[_tensor_space * (tensorNumber - 1) + _p_m1],  state[_tensor_space * (tensorNumber - 1) + _p_m2],
-          state[_tensor_space * (tensorNumber - 1) + _p_m3];
+          state[after_tensor_offset_index + _p_m1],
+          state[after_tensor_offset_index + _p_m2],
+          state[after_tensor_offset_index + _p_m3];
 
       // Perform ijk->RAS transform on eigen vectors
       eigenVec1 = _sizeFreeI2R * eigenVec1;
@@ -745,15 +754,10 @@ void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorN
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-  mat33_t I;
-  I <<
-      1, 0, 0,
-      0, 1, 0,
-      0, 0, 1;
 
-  float L1= state[_tensor_space*(tensorNumber-1)+_p_l1];
-  float L2= state[_tensor_space*(tensorNumber-1)+_p_l2];
+  const float L1= state[after_tensor_offset_index + _p_l1];
+  const float L2= state[after_tensor_offset_index + _p_l2];
 
-  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * I)*GLOBAL_TENSOR_UNPACK_VALUE;
-
+  // $ D = ( ( \lambda_1 - \lambda_2) * e_1 *e_1^{T} + \lambda_2 * I $
+  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * mat33_t::Identity())*GLOBAL_TENSOR_UNPACK_VALUE;
 }

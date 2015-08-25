@@ -53,7 +53,7 @@ void Full1T::H(const  ukfMatrixType& X,
 
   const ukfVectorType& b        = _signal_data->GetBValues();
   const stdVec_t&  gradients = _signal_data->gradients();
- 
+
   diagmat3_t lambdas;
   for( unsigned int i = 0; i < X.cols(); ++i )
     {
@@ -987,8 +987,7 @@ void Simple2T_FW::State2Tensor2T(const State& x, const vec3_t& old_m, vec3_t& m1
               << l2[1] << std::endl;
     }
 
-  // Flip orientations if necessary. (For m1 it should not happen, maybe for
-  // m2.)
+  // Flip orientations if necessary. (For m1 it should not happen, maybe for m2.)
   if( m1[0] * old_m[0] + m1[1] * old_m[1] + m1[2] * old_m[2] < 0 )
     {
     m1 = -m1;
@@ -1130,10 +1129,10 @@ void createProtocol(const ukfVectorType& _b_values,
   std::vector<double> Bunique, tmpG;
   ukfPrecisionType Bmax = 0;
   ukfPrecisionType tmp, Gmax, GAMMA;
-  
+
   _gradientStrength.resize(_b_values.size());
   _pulseSeparation.resize(_b_values.size());
-  
+
   // set maximum G = 40 mT/m
   Gmax = 0.04;
   GAMMA = 267598700;
@@ -1149,7 +1148,7 @@ void createProtocol(const ukfVectorType& _b_values,
     {
       int unique = 1;
       for(size_t j = 0; j < Bunique.size(); ++j )
-      { 
+      {
         if (_b_values[i] == Bunique[j])
         {
           unique = 0;
@@ -1329,7 +1328,7 @@ void NODDI2F::H(const  ukfMatrixType& X,
     const ukfPrecisionType kappa1 = X(4, i);
     const ukfPrecisionType Vic2 = X(8, i);
     const ukfPrecisionType kappa2 = X(9, i);
-    const ukfPrecisionType Viso = X(10, i);        
+    const ukfPrecisionType Viso = X(10, i);
 
     ExtraCelluarModel(dPar, Vic1, kappa1, gradientStrength,
                           pulseSeparation, gradients, m1, Eec1);

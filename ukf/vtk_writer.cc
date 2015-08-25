@@ -754,10 +754,15 @@ void VtkWriter::State2Tensor(const State & state, mat33_t & D, const int tensorN
 
   // Compute the diffusion matrix in RAS coordinate system
   // The transformed matrix is still positive-definite
-
   const float L1= state[after_tensor_offset_index + _p_l1];
   const float L2= state[after_tensor_offset_index + _p_l2];
-
-  // $ D = ( ( \lambda_1 - \lambda_2) * e_1 *e_1^{T} + \lambda_2 * I $
-  D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * mat33_t::Identity())*GLOBAL_TENSOR_UNPACK_VALUE;
+#if 1
+  D = diffusion_l2eql3(eigenVec1, L1, L2);
+#else
+  diagmat3_t lambdas;
+  lambdas.diagonal()[0] = L1;
+  lambdas.diagonal()[1] = L2;
+  lambdas.diagonal()[2] = lambdas.diagonal()[1];
+  D=diffusion(eigenVec1,lambdas);
+#endif
 }

@@ -1388,6 +1388,13 @@ void Tractography::Step2T(const int thread_id,
     tmp = l1;
     l1 = l2;
     l2 = tmp;
+    // Need to swap scalar measures too.
+    ukfPrecisionType tmpScalar = fa_tensor_1;
+    fa_tensor_1 = fa_tensor_2;
+    fa_tensor_2=tmpScalar;
+    tmpScalar= trace;
+    trace= trace2;
+    trace2=tmpScalar;
     ukfMatrixType old = covariance;
     SwapState2T(state, covariance);   // Swap the two tensors
     }
@@ -1424,20 +1431,19 @@ void Tractography::Step2T(const int thread_id,
 
         SwapState2T(state, covariance);   // Swap the two tensors
         }
-
-	  // Update FA. If the first lamba is not the largest anymore the FA is set to
-	  // 0 what will lead to abortion in the tractography loop.
-      if( l1[0] < l1[1] || l1[0] < l1[2] )
-	    {
-	    fa = ukfZero;
-	    fa2 = ukfZero;
-	    }
-	  else
-	    {
-	    fa = l2fa(l1[0], l1[1], l1[2]);
-	    fa2 = l2fa(l2[0], l2[1], l2[2]);
-	    }
       }
+    }
+  // Update FA. If the first lamba is not the largest anymore the FA is set to
+  // 0 what will lead to abortion in the tractography loop.
+  if( l1[0] < l1[1] || l1[0] < l1[2] )
+    {
+    fa = ukfZero;
+    fa2 = ukfZero;
+    }
+  else
+    {
+    fa = l2fa(l1[0], l1[1], l1[2]);
+    fa2 = l2fa(l2[0], l2[1], l2[2]);
     }
   vec3_t dx;
     {

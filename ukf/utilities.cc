@@ -837,7 +837,7 @@ void IntraCelluarModel(ukfPrecisionType dPar,
     }
   }
   // making negative values 10% of Emin
-  for(int i=0; i<negIndex.size();i++)
+  for(size_t i=0; i<negIndex.size();i++)
   {
     tmp = negIndex[i];
     Eic[tmp] = 0.1 * Emin;

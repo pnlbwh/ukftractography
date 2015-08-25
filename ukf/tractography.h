@@ -207,7 +207,7 @@ private:
   const ukfPrecisionType _sigma_signal;
   const ukfPrecisionType _sigma_mask;
   const ukfPrecisionType _min_radius;
-  const ukfPrecisionType _full_brain_ga_min;
+  // UNUSED  const ukfPrecisionType _full_brain_ga_min;
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;

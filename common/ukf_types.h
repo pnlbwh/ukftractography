@@ -13,6 +13,9 @@ typedef float ukfPrecisionType;
 typedef double ukfPrecisionType;
 #endif
 
+static const ukfPrecisionType GLOBAL_TENSOR_PACK_VALUE=1e6;
+static const ukfPrecisionType GLOBAL_TENSOR_UNPACK_VALUE=1e-6;
+
 static const ukfPrecisionType ukfZero(static_cast<ukfPrecisionType>(0.0));
 static const ukfPrecisionType ukfOne(static_cast<ukfPrecisionType>(1.0));
 static const ukfPrecisionType ukfHalf(static_cast<ukfPrecisionType>(0.5));
@@ -21,6 +24,7 @@ typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,1> ukfVectorType;
 typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,Eigen::Dynamic> ukfMatrixType;
 typedef Eigen::Matrix<ukfPrecisionType,3,1> vec3_t;
 typedef Eigen::Matrix<ukfPrecisionType,3,3> mat33_t;
+typedef Eigen::DiagonalMatrix<ukfPrecisionType,3> diagmat3_t;
 
 
 /** Short hand for the state vector */

@@ -42,7 +42,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const std::vector<int>& labels,
 
                            ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
-                           ukfPrecisionType min_radius, ukfPrecisionType full_brain_ga_min,
+                           ukfPrecisionType min_radius,
+                           ukfPrecisionType /* UNUSED full_brain_ga_min */,
 
                            const int num_threads
                            ) :
@@ -50,18 +51,22 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
 
   _output_file(output_file), _output_file_with_second_tensor(output_file_with_second_tensor),
   _record_fa(record_fa), _record_nmse(record_nmse), _record_trace(record_trace), _record_state(record_state),
-  _record_cov(record_cov), _record_free_water(record_free_water), _record_tensors(record_tensors),
-  _record_Vic(record_Vic), _record_kappa(record_kappa), _record_Viso(record_Viso),
+  _record_cov(record_cov), _record_free_water(record_free_water), 
+  _record_Vic(record_Vic),
+  _record_kappa(record_kappa), _record_Viso(record_Viso),
+  _record_tensors(record_tensors),
   _transform_position(transform_position), _store_glyphs(store_glyphs), _branches_only(branchesOnly),
 
-  _p0(p0), _sigma_signal(sigma_signal), _sigma_mask(sigma_mask), _min_radius(min_radius), _full_brain_ga_min(
-    full_brain_ga_min),
-  _max_length(static_cast<int>(std::ceil(maxHalfFiberLength / stepLength) ) ), _full_brain(false),
-
+  _p0(p0), _sigma_signal(sigma_signal), _sigma_mask(sigma_mask), _min_radius(min_radius),
+  //UNUSED _full_brain_ga_min(full_brain_ga_min),
+  _max_length(static_cast<int>(std::ceil(maxHalfFiberLength / stepLength) ) ),
+  _full_brain(false),
+  _noddi(noddi),
   _fa_min(fa_min), _ga_min(ga_min), _seedFALimit(seedFALimit),
   _num_tensors(num_tensors), _seeds_per_voxel(seeds_per_voxel),
   _cos_theta_min(minBranchingAngle), _cos_theta_max(maxBranchingAngle),
-  _is_full_model(is_full_model), _free_water(free_water), _noddi(noddi),
+  _is_full_model(is_full_model), 
+  _free_water(free_water),
   _stepLength(stepLength),
   _steps_per_record(recordLength/stepLength),
   _labels(labels),
@@ -799,7 +804,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     ret[i][3] = theta;
     ret[i][4] = phi;
     ret[i][5] = psi;
-    sigma = sigma * 1.0e6; // NOTICE this scaling of eigenvalues. The values are scaled back in diffusion_euler()
+    sigma = sigma * GLOBAL_TENSOR_PACK_VALUE; // NOTICE this scaling of eigenvalues. The values are scaled back in diffusion_euler()
     ret[i][6] = sigma[0];
     ret[i][7] = sigma[1];
     ret[i][8] = sigma[2];

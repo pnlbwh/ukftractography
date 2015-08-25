@@ -12,7 +12,6 @@ set(MODULE_SRCS
   BRAINSThreadControl.cxx
   tractography.cc
   unscented_kalman_filter.cc
-  filter_model.cc
   seed.cc
   ukffiber.cc
   NrrdData.cc
@@ -21,6 +20,19 @@ set(MODULE_SRCS
   utilities.cc
   thread.cc
   QuadProg++_Eigen.cc
+  filter_model.cc
+  filter_Full1T.cc
+  filter_Full1T_FW.cc
+  filter_Full2T.cc
+  filter_Full2T_FW.cc
+  filter_Full3T.cc
+  filter_NODDI1F.cc
+  filter_NODDI2F.cc
+  filter_Simple1T.cc
+  filter_Simple1T_FW.cc
+  filter_Simple2T.cc
+  filter_Simple2T_FW.cc
+  filter_Simple3T.cc
   )
 
 set(MODULE_TARGET_LIBRARIES

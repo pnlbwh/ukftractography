@@ -114,7 +114,7 @@ private:
   */
   void createProtocol(const ukfVectorType& b, ukfVectorType& gradientStrength,
                                   ukfVectorType& pulseSeparation);
-  
+
   /** One step along the fiber for the 3-tensor case. */
   void Step3T(const int thread_id, vec3_t& x, vec3_t& m1, vec3_t& l1, vec3_t& m2, vec3_t& l2, vec3_t& m3, vec3_t& l3,
               ukfPrecisionType& fa, ukfPrecisionType& fa2, State& state, ukfMatrixType& covariance, ukfPrecisionType& dNormMSE, ukfPrecisionType& trace,
@@ -144,12 +144,13 @@ private:
    * Saves one point along the fiber so that everything can be written to a
    * file at the end.
   */
-  void Record(const vec3_t& x, ukfPrecisionType fa, ukfPrecisionType fa2, const State& state, const ukfMatrixType p, UKFFiber& fiber,
-              ukfPrecisionType dNormMSE, ukfPrecisionType trace, ukfPrecisionType trace2);
+  void Record(const vec3_t& x, const ukfPrecisionType fa, const ukfPrecisionType fa2,
+              const State& state, const ukfMatrixType p, UKFFiber& fiber,
+              const ukfPrecisionType dNormMSE, const ukfPrecisionType trace, const ukfPrecisionType trace2);
 
   /**  Reserving fiber array memory so as to avoid resizing at every step*/
   void FiberReserve(UKFFiber& fiber, int fiber_size);
-  
+
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
 

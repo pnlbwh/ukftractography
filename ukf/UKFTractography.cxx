@@ -14,7 +14,18 @@ unsigned int countH=0;
 #include <vector>
 
 #include "BRAINSThreadControl.h"
-#include "filter_model.h"
+#include "filter_Full1T.h"
+#include "filter_Full1T_FW.h"
+#include "filter_Full2T.h"
+#include "filter_Full2T_FW.h"
+#include "filter_Full3T.h"
+#include "filter_NODDI1F.h"
+#include "filter_NODDI2F.h"
+#include "filter_Simple1T.h"
+#include "filter_Simple1T_FW.h"
+#include "filter_Simple2T.h"
+#include "filter_Simple2T_FW.h"
+#include "filter_Simple3T.h"
 #include "tractography.h"
 #include "UKFTractographyCLP.h"
 
@@ -43,7 +54,7 @@ int main(int argc, char **argv)
   ukfPrecisionType l_minFA = minFA;
   ukfPrecisionType l_minGA = minGA;
   ukfPrecisionType l_stepLength = stepLength;
-  ukfPrecisionType l_recordLength = recordLength;  
+  ukfPrecisionType l_recordLength = recordLength;
   ukfPrecisionType l_maxHalfFiberLength = maxHalfFiberLength;
   ukfPrecisionType l_seedFALimit = seedFALimit;
   ukfPrecisionType l_Qm = Qm;
@@ -54,10 +65,10 @@ int main(int argc, char **argv)
   ukfPrecisionType l_Rs = Rs;
   ukfPrecisionType l_maxBranchingAngle = maxBranchingAngle;
   ukfPrecisionType l_minBranchingAngle = minBranchingAngle;
-  
+
   // If sigmaSignal is not set minimum of voxel size is used for interpolation
   ukfPrecisionType SIGMA_SIGNAL = sigmaSignal;
-  
+
   bool simpleTensorModel = !fullTensorModel;
 
 
@@ -259,8 +270,8 @@ int main(int argc, char **argv)
         setAndTell(l_Qvic, 0.004, "Qvic = Qviso");
     else
       tell(l_Qvic, "Qvic = Qviso");
-  } 
-  else 
+  }
+  else
     if (freeWater) {
       if (l_Qw == 0.0) {
         if (numTensor == 1) {

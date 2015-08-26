@@ -78,6 +78,13 @@ inline mat33_t diffusion(const vec3_t &m, const diagmat3_t & lambdas)
   return R * lambdas * R.transpose() * GLOBAL_TENSOR_UNPACK_VALUE;
 }
 
+inline mat33_t diffusion_l2eql3(const vec3_t &eigenVec1, const ukfPrecisionType L1, const ukfPrecisionType L2)
+{
+  // $ D = ( ( \lambda_1 - \lambda_2) * e_1 *e_1^{T} + \lambda_2 * I $
+  const mat33_t & D = ((L1-L2)* eigenVec1 * eigenVec1.transpose() + L2 * mat33_t::Identity())*GLOBAL_TENSOR_UNPACK_VALUE;
+  return D;
+}
+
 inline void initNormalized(vec3_t &m, const ukfPrecisionType &a, const ukfPrecisionType &b, const ukfPrecisionType &c)
 {
   m << a, b, c;

@@ -172,7 +172,7 @@ int main(int argc, char **argv)
     return 1;   
   }
   
-  if (maxUKFIterations != 0 && !diffusionPropagator) {
+  if (maxUKFIterations != -1.0 && !diffusionPropagator) {
     std::cout<<"maxUKFIterations parameter cannot be set with any other models than the diffusionPropagator model"<<std::endl;
     return 1;   
   }

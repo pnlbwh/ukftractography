@@ -243,11 +243,13 @@ int main(int argc, char **argv)
     if (noddi){
       if (numTensor == 1)
         setAndTell(l_Qm, 0.0025, "Qm");
-      else if (diffusionPropagator)
-        setAndTell(l_Qm, 0.0001, "Qm");
       else
         setAndTell(l_Qm, 0.001, "Qm");
-    } else if (numTensor == 1) {
+    } 
+    else if (diffusionPropagator) {
+        setAndTell(l_Qm, 0.0001, "Qm");
+    }
+    else if (numTensor == 1) {
         setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
       if (!simpleTensorModel) {
@@ -430,7 +432,7 @@ int main(int argc, char **argv)
     }
   else
     {
-    weightsOnTensors.norm(); // Normilize for all to add up to 1.
+    weightsOnTensors.norm(); // Normalize for all to add up to 1.
     }
 
 

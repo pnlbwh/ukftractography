@@ -33,6 +33,7 @@ set(MODULE_SRCS
   filter_Simple2T.cc
   filter_Simple2T_FW.cc
   filter_Simple3T.cc
+  filter_Simple2BiExp_FW.cc
   )
 
 set(MODULE_TARGET_LIBRARIES

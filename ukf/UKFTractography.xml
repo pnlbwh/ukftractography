@@ -354,9 +354,63 @@
 </parameters>
 
 <parameters advanced="true">
-  <label>Not Used: Debug/Develop Only </label>
-  <description> </description>
+  <label>Diffusion Propagator model </label>
+  <description> Use the Bi-exponential diffusion propagator model, with 2 tensors (simple model) and free water </description>
+  
+    <boolean>
+      <name>diffusionPropagator</name>
+      <longflag>diffusionPropagator</longflag>
+      <label>Diffusion Propagator model </label>
+      <description>Use the Bi-exponential diffusion propagator model, with 2 tensors (simple model) and free water </description>
+      <default>false</default>
+    </boolean>
+    
+    <boolean>
+      <name>recordRTOP</name>
+      <longflag>recordRTOP</longflag>
+      <label>Record the return to origin probability </label>
+      <description>Record the return to origin probability when using the diffusion propagator model </description>
+      <default>false</default>
+    </boolean>
+    
+    <double>
+      <name>minRTOP</name>
+      <longflag>minRTOP</longflag>
+      <label>Stopping criteria: RTOP values computed from the signal below this minimum imply the termination of the fiber</label>
+      <description>Stopping criteria: RTOP values computed from the signal below this minimum implied the termination of the fiber. Default: 60.0</description>
+      <default>0.0</default>
+    </double>
+    
+    <double>
+      <name>Qt</name>
+      <longflag>Qt</longflag>
+      <label>UKF Parameter (Advanced): Rate of change of eigenvalues for the slow diffusion (diffusion propagator model)</label>
+      <description>UKF data fitting parameter for tensor model: Process noise for slow diffusion eigenvalues.</description>
+      <default>0.0</default>
+    </double>
+    
+    <double>
+      <name>maxNMSE</name>
+      <longflag>maxNMSE</longflag>
+      <label>Stopping criteria: maximum NMSE allowed when seeding and tracing fibers, in the case of the diffusion propagator model</label>
+      <description>Stopping criteria: maximum NMSE allowed when seeding and tracing fibers, in the case of the diffusion propagator model (default 0.2)</description>
+      <default>0.0</default>
+    </double>
+    
+    <double>
+      <name>maxUKFIterations</name>
+      <longflag>maxUKFIterations</longflag>
+      <label>Maximum number of iterations of the Kalman filter at a given position when following a fiber</label>
+      <description>Maximum number of iterations of the Kalman filter at a given position when following a fiber (default is 5)</description>
+      <default>-1.0</default>
+    </double>    
+      
+</parameters>
 
+<parameters advanced="true">
+  <label>Not Used: Debug/Develop Only </label>
+  <description> </description>  
+  
     <double>
       <name>sigmaSignal</name>
       <longflag>sigmaSignal</longflag>

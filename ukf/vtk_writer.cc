@@ -98,6 +98,19 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
     _num_tensors = 3;
     _tensor_space = 6;
     }
+  else if( filter_model_type == Tractography::_2T_BiExp_FW )
+    {
+    _full = false;
+    _p_m1 = 0;
+    _p_m2 = 1;
+    _p_m3 = 2;
+    _p_l1 = 3;
+    _p_l2 = 4;
+    _p_l3 = 4;
+    _num_tensors = 2;
+    _tensor_space = 7;
+    
+    }
 
   // this also upon initialization of writer, its the same for all
   ukfMatrixType i2r = _signal_data->i2r();
@@ -263,7 +276,8 @@ Write(const std::string& file_name,
       const std::vector<UKFFiber>& fibers,
       bool write_state,
       bool store_glyphs,
-      bool if_noddi)
+      bool if_noddi,
+      bool diffusionPropagator)
 {
   if( fibers.size() == 0 )
     {
@@ -333,6 +347,8 @@ Write(const std::string& file_name,
     fa->Allocate(num_points);
     if(if_noddi)
       fa->SetName("Vic1");
+    else if (diffusionPropagator) 
+      fa->SetName("RTOP1");
     else
       fa->SetName("FA1");
     for( int i = 0; i < num_fibers; ++i )
@@ -353,6 +369,8 @@ Write(const std::string& file_name,
     vtkSmartPointer<vtkFloatArray> fa2 = vtkSmartPointer<vtkFloatArray>::New();
     if(if_noddi)
       fa2->SetName("Vic2");
+    else if (diffusionPropagator) 
+      fa2->SetName("RTOP2");
     else
       fa2->SetName("FA2");
     fa2->SetNumberOfComponents(1);
@@ -377,6 +395,8 @@ Write(const std::string& file_name,
     trace->Allocate(num_points);
     if(if_noddi)
       trace->SetName("OrientationDispersionIndex1");
+    else if (diffusionPropagator) 
+      trace->SetName("RTOP_model");
     else
       trace->SetName("trace1");
     for( int i = 0; i < num_fibers; ++i )
@@ -399,6 +419,8 @@ Write(const std::string& file_name,
     trace2->Allocate(num_points);
     if(if_noddi)
       trace2->SetName("OrientationDispersionIndex2");
+    else if (diffusionPropagator) 
+      trace2->SetName("RTOP_signal");
     else
       trace2->SetName("trace2");
     for( int i = 0; i < num_fibers; ++i )

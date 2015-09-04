@@ -26,6 +26,7 @@ unsigned int countH=0;
 #include "filter_Simple2T.h"
 #include "filter_Simple2T_FW.h"
 #include "filter_Simple3T.h"
+#include "filter_Simple2BiExp_FW.h"
 #include "tractography.h"
 #include "UKFTractographyCLP.h"
 
@@ -59,6 +60,7 @@ int main(int argc, char **argv)
   ukfPrecisionType l_seedFALimit = seedFALimit;
   ukfPrecisionType l_Qm = Qm;
   ukfPrecisionType l_Ql = Ql;
+  ukfPrecisionType l_Qt = Qt;
   ukfPrecisionType l_Qw = Qw;
   ukfPrecisionType l_Qkappa = Qkappa;
   ukfPrecisionType l_Qvic = Qvic;
@@ -122,6 +124,60 @@ int main(int argc, char **argv)
         return 1 ;
     }
   }
+  if (diffusionPropagator) { 
+    if (noddi) {
+      std::cout<<"Noddi and Diffusion Propagator parameters are mutually exclusive. Use either one of the two"<<std::endl;
+      return 1;
+    } 
+    
+    if (recordFA || recordTrace) {
+      std::cout << "recordFA and recordTrace cannot be used with the diffusion propagator model\n";
+      return 1 ;
+    }
+     
+    if (!freeWater) {
+      std::cout<<"Since the Diffusion Propagator model is used, the free water parameter will be estimated"<<std::endl;
+      freeWater = true;
+    }
+    
+    if (!simpleTensorModel) {
+      std::cout<<"Since the Diffusion Propagator model is used, the simple tensor model will be used"<<std::endl;
+      simpleTensorModel = true;
+    }
+    
+    if (numTensor != 2) {
+      std::cout<<"Since the Diffusion Propagator model is used, the number of tensors is set to two (2)"<<std::endl;
+      numTensor = 2;
+    }    
+  
+  }
+  
+  if (recordRTOP && !diffusionPropagator) {
+    std::cout<<"recordRTOP cannot be used with any other models than the diffusionPropagator"<<std::endl;
+    return 1;
+  }
+  
+  if (l_Qt != 0.0 && !diffusionPropagator) {
+    std::cout<<"Qt parameter cannot be set with any other models than the diffusionPropagator model"<<std::endl;
+    return 1; 
+  }
+  
+  if (minRTOP != 0.0 && !diffusionPropagator) {
+    std::cout<<"minRTOP parameter cannot be set with any other models than the diffusionPropagator model"<<std::endl;
+    return 1; 
+  }
+  
+  if (maxNMSE != 0.0 && !diffusionPropagator) {
+    std::cout<<"maxNMSE parameter cannot be set with any other models than the diffusionPropagator model"<<std::endl;
+    return 1;   
+  }
+  
+  if (maxUKFIterations != -1.0 && !diffusionPropagator) {
+    std::cout<<"maxUKFIterations parameter cannot be set with any other models than the diffusionPropagator model"<<std::endl;
+    return 1;   
+  }
+  
+  
 //   if (l_stepLength <= 0){
 //     std::cout << "Invalid step length!" << std::endl ;
 //     return 1 ;
@@ -189,7 +245,11 @@ int main(int argc, char **argv)
         setAndTell(l_Qm, 0.0025, "Qm");
       else
         setAndTell(l_Qm, 0.001, "Qm");
-    } else if (numTensor == 1) {
+    } 
+    else if (diffusionPropagator) {
+        setAndTell(l_Qm, 0.0001, "Qm");
+    }
+    else if (numTensor == 1) {
         setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
       if (!simpleTensorModel) {
@@ -211,7 +271,10 @@ int main(int argc, char **argv)
   }
   else {
     if (l_Ql == 0.0) {
-      if (numTensor == 1) {
+      if (diffusionPropagator) {
+        setAndTell(l_Ql, 150, "Ql");
+      }
+      else if (numTensor == 1) {
         setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
       } else if (numTensor == 2) {
         setAndTell(l_Ql, 50.0, "Ql");//was l_Ql = 100.0; for old Interp3Signal
@@ -222,10 +285,53 @@ int main(int argc, char **argv)
         tell(l_Ql, "Ql");
     }
   }
+ // In the diffusion propagator model, Ql is used for the fast diffusion eigenvalues, and Qt for the slow diffusion.
+  if (diffusionPropagator) {
+    if (l_Qt == 0.0) {
+      setAndTell(l_Qt, 50, "Qt");
+    }
+    else {
+      tell(l_Qt, "Qt");
+    }
+  }
+  
+  if (diffusionPropagator) {
+    if (minRTOP == 0.0) {
+      setAndTell(minRTOP, 60.0, "minRTOP");
+    }
+    else {
+      tell(minRTOP, "minRTOP");
+    }
+  }
+  
+  if (diffusionPropagator) {
+    if (maxNMSE == 0.0) {
+      setAndTell(maxNMSE, 0.15, "maxNMSE");
+    }
+    else {
+      tell(maxNMSE, "maxNMSE");
+    }
+  }
+  
+  if (diffusionPropagator) {
+    if (maxUKFIterations == -1.0) {
+      setAndTell(maxUKFIterations, 5, "maxUKFIterations");
+    }
+    else {
+    if (maxUKFIterations < 0.0) {
+        std::cout<<"Error: maxUKFIterations cannot be negative. Exiting"<<std::endl;
+        exit(1);
+    }
+      tell(maxUKFIterations, "maxUKFIterations");
+    }
+  }  
 
 
   if (l_Rs == 0.0) {
-    if (numTensor == 1) {
+    if (diffusionPropagator) {
+      setAndTell(l_Rs, 0.015, "Rs");
+    }
+    else if (numTensor == 1) {
       setAndTell(l_Rs, 0.01, "Rs");//l_Rs = 0.02;
     } else {
       if (!simpleTensorModel) {
@@ -238,8 +344,14 @@ int main(int argc, char **argv)
     tell(l_Rs, "Rs");
   }
 
-  if (l_stepLength == 0.0) {
-    if (numTensor == 1) {
+  if (l_stepLength == 0.3 && diffusionPropagator)  {
+    setAndTell(l_stepLength, 0.5, "stepLength");
+  }
+  else if (l_stepLength == 0.0) {
+    if (diffusionPropagator) {
+      setAndTell(l_stepLength, 0.5, "stepLength");
+    }
+    else if (numTensor == 1) {
       setAndTell(l_stepLength, 0.3, "stepLength");
     } else if (numTensor == 2) {
       setAndTell(l_stepLength, 0.3, "stepLength"); //was 0.2 for old Interp3Signal
@@ -274,7 +386,10 @@ int main(int argc, char **argv)
   else
     if (freeWater) {
       if (l_Qw == 0.0) {
-        if (numTensor == 1) {
+        if (diffusionPropagator) {
+          setAndTell(l_Qw, 0.002, "Qw");
+        }
+        else if (numTensor == 1) {
           setAndTell(l_Qw, 0.0025, "Qw"); // estimated in a paramsearch // 0.0025
         } else if (numTensor == 2) {
           setAndTell(l_Qw, 0.0015, "Qw"); // 0.0015
@@ -317,15 +432,20 @@ int main(int argc, char **argv)
     }
   else
     {
-    weightsOnTensors.norm(); // Normilize for all to add up to 1.
+    weightsOnTensors.norm(); // Normalize for all to add up to 1.
     }
 
 
   // Initialize the tractography object.
   FilterModel *filter_model = NULL; //Silence warnings.  This will cause segfault if it ever reaches this point.
   Tractography::model_type filter_model_type = Tractography::_1T;
-
-  if (noddi){
+  
+  if (diffusionPropagator) {
+    std::cout << "Using Diffusion Propagator model (2 simple tensors, free water, bi-exponential)" << std::endl;
+    filter_model = new Simple2T_BiExp_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO, l_Qt);
+    filter_model_type = Tractography::_2T_BiExp_FW;
+    
+  } else if (noddi){
     if (numTensor == 1){
       std::cout << "Using NODDI 1-Fiber model." << std::endl;
       filter_model = new NODDI1F(l_Qm, l_Qkappa, l_Qvic, l_Rs, weightsOnTensors, noddi);
@@ -398,6 +518,8 @@ int main(int argc, char **argv)
                                          numTensor, seedsPerVoxel,
                                          l_minBranchingAngle, l_maxBranchingAngle,
                                          !simpleTensorModel, freeWater, noddi,
+                                         diffusionPropagator, minRTOP, recordRTOP,
+                                         maxNMSE, maxUKFIterations,
 
                                          l_stepLength, l_recordLength, l_maxHalfFiberLength,
                                          labels,

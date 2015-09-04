@@ -17,6 +17,7 @@
 // #include "UKFMultiThreader.h"
 #include "itkMultiThreader.h"
 #include "math_utilities.h"
+#include "filter_Simple2BiExp_FW.h"
 
 #include <fstream>
 #include <iostream>
@@ -37,6 +38,9 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const int num_tensors, const int seeds_per_voxel,
                            const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                            const bool is_full_model, const bool free_water, const bool noddi,
+                           const bool diffusionPropagator, const ukfPrecisionType rtop_min, const bool recordRTOP, 
+                           const ukfPrecisionType maxNMSE, const ukfPrecisionType maxUKFIterations,
+   
                            const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
                            const ukfPrecisionType maxHalfFiberLength,
                            const std::vector<int>& labels,
@@ -66,6 +70,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _num_tensors(num_tensors), _seeds_per_voxel(seeds_per_voxel),
   _cos_theta_min(minBranchingAngle), _cos_theta_max(maxBranchingAngle),
   _is_full_model(is_full_model),
+  _diffusionPropagator(diffusionPropagator), _rtop_min(rtop_min), _recordRTOP(recordRTOP), 
+  _maxNMSE(maxNMSE), _maxUKFIterations(maxUKFIterations),
   _free_water(free_water),
   _stepLength(stepLength),
   _steps_per_record(recordLength/stepLength),
@@ -117,7 +123,10 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
     }
   else if( _num_tensors == 2 )    // 2 TENSOR CASE ////////////////////////////////
     {
-    if( !is_full_model && free_water ) // simple model with free water
+    if (_diffusionPropagator) {
+      _nPosFreeWater = 14;
+     }
+    else if( !is_full_model && free_water ) // simple model with free water
       {
       _nPosFreeWater = 10;
       }
@@ -314,6 +323,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
   // Pack information for each seed point.
   int fa_too_low = 0;
+  std::cout<<"Processing "<<starting_points.size()<<" starting points"<<std::endl;
   for( size_t i = 0; i < starting_points.size(); ++i )
     {
     const ukfVectorType& param = starting_params[i];
@@ -337,6 +347,12 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       ++fa_too_low;
       continue;
       }
+    // In the case of the diffusion propagator model, if lambda1 < lambda2, 
+    // then we do not consider this seed
+    
+    if (_diffusionPropagator && param[6] < param[7]) {
+      continue;
+    } 
 
     // Create seed info for both directions;
     SeedPointInfo info;
@@ -442,7 +458,166 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         tmp_info_inv_state[8] = tmp_info_inv_state[3]; // Vic
         tmp_info_inv_state[9] = tmp_info_inv_state[4]; //kappa
       }
-    }
+    } // If diffusion propagator
+    else if (_diffusionPropagator) {
+    
+      //
+      // STEP 1: Initialise the state based on the single estimated tensor
+      //
+      tmp_info_state.resize(15);
+      tmp_info_inv_state.resize(15);
+      
+      // Diffusion directions, m1 = m2
+      tmp_info_state[0] = tmp_info_state[7] = info.start_dir[0];
+      tmp_info_state[1] = tmp_info_state[8] = info.start_dir[1];
+      tmp_info_state[2] = tmp_info_state[9] = info.start_dir[2];
+      
+      // Fast diffusing component,  lambdas l11, l21 = l1 from the single tensor
+      //                            lambdas l12, l21 = (l2 + l3) /2 from the single tensor (avg already calculated and stored in l2)
+      tmp_info_state[3] = tmp_info_state[10] = param[6];
+      tmp_info_state[4] = tmp_info_state[11] = param[7];
+      
+      // Slow diffusing component,  lambdas l13, l23 = 0.2 * l1
+      //                            lambdas l14, l24 = 0.2 * (l2 + l3) /2
+      // tmp_info_state[5] = tmp_info_state[12] = 0.2 * param[6];
+      // tmp_info_state[6] = tmp_info_state[13] = 0.2 * param[7];
+      tmp_info_state[5] = tmp_info_state[12] = 0.7 * param[6];
+      tmp_info_state[6] = tmp_info_state[13] = 0.7 * param[7];
+      
+      // Free water volume fraction
+      tmp_info_state[14] = 0.9; // 0.9 as initial value
+
+      //
+      // STEP 2.1: Loop the UKF at the same point in space. 
+      // The UKF is an estimator, and we want to find the estimate with the smallest error through the iterations
+      
+      // Set the covariance value
+      const int state_dim = tmp_info_state.size();
+      info.covariance.resize(state_dim, state_dim);
+      info_inv.covariance.resize(state_dim, state_dim);
+      
+      // make sure covariances are really empty
+      info.covariance.setConstant(ukfZero);
+      info_inv.covariance.setConstant(ukfZero);
+      
+      // fill the diagonal of the covariance matrix with _p0 (zeros elsewhere)
+      for (int local_i = 0; local_i < state_dim; ++local_i) {
+        info.covariance(local_i, local_i) = _p0;
+        info_inv.covariance(local_i, local_i) = _p0;
+      }
+      
+      // Input of the filter
+      State state = ConvertVector<stdVecState, State>(tmp_info_state);
+      ukfMatrixType p(info.covariance);
+      
+      ukfPrecisionType dNormMSE = 0.0;
+      
+      // Estimate the initial state
+      
+      //InitLoopUKF(state, p, signal_values[i], dNormMSE);
+      NonLinearLeastSquareOptimization(state, signal_values[i], _model);
+
+      
+      
+      // Output of the filter
+      tmp_info_state = ConvertVector<State, stdVecState>(state);
+     
+      //
+      // STEP 2.2: Filter out the seeds with a dNMSE > _maxNMSE (0.15 by default)
+      if (dNormMSE > _maxNMSE) {
+        continue;
+      }
+      
+      //
+      // STEP 3: Compute the return to origin probability (RTOP)
+      // The RTOP is computed using the state informations
+      ukfPrecisionType rtop = 0.0;
+      ukfPrecisionType rtop1 = 0.0;
+      ukfPrecisionType rtop2 = 0.0;
+      ukfPrecisionType rtopSignal = 0.0;
+      
+      computeRTOPfromState(tmp_info_state, rtop, rtop1, rtop2); 
+      computeRTOPfromSignal(rtopSignal, signal_values[i]);
+      
+      // These values are stored so that: rtop1 -> fa; rtop2 -> fa2; rtop -> trace; rtopSignal -> trace2
+      
+      info.fa = rtop1;
+      info.fa2 = rtop2;
+      info.trace = rtop;
+      info.trace2 = rtopSignal;
+      
+      info_inv.fa = rtop1;
+      info_inv.fa2 = rtop2;
+      info_inv.trace = rtop;
+      info_inv.trace2 = rtopSignal;
+      
+      //
+      // STEP 4: Adjust the seed state info, based on the number of branches found at the seed point.
+      //
+      
+      // Angle between m1 and m2 (m1 and m2 are unit vectors)
+      
+      
+      const ukfPrecisionType min_angle = 30; // 25 or 30
+      ukfPrecisionType scalar_product_m1_m2 = tmp_info_state[0] * tmp_info_state[7] 
+                                            + tmp_info_state[1] * tmp_info_state[8]
+                                            + tmp_info_state[2] * tmp_info_state[9];
+      ukfPrecisionType abs_angle_degree = RadToDeg(acos((ukfPrecisionType) std::abs(scalar_product_m1_m2)));
+      
+      
+      if (rtopSignal >= _rtop_min){
+        
+        // If the angle between the two fibers is less than 30 and if lambda2(tensor2) < lambda2(tensor1)
+        // Then we swap tensor 2 and tensor 1 in the state
+        if (abs_angle_degree <= min_angle && tmp_info_state[13] < tmp_info_state[6]) {   
+          // Swap     
+          SwapState2T(tmp_info_state, p);
+        }
+        
+        // Create the opposite seed
+        InverseStateDiffusionPropagator(tmp_info_state, tmp_info_inv_state);
+        
+        // Update the original directions
+        info.start_dir << tmp_info_state[0], tmp_info_state[1], tmp_info_state[2];
+        info_inv.start_dir << -tmp_info_state[0], -tmp_info_state[1], -tmp_info_state[2];
+        
+        // Add the primary seeds to the vector
+        info.state = ConvertVector<stdVecState, State>(tmp_info_state);
+        info_inv.state = ConvertVector<stdVecState, State>(tmp_info_inv_state);
+        seed_infos.push_back(info);
+        seed_infos.push_back(info_inv);
+        
+        // If we have two fibers, we create a second starting seed
+        if (abs_angle_degree > min_angle) {
+          
+          
+          // Swap the first and second direction, in the state as well as the covariance
+          SwapState2T(tmp_info_state, p);
+          
+          // Create a crossing seed
+          SeedPointInfo info_branching;
+          info_branching.point = starting_points[i];
+          info_branching.start_dir << tmp_info_state[0], tmp_info_state[1], tmp_info_state[2];
+          info_branching.fa = rtop1;
+          info_branching.fa2 = rtop2;
+          info_branching.trace = rtop;
+          info_branching.trace2 = rtopSignal;
+          info_branching.covariance.resize(state_dim, state_dim);
+          info_branching.covariance = info.covariance;
+          
+          info_branching.state = ConvertVector<stdVecState, State>(tmp_info_state);       
+          seed_infos.push_back(info_branching);
+          
+          // Create the seed for the opposite direction, keep the other parameters as set for the first direction
+          InverseStateDiffusionPropagator(tmp_info_state, tmp_info_inv_state);
+          info_branching.state = ConvertVector<stdVecState, State>(tmp_info_inv_state);
+          info_branching.start_dir <<  tmp_info_inv_state[0], tmp_info_inv_state[1], tmp_info_inv_state[2];
+          seed_infos.push_back(info_branching);          
+        }
+               
+      } // End of if (rtopSignal >= _rtop_min)
+      
+    } // If not _noddi and not _diffusionPropagator
     else
     {
       tmp_info_state[3] = param[6];     // l1
@@ -451,7 +626,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       tmp_info_inv_state[4] = param[7]; // l2
     }
     // Duplicate/tripple states if we have several tensors.
-    if( _num_tensors > 1 && !_noddi)
+    if( _num_tensors > 1 && !_noddi && ! _diffusionPropagator)
       {
       size_t size = tmp_info_state.size();
       for( size_t j = 0; j < size; ++j )
@@ -475,34 +650,255 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
     else
     {
-      if( _free_water )
+      if( _free_water && ! _diffusionPropagator )
         {
         tmp_info_state.push_back(1);
         tmp_info_inv_state.push_back(1); // add the weight to the state (well was sich rhymt das stiimt)
         }
     }
 
-    const int state_dim = tmp_info_state.size();
+    if (! _diffusionPropagator) {
+      const int state_dim = tmp_info_state.size();
 
-    info.covariance.resize(state_dim, state_dim);
-    info_inv.covariance.resize(state_dim, state_dim);
+      info.covariance.resize(state_dim, state_dim);
+      info_inv.covariance.resize(state_dim, state_dim);
 
-    // make sure covariances are really empty
-    info.covariance.setConstant(ukfZero);
-    info_inv.covariance.setConstant(ukfZero);
-    for( int local_i = 0; local_i < state_dim; ++local_i )
-      {
-      info.covariance(local_i, local_i) = _p0;
-      info_inv.covariance(local_i, local_i) = _p0;
-      }
-    info.state = ConvertVector<stdVecState,State>(tmp_info_state);
-    info_inv.state = ConvertVector<stdVecState,State>(tmp_info_inv_state);
-    seed_infos.push_back(info);
-    seed_infos.push_back(info_inv);   // NOTE that the seed in reverse direction is put directly after the seed in
-                                      // original direction
+      // make sure covariances are really empty
+      info.covariance.setConstant(ukfZero);
+      info_inv.covariance.setConstant(ukfZero);
+      for( int local_i = 0; local_i < state_dim; ++local_i )
+        {
+        info.covariance(local_i, local_i) = _p0;
+        info_inv.covariance(local_i, local_i) = _p0;
+        }
+      info.state = ConvertVector<stdVecState,State>(tmp_info_state);
+      info_inv.state = ConvertVector<stdVecState,State>(tmp_info_inv_state);
+      seed_infos.push_back(info);
+      seed_infos.push_back(info_inv);   // NOTE that the seed in reverse direction is put directly after the seed in
+                                        // original direction
+    }
     }
 }
 
+void Tractography::PrintState(State& state)
+{
+  std::cout<<"State \n";
+  std::cout<<"\t m1: "<<state[0]<<" "<<state[1]<<" "<<state[2]<<std::endl;
+  std::cout<<"\t l11 .. l14: "<<state[3]<<" "<<state[4]<<" "<<state[5]<<" "<<state[6]<<std::endl;
+  std::cout<<"\t m2: "<<state[7]<<" "<<state[8]<<" "<<state[9]<<std::endl;
+  std::cout<<"\t l21 .. l24: "<<state[10]<<" "<<state[11]<<" "<<state[12]<<" "<<state[13]<<std::endl;
+  std::cout<<"\t w: "<<state[14]<<std::endl;
+  std::cout<<" --- "<<std::endl;
+}
+
+void Tractography::InverseStateDiffusionPropagator(stdVecState& reference, stdVecState& inverted)
+{
+  assert(reference.size() == 15);
+  assert(inverted.size() == 15);
+  for (unsigned int it = 0; it < reference.size(); ++it) {
+    if (it <= 2) {
+      inverted[it] = -reference[it];
+    }
+    else {
+      inverted[it] = reference[it];
+    }
+  } 
+}
+
+void Tractography::StateToMatrix(State& state, ukfMatrixType& matrix) 
+{
+  assert(state.size() > 0);
+  
+  matrix.resize(state.size(), 1);
+  
+  for (int it = 0; it<state.size(); ++it) {
+    matrix(it, 0) = state[it];
+  }
+  
+}
+
+void Tractography::MatrixToState(ukfMatrixType& matrix, State& state) 
+{
+  assert(matrix.cols() == 1);
+  assert(matrix.rows() > 0);
+  
+  state.resize(matrix.rows());
+  
+  for (int it = 0; it<matrix.rows(); ++it) {
+    state[it] = matrix(it, 0);
+  }
+  
+}
+
+void Tractography::InitLoopUKF(State& state, ukfMatrixType& covariance, ukfVectorType& signal, ukfPrecisionType& dNormMSE)
+{
+
+  // INITIALIZATION
+  
+  // Suppose that the signal is already loaded in memory
+  assert(_signal_data);
+  
+  // For the initialization, we use the model with different parameters, which are hard-coded here.
+  // This is the reason why we declare init_model here, and that we do not use _model
+  
+  ukfPrecisionType l_Qm = 0.005;
+  ukfPrecisionType l_Ql = 1500;
+  ukfPrecisionType l_Qt = 1500;
+  ukfPrecisionType l_Qw = 0.005;
+  ukfPrecisionType l_Rs = 0.001;
+
+  
+  ukfVectorType weightsOnTensors(2);
+    weightsOnTensors[0] = 0.5;
+    weightsOnTensors[1] = 0.5;
+  
+  const bool freeWater = true;  
+  ukfPrecisionType D_ISO = 0.003;
+  FilterModel* init_model = NULL;
+  init_model = new Simple2T_BiExp_FW(l_Qm, l_Ql, l_Qw, l_Rs, weightsOnTensors, freeWater, D_ISO, l_Qt);
+  
+  if (init_model == NULL) {
+    std::cout<<"NEW operator failed to instentiate a Simple2T_BiExp_FW model during initialization. Exiting the program"<<std::endl;
+    exit(1);
+  }
+  
+  init_model->set_signal_data(_signal_data);
+  init_model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
+  
+  UnscentedKalmanFilter* ukf = NULL;
+  ukf = new UnscentedKalmanFilter(init_model);
+  
+  if (init_model == NULL) {
+    std::cout<<"NEW operator failed to instentiate an UnscentedKalmanFilter during initialization. Exiting the program"<<std::endl;
+    exit(1);
+  }
+  
+
+  ukfPrecisionType dNormMSE_min;
+  ukfPrecisionType er;
+  ukfPrecisionType er_min;
+  
+  
+  State state_new( init_model->state_dim() );
+  State state_min( init_model->state_dim() );
+
+  ukfMatrixType state_matrix(init_model->state_dim(), 1);
+  
+  ukfMatrixType covariance_new( init_model->state_dim(), init_model->state_dim() );
+  covariance_new.setConstant(ukfZero);  
+  
+  ukfMatrixType covariance_min( init_model->state_dim(), init_model->state_dim() );
+  
+  state_min = state;
+  covariance_min = covariance;
+  
+
+  // END OF INITIALIZATION
+  
+  er = 0.1; 
+  state_min = state;
+  covariance_min = covariance;
+  dNormMSE_min = dNormMSE;
+  
+  int max_iter = 100;
+  //int max_iter = 3;
+  int jj  = 1;
+  er_min = er;
+  
+  while (er > 0.003) {
+
+    ukf->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE); 
+    
+    // 1. F function
+    StateToMatrix(state_new, state_matrix);
+    init_model->F(state_matrix);
+    
+    // 2. Compute error
+    er = dNormMSE;
+    
+    // 3. Update state
+    MatrixToState(state_matrix, state_new);    
+    state = state_new;
+    covariance = covariance_new;
+    
+    // 4. Look at the error
+    if (er < er_min) {
+      state_min = state;
+      covariance_min = covariance;
+      er_min = er;
+      dNormMSE_min = dNormMSE;
+    }
+    
+    if (jj > max_iter) {
+      // std::cout<<"Maximum number of iteration reached"<<std::endl;
+      break;
+    }
+       
+    ++jj;
+  }
+  
+  state = state_min;
+  covariance = covariance_min;
+  dNormMSE = dNormMSE_min;
+  
+
+  delete init_model;
+  delete ukf;
+
+}
+
+void Tractography::computeRTOPfromSignal(ukfPrecisionType& rtopSignal, ukfVectorType& signal)
+{
+  assert(signal.size() > 0);
+  
+  rtopSignal = 0.0;
+  
+  // The RTOP is the sum of the signal
+  // We use signal.size()/2 because the first half of the signal is identical
+  // to the second half.
+  
+  for (int i=0; i < signal.size()/2; ++i) {
+    rtopSignal += signal[i];
+    
+    if (signal[i] < 0) {
+      std::cout<<"Negative signal found when computing the RTOP from the signal, value : "<<signal[i]<<std::endl;
+    }
+    
+  }  
+}
+
+
+void Tractography::computeRTOPfromState(stdVecState& state, ukfPrecisionType& rtop, ukfPrecisionType& rtop1, ukfPrecisionType& rtop2)
+{
+  // Control input: state should have 15 rows
+  assert(state.size() == 15);
+  
+  ukfPrecisionType l11 = state[3]*1e-6;
+  ukfPrecisionType l12 = state[4]*1e-6;
+  ukfPrecisionType l13 = state[5]*1e-6;
+  ukfPrecisionType l14 = state[6]*1e-6;
+  
+  ukfPrecisionType l21 = state[10]*1e-6;
+  ukfPrecisionType l22 = state[11]*1e-6;
+  ukfPrecisionType l23 = state[12]*1e-6;
+  ukfPrecisionType l24 = state[13]*1e-6;
+  
+  ukfPrecisionType w = state[14];
+  
+  ukfPrecisionType det_l1 = l11 * l12;
+  ukfPrecisionType det_t1 = l13 * l14;
+  ukfPrecisionType det_l2 = l21 * l22;
+  ukfPrecisionType det_t2 = l23 * l24;
+  
+  // !!! D_ISO value hardcoded...
+  ukfPrecisionType det_fw = 0.003*0.003*0.003;
+  
+  // !!! 0.7 and 0.3 tensor weights are hardcoded...
+  rtop1 = std::pow(UKF_PI, 3/2) * w * (0.7/std::sqrt(det_l1) + 0.3/std::sqrt(det_t1));
+  rtop2 = std::pow(UKF_PI, 3/2) * w * (0.7/std::sqrt(det_l2) + 0.3/std::sqrt(det_t2));
+  rtop  = rtop1 + rtop2 + 2*std::pow(UKF_PI, 3/2) * (1-w)/std::sqrt(det_fw);
+  
+}
 bool Tractography::Run()
 {
   assert(_signal_data);   // The _signal_data is initialized in Tractography::LoadFiles(),
@@ -515,6 +911,10 @@ bool Tractography::Run()
                                                                  // branch attached
 
   Init(primary_seed_infos);
+  if (static_cast<int>(primary_seed_infos.size()) < 1) {
+    std::cout<<"The number of seeds after the initialization step is less than one (1). Cannot perform tractography. Exiting"<<std::endl;
+    exit(1);
+  }
 
   const int num_of_threads = std::min(_num_threads, static_cast<int>(primary_seed_infos.size() ) );
   // const int num_of_threads = 8;
@@ -625,7 +1025,7 @@ bool Tractography::Run()
   writer.SetWriteCompressed(this->_writeCompressed);
 
   writer.set_transform_position(_transform_position);
-  const int writeStatus = writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs, _noddi);
+  const int writeStatus = writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs, _noddi, _diffusionPropagator);
   // Clear up the kalman filters
   for( size_t i = 0; i < _ukf.size(); i++ )
     {
@@ -714,22 +1114,51 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
 
   // Build B matrix.
   const int signal_dim = _signal_data->GetSignalDimension();
+ int B_size = 0;
+  
+  // We define the limits for the diffusionPropagator
+  const int HIGH_BVAL = 1500;
+  const int LOW_BVAL = 800;
+  
+  // When we use the diffusion propagator, we would like to take into account only the gradients with a BValue between 800 and 1500 for the initialisation
+  if (_diffusionPropagator) {
+    
+    // We count the number of gradient directions with LOW_BVAL < bval <= HIGH_BVAL
+    for (int i = 0; i < signal_dim * 2; ++i) {
+      if (b[i] > LOW_BVAL && b[i] <= HIGH_BVAL) {
+        B_size++;
+      }
+    }
+    
+  } 
+  else {
+    B_size = signal_dim * 2;
+  }
+  
+  std::cout<<"Using "<<B_size/2<<" out of "<<signal_dim<<" b-values during initialization, when estimating a single tensor"<<std::endl;
+  
 /**
   * A special type for holding 6 elements of tensor for each signal
   *  Only used in tractography.cc
   */
   typedef Eigen::Matrix<ukfPrecisionType, Eigen::Dynamic, 6>  BMatrixType;
-  BMatrixType B(signal_dim * 2, 6); //HACK: Eigen::Matrix<ukfPrecisionType, DYNAMIC, 6> ??
+  BMatrixType B(B_size, 6); //HACK: Eigen::Matrix<ukfPrecisionType, DYNAMIC, 6> ??
 
+  int local_counter = 0;
   for( int i = 0; i < signal_dim * 2; ++i )
     {
+      if ((b[i] <= LOW_BVAL || b[i] > HIGH_BVAL) && (_diffusionPropagator)) {
+        continue;
+      }
     const vec3_t & g = u[i];
-    B(i, 0) = (-b[i]) * (g[0] * g[0]);
-    B(i, 1) = (-b[i]) * (2.0 * g[0] * g[1]);
-    B(i, 2) = (-b[i]) * (2.0 * g[0] * g[2]);
-    B(i, 3) = (-b[i]) * (g[1] * g[1]);
-    B(i, 4) = (-b[i]) * (2.0 * g[1] * g[2]);
-    B(i, 5) = (-b[i]) * (g[2] * g[2]);
+    B(local_counter, 0) = (-b[i]) * (g[0] * g[0]);
+    B(local_counter, 1) = (-b[i]) * (2.0 * g[0] * g[1]);
+    B(local_counter, 2) = (-b[i]) * (2.0 * g[0] * g[2]);
+    B(local_counter, 3) = (-b[i]) * (g[1] * g[1]);
+    B(local_counter, 4) = (-b[i]) * (2.0 * g[1] * g[2]);
+    B(local_counter, 5) = (-b[i]) * (g[2] * g[2]);
+    
+    local_counter++;
     }
   // Use QR decomposition to find the matrix representation of the tensor at the
   // seed point of the fiber. Raplacement of the gmm function gmm::least_squares_cg(..)
@@ -744,18 +1173,24 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
   // Unpack data
   for( stdEigVec_t::size_type i = 0; i < s.size(); ++i )
     {
+    // We create a temporary vector to store the signal when the log function is applied
+    ukfVectorType log_s;
+    log_s.resize(s[i].size());
+    
     for( unsigned int j = 0; j < s[i].size(); ++j )
       {
       if( s[i][j] <= 0 )
         {
         s[i][j] = 10e-8;
         }
-      s[i][j] = log(s[i][j]);
+      //s[i][j] = log(s[i][j]);
+      log_s[j] = log(s[i][j]);
       }
 
     // The six tensor components.
     //TODO: this could be fixed size
-    ukfVectorType d = qr.solve(s[i]);
+    // ukfVectorType d = qr.solve(s[i]);
+    ukfVectorType d = qr.solve(log_s);
 
     // symmetric diffusion tensor
     D(0, 0) = d[0];
@@ -1039,7 +1474,7 @@ void Tractography::Follow2T(const int thread_id,
   m1 = fiberStartSeed.start_dir;
 
   // Track the fiber.
-  ukfMatrixType signal_tmp(_model->signal_dim(), 1);
+  ukfMatrixType signal_tmp(_model->signal_dim(), 1); // estimated signal from the state
   ukfMatrixType state_tmp(_model->state_dim(), 1);
 
   int stepnr = 0;
@@ -1066,13 +1501,25 @@ void Tractography::Follow2T(const int thread_id,
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
     const ukfPrecisionType ga = s2ga(signal_tmp);
-    const bool in_csf = (_noddi) ? ( ga < _ga_min ) : (ga < _ga_min || fa < _fa_min);
+    bool in_csf = (_noddi) ? ( ga < _ga_min ) : (ga < _ga_min || fa < _fa_min);
+
+    bool dNormMSE_too_high = false;
+    bool negative_free_water = false;
+    
+    if (_diffusionPropagator) {
+      ukfPrecisionType rtopSignal = trace2; // rtopSignal is stored in trace2
+      in_csf = rtopSignal <  _rtop_min;
+      dNormMSE_too_high = dNormMSE > _maxNMSE;
+      negative_free_water = state[14] < 0.0; 
+    }
     const bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
         || stepnr > _max_length  // Stop when the fiber is too long
-        || is_curving)
+        || is_curving
+        || dNormMSE_too_high
+        || negative_free_water)
       {
       break;
       }
@@ -1098,7 +1545,7 @@ void Tractography::Follow2T(const int thread_id,
       }
 
     // Record branch if necessary.
-    if( is_branching )
+    if( is_branching && ! _diffusionPropagator )
       {
       const ukfPrecisionType fa_1 = l2fa(l1[0], l1[1], l1[2]);
       const ukfPrecisionType fa_2 = l2fa(l2[0], l2[1], l2[2]);
@@ -1129,6 +1576,37 @@ void Tractography::Follow2T(const int thread_id,
         local_seed.point = x;
         local_seed.start_dir = m2;
         local_seed.fa = fa_2;
+        }
+      }
+      
+      else if (is_branching && _diffusionPropagator) {
+        ukfPrecisionType scalar_product_m1_m2 = m1.dot(m2); // m1 and m2 are unit vectors
+        ukfPrecisionType angle = RadToDeg(acos(scalar_product_m1_m2));
+        
+        ukfPrecisionType rtop_signal = trace2;
+        ukfPrecisionType rtop2 = fa2;
+
+        // If we have a crossing fiber (angle greater than 25 degree)
+        if (rtop_signal >= _rtop_min && rtop2 >= _rtop_min && angle >= 25) {
+          
+          branching_seeds.push_back(SeedPointInfo() );
+          SeedPointInfo& local_seed = branching_seeds[branching_seeds.size() - 1];
+          branching_seed_affiliation.push_back(BranchingSeedAffiliation() );
+          BranchingSeedAffiliation& affiliation = branching_seed_affiliation[branching_seed_affiliation.size() - 1];
+  
+          affiliation.fiber_index_ = seed_index;
+          affiliation.position_on_fiber_ = stepnr;
+  
+          int state_dim = _model->state_dim();
+          local_seed.state.resize(state_dim);
+          local_seed.state = state;
+          local_seed.covariance.resize(state_dim, state_dim);
+          local_seed.covariance = p;
+          SwapState2T(local_seed.state, local_seed.covariance);
+          local_seed.point = x;
+          local_seed.start_dir = m2;
+          local_seed.fa = rtop2;
+
         }
       }
     }
@@ -1321,6 +1799,48 @@ void Tractography::Step3T(const int thread_id,
   x = x + dx * _stepLength;
 }
 
+void Tractography::LoopUKF(const int thread_id,
+                           State& state, 
+                           ukfMatrixType& covariance, 
+                           ukfVectorType& signal, 
+                           State& state_new, 
+                           ukfMatrixType& covariance_new, 
+                           ukfPrecisionType& dNormMSE
+                           )
+{  
+
+  _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);     
+  state = state_new;
+  covariance = covariance_new;
+  
+  ukfPrecisionType er_org = 0.0;
+  ukfPrecisionType er = 0.0;
+  
+  er_org = dNormMSE;
+  er = er_org;
+  
+  State state_prev = state;
+  
+  int max_iter = _maxUKFIterations;
+  
+  for (int jj = 0; jj < max_iter; ++jj) {
+    _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);     
+    state = state_new;
+    //covariance = covariance_new;
+    
+    er_org = er;
+    er = dNormMSE;
+      
+    if (er_org - er < 0.001) {
+      break;
+    }
+    
+    state_prev = state;
+  }
+  
+  state = state_prev;
+}
+
 void Tractography::Step2T(const int thread_id,
                           vec3_t& x,
                           vec3_t& m1,
@@ -1348,10 +1868,14 @@ void Tractography::Step2T(const int thread_id,
   ukfVectorType signal(_signal_data->GetSignalDimension() * 2);
   _signal_data->Interp3Signal(x, signal);
 
-  _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);
-
-  state = state_new;
-  covariance = covariance_new;
+  if (_diffusionPropagator) {
+    LoopUKF(thread_id, state, covariance, signal, state_new, covariance_new, dNormMSE);
+  }
+  else {
+    _ukf[thread_id]->Filter(state, covariance, signal, state_new, covariance_new, dNormMSE);
+    state = state_new;
+    covariance = covariance_new;
+  }
 
   const vec3_t old_dir = m1;   // Direction in last step
   ukfPrecisionType fa_tensor_1;
@@ -1369,6 +1893,39 @@ void Tractography::Step2T(const int thread_id,
       m2 = -m2;
       }
     }
+  else if (_diffusionPropagator) {
+    // lxx are not used
+    vec3_t l11, l12, l21, l22;
+    // we do not use l1 and l2 in the case of the diffusionPropagator model, so we set the values to 0.
+    l1 << 0.0, 0.0, 0.0;
+    l2 << 0.0, 0.0, 0.0;
+    
+    // DEBUG
+    // Apply F function to normalize directions and bound parameters
+    /*ukfMatrixType state_matrix; StateToMatrix(state, state_matrix);
+    _model->F(state_matrix);
+    MatrixToState(state_matrix, state);*/
+    
+    _model->State2Tensor2T(state, old_dir, m1, l11, m2, l21);
+    
+    /*vec3_t dir; 
+    initNormalized(dir, state[0], state[1], state[2]);
+    state[0] = dir[0]; state[1] = dir[1]; state[2] = dir[2];
+    initNormalized(dir, state[7], state[8], state[9]);
+    state[7] = dir[0]; state[8] = dir[1]; state[9] = dir[2];*/
+    
+    ukfPrecisionType rtop1, rtop2, rtopModel, rtopSignal;
+    stdVecState local_state = ConvertVector<State, stdVecState>(state);
+    
+    computeRTOPfromState(local_state, rtopModel, rtop1, rtop2);
+    computeRTOPfromSignal(rtopSignal, signal);
+    
+    fa = rtop1;
+    fa2 = rtop2;
+    trace = rtopModel;
+    trace2 = rtopSignal;
+    
+  }
   else
     {
     _model->State2Tensor2T(state, old_dir, m1, l1, m2, l2);   // The returned m1 and m2 are unit vector here
@@ -1409,6 +1966,16 @@ void Tractography::Step2T(const int thread_id,
       ukfMatrixType old = covariance;
 
       SwapState2T(state, covariance);   // Swap the two tensors
+      }
+    else if (_diffusionPropagator) 
+      {
+        /*vec3_t avg_m;
+        initNormalized(avg_m, m1[0] + m2[0], m1[1] + m2[1], m1[2] + m2[2]);
+        state[0] = state[7] = avg_m[0];
+        state[1] = state[8] = avg_m[1];
+        state[2] = state[9] = avg_m[2];
+        m1 = avg_m;
+        m2 = avg_m;*/
       }
     else if (std::min(fa_tensor_1, fa_tensor_2) <= 0.2 )
       {
@@ -1558,6 +2125,12 @@ void Tractography::SwapState3T(State& state,
   state.segment(0,state_dim) = tmp_vec.segment(i,state_dim);
 }
 
+void Tractography::SwapState2T(stdVecState& state, ukfMatrixType& covariance)
+{
+  State tmp_state = ConvertVector<stdVecState, State>(state);
+  SwapState2T(tmp_state, covariance);
+  state = ConvertVector<State, stdVecState>(tmp_state);
+}
 void Tractography::SwapState2T( State& state,
                                 ukfMatrixType& covariance)
 {
@@ -1614,7 +2187,8 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
     fiber.normMSE.push_back(dNormMSE);
     }
 
-  if( _record_trace || _record_kappa)
+    
+  if( (_record_trace || _record_kappa) && !_recordRTOP)
     {
     fiber.trace.push_back(2*(atan(1/trace)/3.14));
     if( _num_tensors >= 2 )
@@ -1622,8 +2196,13 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
       fiber.trace2.push_back(2*(atan(1/trace2)/3.14));
       }
     }
+    
+  if (_recordRTOP){
+    fiber.trace.push_back(trace);
+    fiber.trace2.push_back(trace2);
+  }
 
-  if( _record_fa || _record_Vic)
+  if( _record_fa || _record_Vic || _recordRTOP)
     {
     fiber.fa.push_back(fa);
     if( _num_tensors >= 2 )
@@ -1672,7 +2251,7 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
     }
 
   // Record the state
-  if( state.size() == 5 || state.size() == 10 || state.size() == 15 )   // i.e. simple model
+  if( (state.size() == 5 || state.size() == 10 || state.size() == 15) && ! _diffusionPropagator)   // i.e. simple model
     { // Normalize direction before storing it;
     State store_state(state);
     vec3_t dir;
@@ -1698,6 +2277,24 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
     fiber.state.push_back(store_state);
 
     }
+  else if (_diffusionPropagator) {
+    State store_state(state);
+    vec3_t dir;
+    
+    // normalize m1
+    initNormalized(dir, store_state[0], store_state[1], store_state[2]);
+    store_state[0] = dir[0];
+    store_state[1] = dir[1];
+    store_state[2] = dir[2];    
+    
+    // normalize m2
+    initNormalized(dir, store_state[7], store_state[8], store_state[9]);
+    store_state[7] = dir[0];
+    store_state[8] = dir[1];
+    store_state[9] = dir[2];   
+    
+    fiber.state.push_back(store_state);  
+  }
   else
     {
     // Normal state
@@ -1722,7 +2319,7 @@ void Tractography::FiberReserve(UKFFiber& fiber, int fiber_size)
     fiber.normMSE.reserve(fiber_size);
     }
 
-  if( _record_trace || _record_kappa)
+  if( _record_trace || _record_kappa || _recordRTOP)
     {
     fiber.trace.reserve(fiber_size);
     if( _num_tensors >= 2 )
@@ -1731,7 +2328,7 @@ void Tractography::FiberReserve(UKFFiber& fiber, int fiber_size)
       }
     }
 
-  if( _record_fa || _record_Vic)
+  if( _record_fa || _record_Vic || _recordRTOP)
     {
     fiber.fa.reserve(fiber_size);
     if( _num_tensors >= 2 )
@@ -1748,3 +2345,160 @@ void Tractography::FiberReserve(UKFFiber& fiber, int fiber_size)
       fiber.covariance.reserve(fiber_size);
     }
 }
+
+  // Calculate the Normalized Mean Square Error between
+  // the signal and the estimated parameters
+itk::SingleValuedCostFunction::MeasureType itk::DiffusionPropagatorCostFunction::GetValue(const ParametersType &parameters) const
+{
+  MeasureType residual = 0.0;
+    
+  // TODO: check parameters size
+  
+  // Convert the parameter to the ukfMtarixType
+  ukfMatrixType localState(this->GetNumberOfParameters(), 1);
+  for (unsigned int it=0; it<this->GetNumberOfParameters(); ++it) {
+    localState(it, 0) = parameters[it];
+  }
+  // w for freeWater
+  if (localState(14, 0) < 0.0) {
+    localState(14, 0) = 0.0;
+  }    
+  // Estimate the signal
+  ukfMatrixType estimatedSignal(this->GetNumberOfValues(), 1);
+
+  //_model->F(localState);
+  _model->H(localState, estimatedSignal);
+  
+  // Compute the error between the estimated signal and 
+  // the acquired one
+  ukfPrecisionType err = 0.0;
+  this->computeError(estimatedSignal, _signal, err);
+    
+  // Return the result    
+  residual = err;    
+  return residual;
+}
+  
+void itk::DiffusionPropagatorCostFunction::GetDerivative(const ParametersType &parameters, DerivativeType & derivative ) const 
+{
+
+  // We use numerical derivative
+  // slope = [f(x+h) - f(x-h)] / (2h)
+    
+  ParametersType p_h(this->GetNumberOfParameters());    // for f(x+h)
+  ParametersType p_hh(this->GetNumberOfParameters());   // for f(x-h)
+  
+  // The size of the derivative is not set by default,
+  // so we have to do it manually
+  derivative.SetSize(this->GetNumberOfParameters());
+
+  // Set parameters
+  for (unsigned int it=0; it<this->GetNumberOfParameters(); ++it) {
+    p_h[it] = parameters[it];
+    p_hh[it] = parameters[it];  
+  }
+  
+  // Calculate derivative for each parameter
+  for (unsigned int it=0; it<this->GetNumberOfParameters(); ++it) {
+  
+    // Optimal h is sqrt(epsilon machine) * x
+    double h = std::sqrt(2.3e-16)*std::max(std::abs(parameters[it]), 1.0);
+    
+    // Volatile, otherwise compiler will optimize the value for dx
+    volatile double xph = parameters[it] + h;
+    
+    // For taking into account the rounding error
+    double dx = xph - parameters[it];
+    
+    // Compute the slope
+    p_h[it] = xph;
+    //p_hh[it] = parameters[it] - h;  
+    derivative[it] = (this->GetValue(p_h) - this->GetValue(p_hh))/(dx);
+    
+    // Set parameters back for next iteration
+    p_h[it] = parameters[it];
+    p_hh[it] = parameters[it];
+  }
+    
+}
+
+
+#include "itkLBFGSBOptimizer.h"
+
+void Tractography::NonLinearLeastSquareOptimization(State& state, ukfVectorType& signal, FilterModel *model) 
+{
+  typedef itk::LBFGSBOptimizer                  OptimizerType;
+  typedef itk::DiffusionPropagatorCostFunction  CostType;
+
+  CostType::Pointer cost = CostType::New();
+  OptimizerType::Pointer optimizer = OptimizerType::New();
+
+  cost->SetNumberOfParameters(state.size());
+  cost->SetNumberOfValues(signal.size());
+  cost->SetSignalValues(signal);
+  cost->SetModel(model);
+
+  optimizer->SetCostFunction(cost);
+  
+  CostType::ParametersType p(cost->GetNumberOfParameters());
+  // Fill p
+  for (int it=0; it<state.size(); ++it) {
+     p[it] = state[it];
+  }  
+  optimizer->SetInitialPosition(p);
+  optimizer->SetProjectedGradientTolerance(1e-10);
+  optimizer->SetMaximumNumberOfIterations(500);
+  optimizer->SetMaximumNumberOfEvaluations(500);
+  optimizer->SetMaximumNumberOfCorrections(5); // ? Meaning ?
+  optimizer->SetCostFunctionConvergenceFactor(1e2); // Precision of the solution 1e1 = very precise, 1e12 = coarse estimate
+  optimizer->SetTrace(false); // Print debug info
+  
+  // Set bounds
+  
+  OptimizerType::BoundSelectionType boundSelect(cost->GetNumberOfParameters());
+  OptimizerType::BoundValueType upperBound(cost->GetNumberOfParameters());
+  OptimizerType::BoundValueType lowerBound(cost->GetNumberOfParameters());  
+  
+  boundSelect.Fill(2); // BOTHBOUNDED = 2
+  lowerBound.Fill(0.0);
+  upperBound.Fill(3000.0);
+  
+  // Lower bound
+  // First bi-exponential parameters
+  lowerBound[0] = lowerBound[1] = lowerBound[2] = -1.0;
+  lowerBound[3] = lowerBound[4] = 1.0;
+  lowerBound[5] = lowerBound[6] = 0.1;
+
+  // Second bi-exponential
+  lowerBound[7] = lowerBound[8] = lowerBound[9] = -1.0;
+  lowerBound[10] = lowerBound[11] = 1.0;  
+  lowerBound[12] = lowerBound[13] = 0.1;   
+  lowerBound[14] = 0.0; // free water between 0 and 1
+   
+  // Upper bound
+  // First bi-exponential
+  upperBound[0] = upperBound[1] = upperBound[2] = 1.0;
+  upperBound[3] = upperBound[4] = upperBound[5] = upperBound[6] = 3000.0;
+  
+  // Second bi-exponential
+  upperBound[7] = upperBound[8] = upperBound[9] = 1.0;
+  upperBound[10] = upperBound[11] = upperBound[12] = upperBound[13] = 3000.0;
+  upperBound[14] = 1.0;
+  
+  optimizer->SetBoundSelection(boundSelect);
+  optimizer->SetUpperBound(upperBound);
+  optimizer->SetLowerBound(lowerBound);  
+  
+  
+  optimizer->StartOptimization();
+
+  // std::cout<<"Current Iteration: "<<optimizer->GetCurrentIteration()<<std::endl; 
+  // std::cout<<"Value: "<<optimizer->GetValue()<<std::endl;
+  p = optimizer->GetCurrentPosition();
+  // Write back the state
+  for (int it=0; it<state.size(); ++it) {
+    state[it] = p[it];
+  }
+
+}
+

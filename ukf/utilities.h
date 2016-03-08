@@ -19,6 +19,9 @@ ukfPrecisionType l2fa(ukfPrecisionType l1, ukfPrecisionType l2, ukfPrecisionType
 /** Calculate Generalized anisotropy from signal */
 ukfPrecisionType s2ga(const ukfMatrixType& signal);
 
+/** Calculate Generalized anisotropy from signal */
+ukfPrecisionType s2adc(const ukfMatrixType& signal);
+
 /** Calculate curve radius from fiber */
 ukfPrecisionType curve_radius(const stdVec_t& fiber);
 

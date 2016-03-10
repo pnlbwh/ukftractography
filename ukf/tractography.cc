@@ -280,7 +280,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         // GA is bigger than 0.18.
         ukfMatrixType signal_tmp(signal_dim * 2, 1);
         signal_tmp.col(0) = signal;
-        if( _full_brain && s2ga(signal_tmp) < _seedFALimit )
+        if( _full_brain && s2adc(signal_tmp) < _seedFALimit )
           {
           keep = false;
           ++num_ga_too_low;
@@ -866,7 +866,7 @@ void Tractography::Follow3T(const int thread_id,
     state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
 
-    const ukfPrecisionType ga = s2ga(signal_tmp);
+    const ukfPrecisionType ga = s2adc(signal_tmp);
     const bool   in_csf = ga < _ga_min || fa < _fa_min;
     bool is_curving = curve_radius(fiber.position) < _min_radius;
 
@@ -1065,7 +1065,7 @@ void Tractography::Follow2T(const int thread_id,
 
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
-    const ukfPrecisionType ga = s2ga(signal_tmp);
+    const ukfPrecisionType ga = s2adc(signal_tmp);
     const bool in_csf = (_noddi) ? ( ga < _ga_min ) : (ga < _ga_min || fa < _fa_min);
     const bool is_curving = curve_radius(fiber.position) < _min_radius;
 
@@ -1188,7 +1188,7 @@ void Tractography::Follow1T(const int thread_id,
 
     _model->H(state_tmp, signal_tmp);
 
-    const ukfPrecisionType ga = s2ga(signal_tmp);
+    const ukfPrecisionType ga = s2adc(signal_tmp);
     bool in_csf;
     if(_noddi)
       in_csf = ga < _ga_min;

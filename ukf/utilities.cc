@@ -47,6 +47,25 @@ ukfPrecisionType s2ga(const ukfMatrixType& signal)
   return sqrt(mu_sub * n) / sqrt( (n - 1) * mu_sq);
 }
 
+// new ga function for mean values
+ukfPrecisionType s2adc(const ukfMatrixType& signal)
+{
+
+  int n = signal.rows();
+
+  assert(signal.cols() == 1);
+
+  ukfPrecisionType mu = ukfZero;
+  for( int i = 0; i < n; ++i )
+    {
+    mu += signal(i, 0);
+    }
+  // average
+  mu = mu / n;
+  return mu;
+}
+
+
 ukfPrecisionType curve_radius(const stdVec_t& fiber)
 {
   int length = fiber.size();

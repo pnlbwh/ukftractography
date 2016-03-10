@@ -1066,7 +1066,6 @@ void Tractography::Follow2T(const int thread_id,
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
 
     const ukfPrecisionType ga = s2adc(signal_tmp);
-
     const bool in_csf = (_noddi) ? ( ga < _ga_min ) : (ga < _ga_min || fa < _fa_min);
     const bool is_curving = curve_radius(fiber.position) < _min_radius;
 

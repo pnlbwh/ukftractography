@@ -82,6 +82,7 @@ if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()
 else()
+  # Building against Slicer
   project(${PRIMARY_PROJECT_NAME})             # <- NOTE: Here is the main project name setting
   include("${CMAKE_CURRENT_SOURCE_DIR}/${PRIMARY_PROJECT_NAME}.cmake")
   return()

@@ -36,9 +36,6 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     )
 
   ### --- End Project specific additions
-  set(${proj}_REPOSITORY "${git_protocol}://github.com/BRAINSia/eigen.git")
-  set(${proj}_GIT_TAG "032b16f4853237fb70f20d9028ee0ad5d543b0b2")
-    #URL https://bitbucket.org/eigen/eigen/get/3.2.0.tar.gz
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY ${${proj}_REPOSITORY}

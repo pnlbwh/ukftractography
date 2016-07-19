@@ -62,3 +62,5 @@ SEMMacroBuildCLI(
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
   EXECUTABLE_ONLY
   )
+
+add_dependencies(UKFTractographyLib Eigen)

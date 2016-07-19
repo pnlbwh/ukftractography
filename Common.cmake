@@ -15,6 +15,24 @@ include(CMakeDependentOption)
 include(ExternalProjectDependency)
 
 #-----------------------------------------------------------------------------
+# Git protocol option
+#-----------------------------------------------------------------------------
+option(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL "If behind a firewall turn this off to use http instead." ON)
+set(git_protocol "git")
+if(NOT ${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL)
+  set(git_protocol "http")
+endif()
+
+find_package(Git REQUIRED)
+
+#-----------------------------------------------------------------------------
+# Eigen version settings
+#-----------------------------------------------------------------------------
+
+set(Eigen_GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/eigen.git")
+set(Eigen_GIT_TAG "032b16f4853237fb70f20d9028ee0ad5d543b0b2")
+
+#-----------------------------------------------------------------------------
 # Build option(s)
 #-----------------------------------------------------------------------------
 

@@ -35,13 +35,30 @@ endif()
 
 #-----------------------------------------------------------------------------
 if(NOT Eigen_INCLUDE_DIR)
-  if(NOT Eigen_DIR)
-    message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
+  if(Eigen_DIR)
+    set(Eigen_INCLUDE_DIR
+      ${Eigen_DIR}/../Eigen)
+    include_directories(${Eigen_INCLUDE_DIR})
+  else()
+      set (Eigen_DIR ${CMAKE_CURRENT_BINARY_DIR}/Eigen)
+      set (Eigen_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/Eigen-build)
+      ExternalProject_Add(
+        Eigen
+        DOWNLOAD_DIR      ${Eigen_DIR}
+        SOURCE_DIR        ${Eigen_DIR}
+        BINARY_DIR        ${Eigen_BUILD_DIR}
+        GIT_REPOSITORY    ${Eigen_GIT_REPOSITORY}
+        GIT_TAG           ${Eigen_GIT_TAG}
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND     ""
+        INSTALL_COMMAND   ""
+        )
+      include_directories(${Eigen_DIR})
   endif()
-  set(Eigen_INCLUDE_DIR
-    ${Eigen_DIR}/../Eigen)
+  #  message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
+  else()
+    include_directories(${Eigen_INCLUDE_DIR})
 endif()
-include_directories(${Eigen_INCLUDE_DIR})
 
 find_package(ZLIB REQUIRED)
 

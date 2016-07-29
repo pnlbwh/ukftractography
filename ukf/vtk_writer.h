@@ -97,11 +97,11 @@ protected:
         }
     }
 
-  void WritePolyData(const vtkPolyData *pd, const char *filename) const;
+  void WritePolyData(vtkSmartPointer <vtkPolyData> pd, const char *filename) const;
   /**
    * Writes the fibers and all values attached to them to a VTK file
   */
-  void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
+  void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> polyData,
                                 const std::vector<UKFFiber>& fibers);
   /**
    * \brief Reconstructs the tensor from the state for each case

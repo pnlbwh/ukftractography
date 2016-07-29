@@ -18,12 +18,16 @@
 #include "vtkPolyData.h"
 #include "vtkLine.h"
 #include "vtkCellArray.h"
+#include "vtkStringArray.h"
 #include "vtkSmartPointer.h"
 #include "vtkFloatArray.h"
 #include "vtkPointData.h"
+#include "vtkFieldData.h"
 #include "vtkXMLPolyDataWriter.h"
 #include "vtkPolyDataWriter.h"
 #include "vtkDataObject.h"
+
+#include "git_version.h"
 
 VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type, bool write_tensors) :
   _signal_data(signal_data),
@@ -113,10 +117,9 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 
 
 void VtkWriter
-::PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> &polyData,
+::PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> polyData,
                            const std::vector<UKFFiber>& fibers)
 {
-  polyData = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   size_t num_fibers = fibers.size();
@@ -204,12 +207,20 @@ void VtkWriter
 
 void
 VtkWriter
-::WritePolyData(const vtkPolyData *pd, const char *filename) const
+::WritePolyData(vtkSmartPointer<vtkPolyData> pd, const char *filename) const
 {
+  // Add version information to polydata as vtkStringArray
+  std::stringstream header_string;
+  header_string << "UKF_GIT_HASH:" << UKF_GIT_HASH;
+  vtkSmartPointer<vtkStringArray> version_info = vtkSmartPointer<vtkStringArray>::New();
+  version_info->SetNumberOfValues(1);
+  version_info->SetValue(0, header_string.str());
+  version_info->SetName("UKF_VERSION_INFO");
+  pd->GetFieldData()->AddArray(version_info);
+
+  // Output filename extension
   const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
-  // all the casting is because vtk SetInput isn't const-correct.
-  vtkDataObject *dataObject =
-    const_cast<vtkDataObject *>(static_cast<const vtkDataObject *>(pd));
+
   if(ext == ".vtp")
     {
     vtkSmartPointer<vtkXMLPolyDataWriter> writer =
@@ -231,9 +242,9 @@ VtkWriter
       writer->SetCompressorTypeToNone();
       }
 #if (VTK_MAJOR_VERSION < 6)
-    writer->SetInput(dataObject);
+    writer->SetInput(pd);
 #else
-    writer->SetInputData(dataObject);
+    writer->SetInputData(pd);
 #endif
     writer->SetFileName(filename);
     writer->Write();
@@ -247,11 +258,12 @@ VtkWriter
       writer->SetFileTypeToBinary();
       }
 #if (VTK_MAJOR_VERSION < 6)
-    writer->SetInput(dataObject);
+    writer->SetInput(pd);
 #else
-    writer->SetInputData(dataObject);
+    writer->SetInputData(pd);
 #endif
     writer->SetFileName(filename);
+
     writer->Write();
     }
 }
@@ -284,15 +296,15 @@ Write(const std::string& file_name,
       }
     }
   // polyData object to fill in
-  vtkSmartPointer<vtkPolyData> polyData;
+  vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
   // handle fibers and tensors
   this->PopulateFibersAndTensors(polyData,fibers);
 
   // no idea if this below is ever called.
   if( !tractsWithSecondTensor.empty() )
     {
-    vtkSmartPointer<vtkPolyData> polyData2;
-    this->PopulateFibersAndTensors(polyData,fibers);
+    vtkSmartPointer<vtkPolyData> polyData2 = vtkSmartPointer<vtkPolyData>::New();
+    this->PopulateFibersAndTensors(polyData2,fibers);
     WritePolyData(polyData2, tractsWithSecondTensor.c_str());
     }
 
@@ -537,7 +549,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
     return EXIT_FAILURE;
     }
   // polyData object to fill in
-  vtkSmartPointer<vtkPolyData> polyData;
+  vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
   int num_fibers = fibers.size();

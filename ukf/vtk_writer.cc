@@ -18,12 +18,16 @@
 #include "vtkPolyData.h"
 #include "vtkLine.h"
 #include "vtkCellArray.h"
+#include "vtkStringArray.h"
 #include "vtkSmartPointer.h"
 #include "vtkFloatArray.h"
 #include "vtkPointData.h"
+#include "vtkFieldData.h"
 #include "vtkXMLPolyDataWriter.h"
 #include "vtkPolyDataWriter.h"
 #include "vtkDataObject.h"
+
+#include "git_version.h"
 
 VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type filter_model_type, bool write_tensors) :
   _signal_data(signal_data),
@@ -205,6 +209,16 @@ void
 VtkWriter
 ::WritePolyData(vtkSmartPointer<vtkPolyData> pd, const char *filename) const
 {
+  // Add version information to polydata as vtkStringArray
+  std::stringstream header_string;
+  header_string << "UKF_GIT_HASH:" << UKF_GIT_HASH;
+  vtkSmartPointer<vtkStringArray> version_info = vtkSmartPointer<vtkStringArray>::New();
+  version_info->SetNumberOfValues(1);
+  version_info->SetValue(0, header_string.str());
+  version_info->SetName("UKF_VERSION_INFO");
+  pd->GetFieldData()->AddArray(version_info);
+
+  // Output filename extension
   const std::string ext(itksys::SystemTools::GetFilenameExtension(filename));
 
   if(ext == ".vtp")

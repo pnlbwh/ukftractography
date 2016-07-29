@@ -2,6 +2,31 @@
 set(MODULE_NAME UKFTractography)
 
 #-----------------------------------------------------------------------------
+# Generate cpp with git commit hash
+set(UKF_GITVER_FILE "${CMAKE_CURRENT_BINARY_DIR}/git_version.cc")
+set(UKF_GITVER_TEMP "${CMAKE_CURRENT_BINARY_DIR}/git_version.tmp")
+
+# always run this target to check for changes.
+add_custom_target(_GEN_GITVER ALL
+    # write git hash to temp file
+    COMMAND ${CMAKE_COMMAND} -E echo         "#include \"git_version.h\""                            > "${UKF_GITVER_TEMP}"
+    COMMAND ${CMAKE_COMMAND} -E echo_append  "#define _UKF_GIT_HASH "                               >> "${UKF_GITVER_TEMP}"
+    COMMAND                                  ${GIT_EXECUTABLE} rev-parse HEAD                       >> "${UKF_GITVER_TEMP}"
+    COMMAND ${CMAKE_COMMAND} -E echo_append  "const char UKF_GIT_HASH[] = _ukf_str(_UKF_GIT_HASH);" >> "${UKF_GITVER_TEMP}"
+
+    # copy to the real file if different
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${UKF_GITVER_TEMP}" "${UKF_GITVER_FILE}"
+
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating UKF_GIT_HASH"
+    VERBATIM
+    )
+
+# dummy output so we can depend on it in the external macro, because CMake.
+add_custom_command(OUTPUT ${UKF_GITVER_FILE}
+                   DEPENDS _GEN_GITVER)
+
+#-----------------------------------------------------------------------------
 set(MODULE_INCLUDE_DIRECTORIES
   ${Teem_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -33,6 +58,7 @@ set(MODULE_SRCS
   filter_Simple2T.cc
   filter_Simple2T_FW.cc
   filter_Simple3T.cc
+  "${UKF_GITVER_FILE}"
   )
 
 set(MODULE_TARGET_LIBRARIES
@@ -63,4 +89,5 @@ SEMMacroBuildCLI(
   EXECUTABLE_ONLY
   )
 
-add_dependencies(UKFTractographyLib Eigen)
+#-----------------------------------------------------------------------------
+add_dependencies(${MODULE_NAME}Lib Eigen)

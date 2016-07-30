@@ -11,7 +11,7 @@ include_directories(${CMAKE_INSTALL_PREFIX}/include)
 link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
 add_executable( ${CLP}Test CompareFibers.cc )
-target_link_libraries( ${CLP}Test UKFCommonLib ${VTK_LIBRARIES} ${ITK_LIBRARIES})
+target_link_libraries( ${CLP}Test ${VTK_LIBRARIES} ${ITK_LIBRARIES})
 add_dependencies(${CLP}Test ${CLP})
 set_target_properties(${CLP}Test PROPERTIES LABELS ${CLP})
 

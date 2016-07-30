@@ -49,8 +49,7 @@ is more of a test than anything).
 #### b) Build with Slicer4
 
     cd <build-dir>
-    cmake -DUKFTractography_SUPERBUILD:BOOL=OFF \
-      -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
+    cmake -DSlicer_DIR=<path-to-Slicer4-Superbuild>/Slicer-build <path-to-source>
     make
     make test
 

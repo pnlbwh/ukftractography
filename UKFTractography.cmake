@@ -34,8 +34,10 @@ if(VTK_USE_FILE)
 endif()
 
 #-----------------------------------------------------------------------------
-if(NOT Eigen_INCLUDE_DIR)
-  if(Eigen_DIR)
+if(DEFINED Eigen_INCLUDE_DIR)
+  include_directories(${Eigen_INCLUDE_DIR})
+else()
+    if(DEFINED Eigen_DIR)
     set(Eigen_INCLUDE_DIR
       ${Eigen_DIR}/../Eigen)
     include_directories(${Eigen_INCLUDE_DIR})
@@ -55,9 +57,6 @@ if(NOT Eigen_INCLUDE_DIR)
         )
       include_directories(${Eigen_DIR})
   endif()
-  #  message(FATAL_ERROR "Missing Eigen_DIR path, can't find Eigen library includes")
-  else()
-    include_directories(${Eigen_INCLUDE_DIR})
 endif()
 
 find_package(ZLIB REQUIRED)
@@ -78,7 +77,6 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
-add_subdirectory(common)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
 

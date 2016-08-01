@@ -83,6 +83,7 @@ if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   return()
 else()
   # Building against Slicer
+  set(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION TRUE)
   project(${PRIMARY_PROJECT_NAME})             # <- NOTE: Here is the main project name setting
   include("${CMAKE_CURRENT_SOURCE_DIR}/${PRIMARY_PROJECT_NAME}.cmake")
   return()

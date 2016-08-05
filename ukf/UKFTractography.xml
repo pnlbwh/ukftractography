@@ -6,10 +6,10 @@
 
   <title>UKF Tractography</title>
 
-  <description><![CDATA[This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methodology. At each point on the fiber the most consistent direction is found as a mixture of previous estimates and of the local model.<br><br>For more information, please reference: Malcolm, James G., Martha E. Shenton, and Yogesh Rathi. <a href="http://www.ncbi.nlm.nih.gov/pubmed/20805043">"Filtered multitensor tractography." Medical Imaging, IEEE Transactions on 29.9 (2010): 1664-1675.</a>]]></description>
+  <description><![CDATA[This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methodology. At each point on the fiber the most consistent direction is found as a mixture of previous estimates and of the local model.<br><br>For more information, please reference: Malcolm, James G., Martha E. Shenton, and Yogesh Rathi. "Filtered multitensor tractography." Medical Imaging, IEEE Transactions on 29.9 (2010): 1664-1675. (http://www.ncbi.nlm.nih.gov/pubmed/20805043)]]></description>
 
   <version>1.0</version>
-  <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
+  <documentation-url>https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Modules/UKFTractography</documentation-url>
   <license></license>
   <contributor>Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin, Lauren O'Donnell, Jessica Lee.</contributor>
   <acknowledgements><![CDATA[The development of this module was supported by NIH grants R01 MH097979 (PI Rathi), R01 MH092862 (PIs Westin and Verma), U01 NS083223 (PI Westin), R01 MH074794 (PI Westin) and P41 EB015902 (PI Kikinis), and P41 EB015898 (NCIGT).]]></acknowledgements>

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <executable>
-  <category>
-    Diffusion.Tractography
-  </category>
-  <title>
-    UKF Tractography
-  </title>
-  <description>
-    This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methodology. For more information, please reference: Malcolm, James G., Martha E. Shenton, and Yogesh Rathi. "Filtered multitensor tractography." Medical Imaging, IEEE Transactions on 29.9 (2010): 1664-1675.
-  </description>
+
+  <category>Diffusion.Tractography</category>
+
+  <title>UKF Tractography</title>
+
+  <description><![CDATA[This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methodology. At each point on the fiber the most consistent direction is found as a mixture of previous estimates and of the local model.<br><br>For more information, please reference: Malcolm, James G., Martha E. Shenton, and Yogesh Rathi. <a href="http://www.ncbi.nlm.nih.gov/pubmed/20805043">"Filtered multitensor tractography." Medical Imaging, IEEE Transactions on 29.9 (2010): 1664-1675.</a>]]></description>
+
   <version>1.0</version>
   <documentation-url>http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage</documentation-url>
   <license></license>
@@ -19,12 +17,12 @@
 
   <parameters>
     <label>IO</label>
-    <description>Input/output paramaters</description>
+    <description>Input/output parameters</description>
 
     <image type="diffusion-weighted" fileExtensions=".nhdr,.nrrd">
       <name>dwiFile</name>
       <longflag alias="dwiData">dwiFile</longflag>
-      <label>Input DWI volume</label>
+      <label>Input DWI Volume</label>
       <channel>input</channel>
       <description>Input diffusion weighted (DWI) volume</description>
     </image>
@@ -48,7 +46,7 @@
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>maskFile</name>
       <longflag alias="maskData">maskFile</longflag>
-      <label>Brain mask</label>
+      <label>Input brain mask</label>
       <channel>input</channel>
       <description>Brain mask for diffusion tractography. Tracking will only be performed inside this mask.</description>
     </image>
@@ -56,14 +54,12 @@
     <geometry type="fiberbundle" fileExtensions=".vtp,.vtk">
       <name>tracts</name>
       <longflag>tracts</longflag>
-      <label>Output Fibers</label>
+      <label>Output Fiber Bundle</label>
       <channel>output</channel>
       <description>Output fiber tracts.</description>
     </geometry>
 
-
   </parameters>
-
 
   <parameters>
   <label>Tractography Options</label>
@@ -99,7 +95,7 @@
     <double>
       <name>minFA</name>
       <longflag>minFA</longflag>
-      <label>Stopping Criterion: Terminating FA </label>
+      <label>Stopping Criterion: Terminating FA</label>
       <description>Tractography parameter used in tensor model. Tractography will stop when the fractional anisotropy (FA) of the tensor being tracked is less than this value. Note: make sure to also decrease the GA to track through lower anisotropy areas. This parameter is used only in tensor models. Default: 0.15. Range: 0-1.</description>
       <default>0.15</default>
       <constraints>
@@ -203,10 +199,9 @@
 
   </parameters>
 
-
   <parameters>
-  <label>Tensor Model </label>
-    <description>Use for tensor model</description>
+  <label>Tensor Model (default)</label>
+    <description>Tensor model parameters</description>
 
     <boolean>
       <name>freeWater</name>

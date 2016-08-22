@@ -1,7 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/Common.cmake)
 
 #-----------------------------------------------------------------------------
-if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+if(NOT ${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
 endif()
@@ -65,7 +65,7 @@ find_package(ZLIB REQUIRED)
 #-----------------------------------------------------------------------------
 find_package(Teem REQUIRED)
 include(${Teem_USE_FILE})
-if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION) 
+if(NOT ${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   set(TEEM_LIB teem)
 else()
   #

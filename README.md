@@ -20,7 +20,7 @@ Yogesh Rathi (yogesh@bwh.harvard.edu), Stefan Lienhard, Yinpeng Li, Martin
 Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner (c.f.baumgartner@gmail.com)
 Ryan Eckbo
 
-
+For references and further documentation, please see the [Slicer module homepage](https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Modules/UKFTractography).
 
 Installation
 ------------
@@ -53,31 +53,16 @@ is more of a test than anything).
     make
     make test
 
-#### c) Build as Slicer4 extension
+#### c) Build via Slicer ExtensionIndex build
 
-Manual build (for the developer to test that the extension can be installed
-successfully)
+Create local extension index following [these instructions](https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Developers/Build_ExtensionsIndex), containing at least `UKFTractography.s4ext` and `Eigen.s4ext` (required dependency).
 
-    mkdir s4ext_build
-    cd s4ext_build
-    cmake -DCMAKE_BUILD_TYPE:String=Release \
-      -DSlicer_DIR:PATH=/path/to/Slicer-SuperBuild-Debug/Slicer-build ../ukftractography 
-    make
-
-Extension build, test, package and upload using ExperimentalUpload target
-(https://github.com/Slicer/ExtensionsIndex#extension-build-test-package-and-upload-using-experimentalupload-target):
-
-    cd s4ext_build
-    cd ukf_tractography-build
-    cmake -DMIDAS_PACKAGE_URL:STRING=http://slicer.kitware.com/midas3 -DMIDAS_PACKAGE_EMAIL:STRING=<EMAIL> -DMIDAS_PACKAGE_API_KEY:STRING=<API KEY> .
-    make ExperimentalUpload
-
+It may be helpful to [test the exension upload](https://www.slicer.org/slicerWiki/index.php/Documentation/Nightly/Developers/Build_ExtensionsIndex#Extension_build.2C_test.2C_package_and_upload_using_.60ExperimentalUpload.60_target) using your API key.
 
 ### 2. As a Slicer 4 Extension
 
 Navigate to the Slicer Extension Manager and download `UKF Tractography` to
 install it as a Slicer 4 module.
-
 
 
 Basic Usage

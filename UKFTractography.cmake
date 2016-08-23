@@ -1,7 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/Common.cmake)
 
 #-----------------------------------------------------------------------------
-if(NOT ${PRIMARY_PROJECT_NAME}_SUPERBUILD)
+if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
 endif()
@@ -68,8 +68,7 @@ include(${Teem_USE_FILE})
 if(NOT ${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   set(TEEM_LIB teem)
 else()
-  #
-  # due to forcing all dependcy builds to put outputs into lib and bin at the
+  # due to forcing all dependency builds to put outputs into lib and bin at the
   # top level build directory, the Teem_LIBRARY_DIRS var is wrong; have to add
   # top level build dir here
   find_library(TEEM_LIB teem PATHS ${CMAKE_CURRENT_BINARY_DIR}/../lib)

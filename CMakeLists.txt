@@ -64,7 +64,12 @@ set(EXTENSION_ICONURL "https://github.com/pnlbwh/ukftractography/raw/master/UKF_
 set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/a/ab/Slicer-r19441-CLIExtensionTemplate-screenshot.png http://wiki.slicer.org/slicerWiki/images/1/1e/Slicer-r19441-CLIExtensionTemplate-screenshot-2.png")
 
 #-----------------------------------------------------------------------------
-message(STATUS "<${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION> value: ${${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION}")
+option(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION "Build ${PRIMARY_PROJECT_NAME} as Slicer extension." OFF)
+
+if (DEFINED Slicer_DIR)
+  set(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION ON)
+endif()
+
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   set(default_superbuild_value OFF)
 else()

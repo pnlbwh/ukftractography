@@ -5,12 +5,7 @@
 
 int main(int argc, char *argv[])
 {
-  // PARSE_ARGS ;
-  GENERATE_LOGO;
-  GENERATE_XML;
-  GENERATE_TCLAP;
-  GENERATE_ECHOARGS;
-  GENERATE_ProcessInformationAddressDecoding;
+  PARSE_ARGS ;
 
   if(inputFile.empty())
     {

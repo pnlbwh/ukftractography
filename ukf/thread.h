@@ -27,8 +27,6 @@ typedef std::vector<WorkList> WorkDistribution;
 
 WorkDistribution GenerateWorkDistribution(const int num_threads, const int total_num_works);
 
-void * ThreadCallback(void *arg);
-
 struct thread_struct
   {
   Tractography *tractography_;

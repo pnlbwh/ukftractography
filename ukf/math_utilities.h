@@ -13,13 +13,14 @@
 
 #include <limits>
 
-//http://stackoverflow.com/questions/13690483/better-more-portable-method-of-defining-pi-in-c-c
 #ifndef M_PI
-// Source: http://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
-#define M_PI 3.141592653589793238462643383279502884197169399375105820974944592307816406
-#else
-#define UKF_PI M_PI
+// Source: http://stackoverflow.com/questions/13690483/better-more-portable-method-of-defining-pi-in-c-c
+//         http://www.geom.uiuc.edu/~huberty/math5337/groupe/digits.html
+
+#  define M_PI 3.141592653589793238462643383279502884197169399375105820974944592307816406
 #endif
+
+#define UKF_PI M_PI
 
 #define DEG_TO_RAD (UKF_PI/180.0)
 #define RAD_TO_DEG (180.0/UKF_PI)

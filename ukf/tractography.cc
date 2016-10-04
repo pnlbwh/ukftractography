@@ -24,6 +24,9 @@
 // TODO implement this switch
 #include "config.h"
 
+// Local forward declaration of callback type.
+ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
+
 Tractography::Tractography(FilterModel *model, model_type filter_model_type,
 
                            const std::string& output_file, const std::string & output_file_with_second_tensor,

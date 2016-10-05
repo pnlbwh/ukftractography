@@ -6,6 +6,10 @@
 #include "utilities.h"
 #include "math_utilities.h"
 
+// std includes
+#include <math.h>
+#include <float.h>
+
 ukfPrecisionType l2fa(ukfPrecisionType l1, ukfPrecisionType l2, ukfPrecisionType l3)
 {
   if( l2 == l3 )
@@ -69,7 +73,7 @@ ukfPrecisionType s2adc(const ukfMatrixType& signal)
 ukfPrecisionType curve_radius(const stdVec_t& fiber)
 {
   int length = fiber.size();
-  
+
   if( length < 3 )
     {
     return ukfOne;
@@ -493,7 +497,7 @@ static double w_im_y100(double y100, double x) {
     }
   case 97: case 98:
   case 99: case 100: { // use Taylor expansion for small x (|x| <= 0.0309...)
-      //  (2/sqrt(pi)) * (x - 2/3 x^3  + 4/15 x^5  - 8/105 x^7 + 16/945 x^9) 
+      //  (2/sqrt(pi)) * (x - 2/3 x^3  + 4/15 x^5  - 8/105 x^7 + 16/945 x^9)
       double x2 = x*x;
       return x * (1.1283791670955125739
                   - x2 * (0.75225277806367504925
@@ -516,10 +520,10 @@ double Legendre(int n, double t)
  Pk_2 = 0.0;
  Pk_1 = 1.0;
  Pk = 1.0;
- 
+
  for(k=1;k<=n;k++)
  {
-  Pk = (2.0*k-1.0)/k*t*Pk_1 - (k-1.0)/k*Pk_2; 
+  Pk = (2.0*k-1.0)/k*t*Pk_1 - (k-1.0)/k*Pk_2;
   Pk_2 = Pk_1;
   Pk_1 = Pk;
  }
@@ -568,12 +572,12 @@ void WatsonHinderedDiffusionCoeff(ukfPrecisionType dPar,
 }
 
 void WatsonSHCoeff(ukfPrecisionType kappa, ukfVectorType& SHCoeff)
-{  
+{
   ukfPrecisionType sk,sk2,sk3,sk4,sk5,sk6;
   ukfPrecisionType k2,k3,k4,k5,k6;
   ukfPrecisionType lnkd,lnkd2,lnkd3,lnkd4,lnkd5,lnkd6;
   ukfPrecisionType erfik, ierfik, ek, dawsonk;
-  
+
   sk = sqrt(kappa);
   sk2 = sk*kappa;
   sk3 = sk2*kappa;
@@ -593,7 +597,7 @@ void WatsonSHCoeff(ukfPrecisionType kappa, ukfVectorType& SHCoeff)
   dawsonk = 0.5*exp(-kappa)*sqrt(M_PI)*erfik;
 
   SHCoeff[0] = 2*sqrt(M_PI);
-  
+
   if(kappa>30)
   {
     lnkd = log(kappa) - log(30);
@@ -610,7 +614,7 @@ void WatsonSHCoeff(ukfPrecisionType kappa, ukfVectorType& SHCoeff)
     SHCoeff[6] = 4.65678 + 6.30069*lnkd + 1.13754*lnkd2 - 1.38393*lnkd3 - 0.0134758*lnkd4 + 0.331686*lnkd5 - 0.105954*lnkd6;
   }
   else if(kappa>0.1)
-  { 
+  {
 
     SHCoeff[1] = 3*sk - (3 + 2*kappa)*dawsonk;
     SHCoeff[1] = sqrt(5)*SHCoeff(1)*ek;
@@ -671,7 +675,7 @@ void WatsonSHCoeff(ukfPrecisionType kappa, ukfVectorType& SHCoeff)
 void legendreGaussianIntegral(ukfVectorType ParComp, ukfPrecisionType n, ukfMatrixType& legGauInt)
 {
   assert(n<=6); // maximum value of n is 6
-  
+
   ukfPrecisionType sqrtx, dx, emx;
   ukfMatrixType I(ParComp.size(), int(n+1));
   ukfVectorType x2(ParComp.size());
@@ -765,7 +769,7 @@ void ExtraCelluarModel(ukfPrecisionType dPar,
   Eec.resize(gradientStrength.size());
     // This version is for cylinders with regular packing.
   // dPerp = dPar/((1 + f^(3/2))^2);
-  
+
   // This one is for randomly packed cylinders
   dPerp = dPar*(1-Vic);
   WatsonHinderedDiffusionCoeff(dPar, dPerp, kappa, dw);
@@ -778,7 +782,7 @@ void ExtraCelluarModel(ukfPrecisionType dPar,
     modQ_sq = GAMMA*GAMMA*pulseSeparation[i]*pulseSeparation[i]*gradientStrength[i]* gradientStrength[i];
     bval = (pulseSeparation[i] - pulseSeparation[i]/3)*modQ_sq ;
     cosThetasq = (u[i][0]*fiberdir[0] + u[i][1]*fiberdir[1] + u[i][2]*fiberdir[2])*(u[i][0]*fiberdir[0] + u[i][1]*fiberdir[1] + u[i][2]*fiberdir[2]);
-    Eec[i] = exp(-1 * bval* ((dPar-dPerp)*cosThetasq + dPerp));    
+    Eec[i] = exp(-1 * bval* ((dPar-dPerp)*cosThetasq + dPerp));
   }
 }
 
@@ -830,7 +834,7 @@ void IntraCelluarModel(ukfPrecisionType dPar,
     }
     for(int j=0; j<7; j++)
     {
-      tmp += sqrt((j+0.25)*7/22) * Legendre(2*j, cosTheta )*SHCoeff[j]*legGauInt(i,j); 
+      tmp += sqrt((j+0.25)*7/22) * Legendre(2*j, cosTheta )*SHCoeff[j]*legGauInt(i,j);
     }
     Eic[i] = 0.5 * tmp ;
   }

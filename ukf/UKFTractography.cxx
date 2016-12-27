@@ -51,12 +51,34 @@ int main(int argc, char **argv)
 {
 
   PARSE_ARGS ;
-  ukfPrecisionType l_minFA = minFA;
-  ukfPrecisionType l_minGA = minGA;
+
+  /* Begin deprecation section */
+  {
+  /*
+  *  Check for and print warning about invalid parameter `minGA`
+  *
+  *  GA is no longer used as a tracking threshold.
+  *
+  *  Please see the following for more information:
+  *   https://github.com/pnlbwh/ukftractography/pull/64
+  *   https://github.com/pnlbwh/ukftractography/pull/75
+  *
+  */
+
+    if (minGAArg.isSet())
+      {
+      std::cerr << "Error: the `minGA` parameter is no longer valid because GA is not used! Please use 'stoppingThreshold' instead! Please see `--help` for more information" << std::endl;
+      exit(1);
+      }
+  }
+  /* End deprecation section */
+
+  ukfPrecisionType l_stoppingFA = stoppingFA;
+  ukfPrecisionType l_stoppingThreshold = stoppingThreshold;
   ukfPrecisionType l_stepLength = stepLength;
   ukfPrecisionType l_recordLength = recordLength;
   ukfPrecisionType l_maxHalfFiberLength = maxHalfFiberLength;
-  ukfPrecisionType l_seedFALimit = seedFALimit;
+  ukfPrecisionType l_seedingThreshold = seedingThreshold;
   ukfPrecisionType l_Qm = Qm;
   ukfPrecisionType l_Ql = Ql;
   ukfPrecisionType l_Qw = Qw;
@@ -164,16 +186,16 @@ int main(int argc, char **argv)
     labels.push_back(1) ;	//Default to use label 1
   }
 
-  if (l_minFA == 0.15) {
-    setAndTell(l_minFA, l_minFA, "minFA");
+  if (l_stoppingFA == 0.15) {
+    setAndTell(l_stoppingFA, l_stoppingFA, "stoppingFA");
   } else {
-    tell(l_minFA, "minFA");
+    tell(l_stoppingFA, "stoppingFA");
   }
 
-  if (l_seedFALimit == 0.0) {
-    setAndTell(l_seedFALimit, FULL_BRAIN_GA_MIN, "seedFALimit");  // Used to default to 2 times the FA threshold.
+  if (l_seedingThreshold == 0.0) {
+    setAndTell(l_seedingThreshold, FULL_BRAIN_GA_MIN, "seedingThreshold");  // Used to default to 2 times the FA threshold.
   } else {
-    tell(l_seedFALimit, "seedFALimit");
+    tell(l_seedingThreshold, "seedingThreshold");
   }
 
   if(!noddi){
@@ -284,7 +306,7 @@ int main(int argc, char **argv)
       }
     }
 
-  tell(l_minGA, "minGA");
+  tell(l_stoppingThreshold, "stoppingThreshold");
 
   if (seedsPerVoxel == 1) {
     std::cout << "- seedsPerVoxel: " << seedsPerVoxel << std::endl;
@@ -394,7 +416,7 @@ int main(int argc, char **argv)
                                          recordVic, recordKappa, recordViso,
                                          !noTransformPosition, storeGlyphs, branchesOnly,
 
-                                         l_minFA, l_minGA, l_seedFALimit,
+                                         l_stoppingFA, l_stoppingThreshold, l_seedingThreshold,
                                          numTensor, seedsPerVoxel,
                                          l_minBranchingAngle, l_maxBranchingAngle,
                                          !simpleTensorModel, freeWater, noddi,

@@ -412,14 +412,22 @@ int main(int argc, char **argv)
   tract->SetWriteBinary(!writeAsciiTracts);
   tract->SetWriteCompressed(!writeUncompressedTracts);
 
-  if (tract->LoadFiles(dwiFile, seedsFile, maskFile, normalizedDWIData, outputNormalizedDWIData)) {
-    delete tract;
-    delete filter_model;
-    return 1;
-  }
+  int writeStatus = 0;
+  try
+    {
+    if (tract->LoadFiles(dwiFile, seedsFile, maskFile, normalizedDWIData, outputNormalizedDWIData) == true)
+      {
+      itkGenericExceptionMacro(<< "::LoadFiles failed with unknown error.");
+      }
 
-  // Run the tractography.
-  const int writeStatus = tract->Run();
+    // Run the tractography.
+    writeStatus = tract->Run();
+    }
+  catch( itk::ExceptionObject & err )
+    {
+    std::cerr << "ITK ExceptionObject caught!" << std::endl;
+    std::cerr << err << std::endl;
+    }
 
   // Clean up.
   delete tract;

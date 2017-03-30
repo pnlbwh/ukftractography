@@ -8,6 +8,7 @@
 #include "dwi_normalize.h"
 #include <iostream>
 #include <cassert>
+#include "itkMacro.h"
 
 NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
   : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
@@ -38,7 +39,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
   const int ny = static_cast<const int>(_dim[1]);
   const int nz = static_cast<const int>(_dim[2]);
 
-  // If sigmaSignal is not set minimum of voxel size is used for interpolation  
+  // If sigmaSignal is not set minimum of voxel size is used for interpolation
   ukfPrecisionType sigma = _sigma_signal;
   if (sigma == 0)
     {
@@ -203,7 +204,12 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     int ny = _seed_nrrd->axis[1].size;
     int nz = _seed_nrrd->axis[0].size;
     assert(_seed_data);
-    assert(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]);
+
+    if ( !(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]) )
+      {
+      itkGenericExceptionMacro(<< "Labelmap ROI volume dimensions DO NOT match DWI dimensions");
+      }
+
     for( int i = 0; i < nx; ++i )
       {
       for( int j = 0; j < ny; ++j )

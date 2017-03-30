@@ -174,12 +174,18 @@ bool Tractography::LoadFiles(const std::string& data_file,
 
 void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 {
+  if (! (_signal_data)) {
+    itkGenericExceptionMacro(<< "No signal data!");
+  }
 
-  assert(_signal_data);
   int signal_dim = _signal_data->GetSignalDimension();
 
   stdVec_t seeds;
-  assert(_labels.size() > 0);
+  if (! (_labels.size() > 0))
+    {
+    itkGenericExceptionMacro(<< "No label data!");
+    }
+
   if( !_full_brain )
     {
     _signal_data->GetSeeds(_labels, seeds);
@@ -204,7 +210,9 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       }
     }
 
-  assert(seeds.size() > 0);
+  if (! (seeds.size() > 0)) {
+    itkGenericExceptionMacro(<< "No matching label ROI seeds found! Please verify label selection.");
+  }
 
   // Determinism.
   srand(0);

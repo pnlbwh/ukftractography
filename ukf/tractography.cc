@@ -201,7 +201,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         for( int z = 0; z < dim[2]; ++z )
           {
           vec3_t pos(x,y,z); //  = make_vec(x, y, z);
-          if( _signal_data->Interp3ScalarMask(pos) > 0.1 )
+          if(_signal_data->ScalarMaskValue(pos) > 0)
             {
             seeds.push_back(pos);
             }
@@ -872,7 +872,7 @@ void Tractography::Follow3T(const int thread_id,
     // Check if we should abort following this fiber. We abort if we reach the
     // CSF, if FA or GA get too small, if the curvature get's too high or if
     // the fiber gets too long.
-    const bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1;
+    const bool is_brain = _signal_data->ScalarMaskValue(x) > 0; //_signal_data->Interp3ScalarMask(x) > 0.1;
 
     state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
@@ -1068,7 +1068,7 @@ void Tractography::Follow2T(const int thread_id,
     // Check if we should abort following this fiber. We abort if we reach the
     // CSF, if FA or GA get too small, if the curvature get's too high or if
     // the fiber gets too long.
-    const bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1; // is this 0.1 correct? yes
+    const bool is_brain = _signal_data->ScalarMaskValue(x) > 0; // _signal_data->Interp3ScalarMask(x) > 0.1; // is this 0.1 correct? yes
 
     // after here state does not change until next step.
 
@@ -1194,7 +1194,7 @@ void Tractography::Follow1T(const int thread_id,
     Step1T(thread_id, x, fa, state, p, dNormMSE, trace);
 
     // Terminate if off brain or in CSF.
-    const bool is_brain = _signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
+    const bool is_brain = _signal_data->ScalarMaskValue(x) > 0; //_signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
     state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp);

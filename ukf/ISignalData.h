@@ -47,6 +47,9 @@ public:
   /** Checks if a certian position is still within the brain mask. */
   virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const = 0;
 
+  /** Checks if a certian position is still within the brain mask. */
+  virtual ukfPrecisionType ScalarMaskValue(const vec3_t& pos) const = 0;
+
   /** Get all the seed points. */
   virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
 

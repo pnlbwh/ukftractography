@@ -117,6 +117,45 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
 
 }
 
+ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
+{
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
+
+  unsigned int index;
+  ukfPrecisionType       value;
+
+  ukfPrecisionType w_sum = 1e-16;
+  ukfPrecisionType s = ukfZero;
+
+
+  const int x = static_cast<const int>(round(pos[0]));
+  const int y = static_cast<const int>(round(pos[1]));
+  const int z = static_cast<const int>(round(pos[2]));
+  index = nz * ny * x + nz * y + z;
+
+  // signed or unsigned doesn't make a difference since masks don't contain any negative values
+  switch( _mask_num_bytes )
+    {
+    case 1:
+      {
+      value = static_cast<char *>(_mask_data)[index];
+      }
+      break;
+    case 2:
+      {
+      value = static_cast<short *>(_mask_data)[index];
+      }
+      break;
+    default:
+      std::cout << "Unsupported data type for seed file!" << std::endl;
+      exit(1);
+    }
+
+  return value;
+}
+
 ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
 {
   const int nx = static_cast<const int>(_dim[0]);

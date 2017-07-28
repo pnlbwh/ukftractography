@@ -36,6 +36,9 @@ public:
   /** Interpolates the brain mask at a certain position */
   virtual ukfPrecisionType Interp3ScalarMask(const vec3_t& pos) const;
 
+  /** Gets brain mask value at a certain position */
+  virtual ukfPrecisionType ScalarMaskValue(const vec3_t& pos) const;
+
   /**
    * \brief Get the seed points from the nrrd file
    *

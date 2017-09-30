@@ -126,13 +126,17 @@ ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
   unsigned int index;
   ukfPrecisionType       value;
 
-  ukfPrecisionType w_sum = 1e-16;
-  ukfPrecisionType s = ukfZero;
-
-
   const int x = static_cast<const int>(round(pos[0]));
   const int y = static_cast<const int>(round(pos[1]));
   const int z = static_cast<const int>(round(pos[2]));
+
+  if( (x < 0 || nx <= x) ||
+      (y < 0 || ny <= y) ||
+      (z < 0 || nz <= z)  )
+    {
+    return ukfZero;
+    }
+
   index = nz * ny * x + nz * y + z;
 
   // signed or unsigned doesn't make a difference since masks don't contain any negative values

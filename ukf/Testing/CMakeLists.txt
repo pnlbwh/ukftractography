@@ -24,6 +24,15 @@ macro(RMTestFile CleanupTestName FileToRemove)
     )
 endmacro()
 
+
+
+
+##############################################################################
+# UKFTractography tests
+##############################################################################
+
+
+##############################################################################
 # 1T no free water
 # ----------------
 set(testname ${CLP}_1T_Test)
@@ -57,6 +66,7 @@ set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_1T_Test)
 
 
+##############################################################################
 # 1T free water
 # -------------
 set(testname ${CLP}_1T_fw_Test)
@@ -91,8 +101,9 @@ set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_1T_fw_Test)
 
 
-#2T no freewater
-#---------------
+##############################################################################
+# 2T no freewater
+# ---------------
 set(testname ${CLP}_2T_Test)
 
 RMTestFile(${testname}-cleanup ${TESTING_RESULTS_DIRECTORY}/2T_fiber.vtk)
@@ -129,7 +140,7 @@ set_property(TEST ${testname} PROPERTY LABELS ${CLP})
 set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_Test)
 
 
-
+##############################################################################
 # 2T free water
 # -------------
 set(testname ${CLP}_2T_fw_Test)
@@ -238,18 +249,39 @@ add_test(NAME ${testname}
   )
 
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinary)
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
-#
+set_tests_properties(${testname} PROPERTIES DEPENDS "${CLP}_2T_fw_TestBinary;${CLP}_2T_fw_TestBinaryVTP")
+
+
+
+##############################################################################
+# Dummy Test as checkpoint to prevent races.
+  add_test(NAME DUMMY_TEST
+           COMMAND cmake -E sleep 1)
+  set_tests_properties(DUMMY_TEST PROPERTIES DEPENDS
+    "UKFTractography_1T_Test_Compare;UKFTractography_2T_fw_Test_Compare;UKFTractography_2T_fw_TestBinary_Compare;UKFTractography_2T_fw_TestBinaryVTP_Compare")
+  set_tests_properties(DUMMY_TEST PROPERTIES RUN_SERIAL false)
+
+##############################################################################
+
+
+##############################################################################
+# ConvertVTK tests
+##############################################################################
+
+
+####
 # convert from legacy vtk ASCII to legacy vtk binary
+####
+
 set(testname ConvertVTK_LegacyText_ToLegacyBinary)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} $<TARGET_FILE:ConvertVTK>
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
   )
+
 # depends on last of chain of 2T_fw_fiber tests; will depend on all of them
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
 
 add_test(NAME ${testname}Compare
   COMMAND ${CLP}Test
@@ -259,8 +291,12 @@ add_test(NAME ${testname}Compare
 set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
 set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 
-#
+
+####
 # convert from legacy vtk ASCII to XML ASCII
+####
+
+
 set(testname ConvertVTK_LegacyText_ToXML)
 
 RMTestFile(${testname}-cleanup ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp)
@@ -271,10 +307,9 @@ add_test(NAME ${testname}
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
   )
-set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 # depends on last of chain of 2T_fw_fiber tests; will depend on all of them
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
+set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
 
 add_test(NAME ${testname}Compare
   COMMAND ${CLP}Test
@@ -285,8 +320,11 @@ add_test(NAME ${testname}Compare
 set_property(TEST ${testname}Compare PROPERTY LABELS ConvertVTK)
 set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 
-#
+
+####
 # convert from legacy vtk ASCII to XML compressed binary
+####
+
 set(testname ConvertVTK_LegacyText_ToXMLBinaryCompressed)
 
 RMTestFile(${testname}-cleanup ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp)
@@ -296,9 +334,9 @@ add_test(NAME ${testname}
   -i ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
   )
-# depends on last of chain of 2T_fw_fiber tests; will depend on all of them
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
-set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
+
+set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
+
 add_test(NAME ${testname}Compare
   COMMAND ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
@@ -310,8 +348,11 @@ set_tests_properties(${testname}Compare PROPERTIES DEPENDS ${testname})
 
 set(XMLBinaryCompressed ${testname})
 
-#
+
+####
 # convert from XML compressed binary to legacy vtk ASCII
+####
+
 set(testname ConvertVTK_XMLBinaryCompressed_To_LegacyText)
 
 RMTestFile(${testname}-cleanup ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk)
@@ -323,9 +364,7 @@ add_test(NAME ${testname}
   -o ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
   )
 # depends on last of chain of 2T_fw_fiber tests; will depend on all of them
-set_tests_properties(${testname} PROPERTIES DEPENDS ${CLP}_2T_fw_TestBinaryVTP)
-set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
-set_tests_properties(${testname} PROPERTIES DEPENDS ${XMLBinaryCompressed})
+set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup;${XMLBinaryCompressed}")
 
 add_test(NAME ${testname}Compare
   COMMAND ${CLP}Test

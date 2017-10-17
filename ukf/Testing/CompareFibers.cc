@@ -56,27 +56,22 @@ int main(int argc, char *argv[])
             << " Lines " << input1->GetNumberOfLines()
             << " Polys " << input1->GetNumberOfPolys()
             << " Strips " << input1->GetNumberOfStrips()
+            << " Points " << input1->GetNumberOfPoints()
             << std::endl;
   std::cerr << "Input 2" << std::endl
             << "Verts " << input2->GetNumberOfVerts()
             << " Lines " << input2->GetNumberOfLines()
             << " Polys " << input2->GetNumberOfPolys()
             << " Strips " << input2->GetNumberOfStrips()
+            << " Points " << input2->GetNumberOfPoints()
             << std::endl;
 
   const vtkIdType size1 = input1->GetNumberOfPoints();
-  if(size1 == 0 )
-    {
-    std::cerr << "first file fiber has " << size1
-              << " points " << std::endl;
-    return EXIT_FAILURE;
-    }
   const vtkIdType size2 = input2->GetNumberOfPoints();
-  if(size1 != size2 || size1 == 0 )
+
+  if(size1 == 0 || (size1 != size2))
     {
-    std::cerr << "first file fiber has " << size1
-              << " points, second file has " << size2
-              << std::endl;
+    std::cerr << "Mismatched or empty input(s) detected, exiting!" << std::endl;
     return EXIT_FAILURE;
     }
 

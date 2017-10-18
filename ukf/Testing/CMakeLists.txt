@@ -244,7 +244,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 set(testname ${CLP}_2T_fw_TestBinaryVTP_Compare)
 add_test(NAME ${testname}
   COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
-  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtk
+  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtp
   ${BASELINE}/2T_fw_fiber.vtk
   )
 

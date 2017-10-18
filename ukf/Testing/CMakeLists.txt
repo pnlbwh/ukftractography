@@ -58,7 +58,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_1T_Test_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/1T_fiber.vtk
   ${BASELINE}/1T_fiber.vtk
   )
@@ -93,7 +93,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_1T_fw_Test_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/1T_fw_fiber.vtk
   ${BASELINE}/1T_fw_fiber.vtk
   )
@@ -131,7 +131,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_2T_Test_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fiber.vtk
   ${BASELINE}/2T_fiber.vtk
   )
@@ -172,7 +172,7 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_2T_fw_Test_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   ${BASELINE}/2T_fw_fiber.vtk
   )
@@ -208,9 +208,9 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_2T_fw_TestBinary_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtk
-  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
+  ${BASELINE}/2T_fw_fiber.vtk
   )
 
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
@@ -243,9 +243,9 @@ set_tests_properties(${testname} PROPERTIES DEPENDS ${testname}-cleanup)
 
 set(testname ${CLP}_2T_fw_TestBinaryVTP_Compare)
 add_test(NAME ${testname}
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtk
-  ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber-binary.vtp
+  ${BASELINE}/2T_fw_fiber.vtk
   )
 
 set_property(TEST ${testname} PROPERTY LABELS ${CLP})
@@ -284,7 +284,7 @@ add_test(NAME ${testname}
 set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
 
 add_test(NAME ${testname}Compare
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
   )
@@ -312,7 +312,7 @@ add_test(NAME ${testname}
 set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
 
 add_test(NAME ${testname}Compare
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
   )
@@ -338,7 +338,7 @@ add_test(NAME ${testname}
 set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup")
 
 add_test(NAME ${testname}Compare
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/2T_fw_fiber.vtk
   ${TESTING_RESULTS_DIRECTORY}/${testname}.vtp
   )
@@ -367,7 +367,7 @@ add_test(NAME ${testname}
 set_tests_properties(${testname} PROPERTIES DEPENDS "DUMMY_TEST;${testname}-cleanup;${XMLBinaryCompressed}")
 
 add_test(NAME ${testname}Compare
-  COMMAND ${CLP}Test
+  COMMAND ${SEM_LAUNCH_COMMAND} ${CLP}Test
   ${TESTING_RESULTS_DIRECTORY}/${XMLBinaryCompressed}.vtp
   ${TESTING_RESULTS_DIRECTORY}/${testname}.vtk
   )

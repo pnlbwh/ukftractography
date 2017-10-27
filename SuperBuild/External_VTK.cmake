@@ -111,7 +111,7 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       -P ${CMAKE_CURRENT_BINARY_DIR}/VTK_build_step.cmake)
   endif()
 
-  set(${proj}_GIT_REPOSITORY "${git_protocol}://gitlab.kitware.com/vtk/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
+  set(${proj}_GIT_REPOSITORY "${git_protocol}://vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
   set(${proj}_GIT_TAG "57d826c1bcdf6cd201b1e77dd14a84d6930e3a55")  # Slicer VTKv7 target
 
 ## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./

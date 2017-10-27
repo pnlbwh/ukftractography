@@ -96,10 +96,4 @@ Notes
 On a Mac, there are rounding errors that affect the accuracy of 2T FW tracts.
 This explains why the 2T_FW ctest fails.
 
-Several steps in the build process download additional git repositories using the git:// protocol. The git protocol used port 9418, if this is blocked by your firewall the build will fail, currently while trying to download zlib. To confirm this is the problem you can try:
-
-`$  nc github.com 9418 < /dev/null; echo $?`
-
-Which will return 1 if the port is blocked. To overcome the blocked port modify .gitconfig with the command:
-
-`$ git config --global url."https://".insteadOf git://`
+Several steps in the SuperBuild process download additional git repositories as CMake external projects. By default `UKFTractography_USE_GIT_PROTOCOL:BOOL=OFF` indicates to use `https://` instead of `git://`. This default should work behind most firewalls (the git protocol uses port 9418: if this is blocked by your firewall the build will fail). If download problems are encountered, please [file an issue](https://github.com/pnlbwh/ukftractography/issues/new).

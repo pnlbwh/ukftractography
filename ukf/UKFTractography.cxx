@@ -100,7 +100,7 @@ int main(int argc, char **argv)
   const ukfPrecisionType SIGMA_MASK 	      = 0.5;
   const ukfPrecisionType P0 			          = 0.01;
   const ukfPrecisionType MIN_RADIUS 		    = 0.87;
-  const ukfPrecisionType FULL_BRAIN_GA_MIN	= 0.18;
+  const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN	= 0.18;
   const ukfPrecisionType D_ISO			        = 0.003; // Diffusion coefficient of free water
 
   // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
@@ -193,7 +193,8 @@ int main(int argc, char **argv)
   }
 
   if (l_seedingThreshold == 0.0) {
-    setAndTell(l_seedingThreshold, FULL_BRAIN_GA_MIN, "seedingThreshold");  // Used to default to 2 times the FA threshold.
+    setAndTell(l_seedingThreshold, FULL_BRAIN_MEAN_SIGNAL_MIN,
+               "seedingThreshold");  // Used to default to 2 times the FA threshold.
   } else {
     tell(l_seedingThreshold, "seedingThreshold");
   }
@@ -425,7 +426,7 @@ int main(int argc, char **argv)
                                          labels,
 
                                          P0,  SIGMA_SIGNAL, SIGMA_MASK,
-                                         MIN_RADIUS, FULL_BRAIN_GA_MIN,
+                                         MIN_RADIUS, FULL_BRAIN_MEAN_SIGNAL_MIN,
 
                                          actuallNumThreadsUsed
                                         ) ;

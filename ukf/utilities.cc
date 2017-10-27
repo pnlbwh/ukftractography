@@ -51,7 +51,7 @@ ukfPrecisionType s2ga(const ukfMatrixType& signal)
   return sqrt(mu_sub * n) / sqrt( (n - 1) * mu_sq);
 }
 
-// new ga function for mean values
+// mean signal function
 ukfPrecisionType s2adc(const ukfMatrixType& signal)
 {
 

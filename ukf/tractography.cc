@@ -36,7 +36,8 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
                            const bool record_Vic, const bool record_kappa,  const bool record_Viso,
                            const bool transform_position, const bool store_glyphs, const bool branchesOnly,
 
-                           const ukfPrecisionType fa_min, const ukfPrecisionType ga_min, const ukfPrecisionType seedFALimit,
+                           const ukfPrecisionType fa_min, const ukfPrecisionType mean_signal_min,
+                           const ukfPrecisionType seedFALimit,
                            const int num_tensors, const int seeds_per_voxel,
                            const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                            const bool is_full_model, const bool free_water, const bool noddi,
@@ -46,7 +47,7 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
 
                            ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
                            ukfPrecisionType min_radius,
-                           ukfPrecisionType /* UNUSED full_brain_ga_min */,
+                           ukfPrecisionType /* UNUSED full_brain_mean_signal_min */,
 
                            const int num_threads
                            ) :
@@ -61,11 +62,11 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   _transform_position(transform_position), _store_glyphs(store_glyphs), _branches_only(branchesOnly),
 
   _p0(p0), _sigma_signal(sigma_signal), _sigma_mask(sigma_mask), _min_radius(min_radius),
-  //UNUSED _full_brain_ga_min(full_brain_ga_min),
+  //UNUSED _full_brain_mean_signal_min(full_brain_mean_signal_min),
   _max_length(static_cast<int>(std::ceil(maxHalfFiberLength / stepLength) ) ),
   _full_brain(false),
   _noddi(noddi),
-  _fa_min(fa_min), _ga_min(ga_min), _seedFALimit(seedFALimit),
+  _fa_min(fa_min), _mean_signal_min(mean_signal_min), _seedFALimit(seedFALimit),
   _num_tensors(num_tensors), _seeds_per_voxel(seeds_per_voxel),
   _cos_theta_min(minBranchingAngle), _cos_theta_max(maxBranchingAngle),
   _is_full_model(is_full_model),
@@ -251,7 +252,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 
   int num_less_than_zero = 0;
   int num_invalid = 0;
-  int num_ga_too_low = 0;
+  int num_mean_signal_too_low = 0;
 
   int tmp_counter = 1;
   for( stdVec_t::const_iterator cit = seeds.begin(); cit != seeds.end(); ++cit )
@@ -294,7 +295,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         if( _full_brain && s2adc(signal_tmp) < _seedFALimit )
           {
           keep = false;
-          ++num_ga_too_low;
+          ++num_mean_signal_too_low;
           break;
           }
         }
@@ -877,8 +878,10 @@ void Tractography::Follow3T(const int thread_id,
     state_tmp.col(0) = state;
     _model->H(state_tmp, signal_tmp);
 
-    const ukfPrecisionType ga = s2adc(signal_tmp);
-    const bool   in_csf = ga < _ga_min || fa < _fa_min;
+    const ukfPrecisionType mean_signal = s2adc(signal_tmp);
+    const bool in_csf = (mean_signal < _mean_signal_min) ||
+                        (fa < _fa_min);
+
     bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain || in_csf
@@ -1074,10 +1077,12 @@ void Tractography::Follow2T(const int thread_id,
 
     state_tmp.col(0) = state;
 
-    _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate ga
+    _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate mean signal
 
-    const ukfPrecisionType ga = s2adc(signal_tmp);
-    const bool in_csf = (_noddi) ? ( ga < _ga_min ) : (ga < _ga_min || fa < _fa_min);
+    const ukfPrecisionType mean_signal = s2adc(signal_tmp);
+    const bool in_csf = (_noddi) ? ( mean_signal < _mean_signal_min ) :
+                                   ( mean_signal < _mean_signal_min || fa < _fa_min);
+
     const bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
@@ -1199,12 +1204,14 @@ void Tractography::Follow1T(const int thread_id,
 
     _model->H(state_tmp, signal_tmp);
 
-    const ukfPrecisionType ga = s2adc(signal_tmp);
+    // Check mean_signal threshold
+    const ukfPrecisionType mean_signal = s2adc(signal_tmp);
     bool in_csf;
     if(_noddi)
-      in_csf = ga < _ga_min;
+      in_csf = mean_signal < _mean_signal_min;
     else
-      in_csf = ga < _ga_min || fa < _fa_min;
+      in_csf = mean_signal < _mean_signal_min || fa < _fa_min;
+
     bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain

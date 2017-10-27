@@ -1,8 +1,7 @@
 
 set(proj VTK)
 
-set(${proj}_REQUIRED_VERSION "6.10")  #If a required version is necessary, then set this, else leave blank
-set(VTK_VERSION_MAJOR 6)
+set(VTK_VERSION_MAJOR 7)
 
 # Set dependency list
 set(${proj}_DEPENDENCIES "zlib")
@@ -112,20 +111,8 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       -P ${CMAKE_CURRENT_BINARY_DIR}/VTK_build_step.cmake)
   endif()
 
-  # Slicer settings
-  # set(${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
-  #   "github.com/Slicer/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
-  # set(${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
-  #   "c88dfedb277969e5f1f6c5349d8f7898610e75f4" CACHE STRING "VTK git tag to use" FORCE)
-  #
-  # mark_as_advanced(${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG)
-  if(NOT DEFINED git_protocol)
-    set(git_protocol "git")
-  endif()
-  # set(${proj}_GIT_REPOSITORY "${git_protocol}://github.com/Slicer/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
-  # set(${proj}_GIT_TAG "ea7cdc4e0b399be244e79392c67fed068c33e454")  # VTK 20141221
   set(${proj}_GIT_REPOSITORY "${git_protocol}://gitlab.kitware.com/vtk/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
-  set(${proj}_GIT_TAG "af02b2f95a0477d3bd7dabb06967b111ca926a86")  # VTK 20150421
+  set(${proj}_GIT_TAG "57d826c1bcdf6cd201b1e77dd14a84d6930e3a55")  # Slicer VTKv7 target
 
 ## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./
 ## to identify necessary modules for VTK

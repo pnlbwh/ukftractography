@@ -44,7 +44,7 @@ public:
                const bool record_Vic, const bool record_kappa,  const bool record_Viso,
                const bool transform_position, const bool store_glyphs, const bool branchesOnly,
 
-               const ukfPrecisionType fa_min, const ukfPrecisionType ga_min, const ukfPrecisionType seedFALimit,
+               const ukfPrecisionType fa_min, const ukfPrecisionType mean_signal_min, const ukfPrecisionType seedFALimit,
                const int num_tensors, const int seeds_per_voxel,
                const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
                const bool is_full_model, const bool free_water, const bool noddi,
@@ -53,7 +53,7 @@ public:
                const std::vector<int>& labels,
 
                ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
-               ukfPrecisionType min_radius, ukfPrecisionType full_brain_ga_min,
+               ukfPrecisionType min_radius, ukfPrecisionType full_brain_mean_signal_min,
 
                const int num_threads
                );
@@ -208,7 +208,7 @@ private:
   const ukfPrecisionType _sigma_signal;
   const ukfPrecisionType _sigma_mask;
   const ukfPrecisionType _min_radius;
-  // UNUSED  const ukfPrecisionType _full_brain_ga_min;
+  // UNUSED  const ukfPrecisionType _full_brain_mean_signal_min;
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;
@@ -219,7 +219,7 @@ private:
 
   // Parameters for the tractography
   const ukfPrecisionType           _fa_min;
-  const ukfPrecisionType           _ga_min;
+  const ukfPrecisionType           _mean_signal_min;
   const ukfPrecisionType           _seedFALimit;
   const int              _num_tensors;
   const int              _seeds_per_voxel;

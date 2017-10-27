@@ -80,8 +80,10 @@
     </integer>
 
     <double>
-      <name>seedFALimit</name>
-      <longflag>seedFALimit</longflag>
+      <name>seedingThreshold</name>
+      <longflag deprecatedalias="seedFALimit">
+        seedingThreshold
+      </longflag>
       <label>Seeding: Minimum seed FA</label>
       <description>Tractography parameter used in all models. Seed points whose fractional anisotropy (FA) are below this value are excluded. Default: 0.18. Range: 0-1.</description>
       <default>0.18</default>
@@ -93,8 +95,10 @@
     </double>
 
     <double>
-      <name>minFA</name>
-      <longflag>minFA</longflag>
+      <name>stoppingFA</name>
+      <longflag deprecatedalias="minFA">
+        stoppingFA
+      </longflag>
       <label>Stopping Criterion: Terminating FA</label>
       <description>Tractography parameter used in tensor model. Tractography will stop when the fractional anisotropy (FA) of the tensor being tracked is less than this value. Note: make sure to also decrease the GA to track through lower anisotropy areas. This parameter is used only in tensor models. Default: 0.15. Range: 0-1.</description>
       <default>0.15</default>
@@ -106,16 +110,16 @@
     </double>
 
     <double>
-      <name>minGA</name>
-      <longflag>minGA</longflag>
-      <label>Stopping Criterion: Terminating GA </label>
-      <description>Tractography parameter used in all models. Tractography will stop when the generalized anisotropy (GA) is less than this value. GA is a normalized variance of the input signals (so it does not depend on any model). Note: to extend tracking through low anisotropy areas, this parameter is often more effective than the minFA. This parameter is used by both tensor and NODDI models. Default: 0.1. Range: 0-1. </description>
+      <name>stoppingThreshold</name>
+      <longflag>stoppingThreshold</longflag>
+      <label>Stopping Criterion: Terminating mean signal</label>
+      <description>Tractography parameter used in all models. Tractography will stop when the mean signal is below this value. Default: 0.1. Range: 0-1. </description>
       <default>0.1</default>
       <constraints>
-    <minimum>0</minimum>
-      <maximum>1</maximum>
-      <step>0.01</step>
-    </constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
     </double>
 
     <integer>
@@ -444,6 +448,24 @@
       <default>false</default>
     </boolean>
 
+<!-- DEPRECATED-REMOVED: we will print an error and deprecation notice because this GA threshold is no
+                         longer available.
+                         for changes see: https://github.com/pnlbwh/ukftractography/pull/64  -->
+
+    <double hidden="true">
+      <name>minGA</name>
+      <longflag>minGA</longflag>
+      <label>DEPRECATED REMOVED: minGA (was Stopping Criterion: Terminating GA)</label>
+      <description>
+        <![CDATA[DEPRECATED REMOVED: this parameter is no longer valid! Please use 'stoppingThreshold' instead! GA is no longer used as a stopping threshold. Please see https://github.com/pnlbwh/ukftractography/pull/64 for more information. (Was: Tractography parameter used in all models. Tractography will stop when the generalized anisotropy (GA) is less than this value. GA is a normalized variance of the input signals (so it does not depend on any model). Note: to extend tracking through low anisotropy areas, this parameter is often more effective than the minFA. This parameter is used by both tensor and NODDI models. Default: 0.1. Range: 0-1.)]]>
+      </description>
+      <default>0.1</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
+    </double>
 
 </parameters>
 

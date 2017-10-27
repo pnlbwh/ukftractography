@@ -120,8 +120,8 @@ add_test(NAME ${testname}
  --minBranchingAngle 0.0
  --maxBranchingAngle 0.0
  --recordNMSE
- --minFA 0.10
- --minGA 0.05
+ --stoppingFA 0.10
+ --stoppingThreshold 0.05
  --Qm 0.001
  --Ql 10
  --Rs 0.015
@@ -162,8 +162,8 @@ add_test(NAME ${testname}
   --recordNMSE
   --freeWater
   --recordFreeWater
-  --minFA 0.1
-  --minGA 0.05
+  --stoppingFA 0.1
+  --stoppingThreshold 0.05
   --Qm 0.01
   --Ql 10
   --Rs 0.015
@@ -198,8 +198,8 @@ add_test(NAME ${testname}
   --recordNMSE
   --freeWater
   --recordFreeWater
-  --minFA 0.1
-  --minGA 0.05
+  --stoppingFA 0.1
+  --stoppingThreshold 0.05
   --Qm 0.01
   --Ql 10
   --Rs 0.015
@@ -233,8 +233,8 @@ add_test(NAME ${testname}
   --recordNMSE
   --freeWater
   --recordFreeWater
-  --minFA 0.1
-  --minGA 0.05
+  --stoppingFA 0.1
+  --stoppingThreshold 0.05
   --Qm 0.01
   --Ql 10
   --Rs 0.015

@@ -32,13 +32,13 @@ int main(int argc, char* argv[]) {
   if (  OutputVolume.empty() )
   {
     std::cout << "No output volume specified! Set the --OutputVolume option." << std::endl;
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   if (  ReferenceFile.empty() )
   {
     std::cout << "No reference volume specified! Set the --ReferenceFile option." << std::endl;
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   std::vector<Fiber> in_fibers;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
   // SOME ADDITIONAL CHECKS ///////////////////////////////////////////////////
   if (in_fibers.size() == 0) {
     std::cout << "The fiber file is empty. Exiting..." << std::endl;
-    exit(1);
+    return EXIT_FAILURE;
   }
 
   if (ScalarName.empty()) {

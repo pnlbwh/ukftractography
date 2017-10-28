@@ -88,7 +88,7 @@ void UnscentedKalmanFilter::Constrain(ukfVectorType& x, const ukfMatrixType& W)
     const ukfPrecisionType error = solve_quadprog(W_tmp, g0, m_DummyZeroCE, m_DummyZeroce0, D, d, x);
     if( error > 0.01 )   // error usually much smaller than that, if solve_quadprog fails it returns inf
       {
-      exit(1);
+      throw std::logic_error("solve_quadprog error exceeds threshold 0.01!");
       }
     }
 }
@@ -169,7 +169,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   /** Used for the estimation of the new state */
   ukfMatrixType dim_dimext(dim, 2 * dim + 1);
   dim_dimext.setConstant(ukfZero);
-  // std::cout << "\n X:"<<X <<"\n Weigths" << this->m_Weights;  
+  // std::cout << "\n X:"<<X <<"\n Weigths" << this->m_Weights;
   const ukfVectorType X_hat = X * this->m_Weights;
   for( unsigned int i = 0; i < dim_dimext.cols(); ++i )
     {

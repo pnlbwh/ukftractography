@@ -77,13 +77,13 @@ void Simple1T_FW::H(const ukfMatrixType& X,
       {
       std::cout << "Negative weight! w= " << w << "\n";
       std::cout << X << "\ni: " << i;
-      exit(1);
+      throw;
       }
     if( w > 1 + 1.0e-5 )
       {
       std::cout << "Weight > 1 => negative free water! w= " << w << "\n";
       std::cout << X << "\ni: " << i;
-      exit(1);
+      throw;
       }
 
     // Flip if necessary.

@@ -206,7 +206,7 @@ int main(int argc, char **argv)
   if(!noddi){
     if(recordVic || recordKappa || recordViso){
       std::cout << "Can use recordVic or recordKappa or recordViso parameters only with noddi model";
-      exit(1);
+      return EXIT_FAILURE;
     }
   }
 
@@ -340,7 +340,7 @@ int main(int argc, char **argv)
   if (std::abs(weight_accumu - 1.0) > 0.000001)
     {
     std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
-    exit(1) ;
+    return EXIT_FAILURE;
     }
   else
     {
@@ -449,17 +449,32 @@ int main(int argc, char **argv)
 
     // Run the tractography.
     writeStatus = tract->Run();
+    std::cout << "H count = " << countH << std::endl;
     }
   catch( itk::ExceptionObject & err )
     {
-    std::cerr << "ITK ExceptionObject caught!" << std::endl;
+    std::cerr << "UKFTractography: ITK ExceptionObject caught!" << std::endl;
     std::cerr << err << std::endl;
+
+    writeStatus = EXIT_FAILURE;
+    }
+  catch( std::exception& exc )
+    {
+    std::cerr << "UKFTractography: std::exception caught:" << std::endl;
+    std::cerr << exc.what() << std::endl;
+
+    writeStatus = EXIT_FAILURE;
+    }
+  catch(...)
+    {
+    std::cerr << "UKFTractography: Unknown exception caught!" << std::endl;
+
+    writeStatus = EXIT_FAILURE;
     }
 
   // Clean up.
   delete tract;
   delete filter_model;
 
-  std::cout << "H count = " << countH << std::endl;
   return writeStatus;
 }

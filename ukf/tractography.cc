@@ -81,13 +81,13 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   if( _cos_theta_max != ukfZero && _cos_theta_max <= _cos_theta_min )
     {
     std::cout << "Maximum branching angle must be greater than " << minBranchingAngle << " degrees." << std::endl;
-    exit(1);
+    throw;
     }
 
   if( _num_tensors < 1 || _num_tensors > 3 )
     {
     std::cout << "Only one, two or three tensors are supported." << std::endl;
-    exit(1);
+    throw;
     }
 
   _cos_theta_max = std::cos( DegToRad( _cos_theta_max ) );
@@ -1480,7 +1480,7 @@ void Tractography::Step2T(const int thread_id,
   // file.
   // This coordinate order is filpped back during output
   // The step length is in World space
-  // exit(1);
+  // throw;
 }
 
 void Tractography::Step1T(const int thread_id,
@@ -1662,7 +1662,7 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
       else   // for too big errors exit with exception.
         {
         std::cout << "Error: program produced negative free water.\n";
-        exit(1);
+        throw;
         }
       }
     fiber.free_water.push_back(viso);
@@ -1683,7 +1683,7 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
       else   // for too big errors exit with exception.
         {
         std::cout << "Error: program produced negative free water.\n";
-        exit(1);
+        throw;
         }
       }
     fiber.free_water.push_back(fw);

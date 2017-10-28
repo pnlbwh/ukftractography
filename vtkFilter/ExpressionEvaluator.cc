@@ -153,7 +153,7 @@ std::vector<Fiber> ExpressionEvaluator::evaluateOperand(char operand)
       break;
     default:
       std::cout << "error!\n";
-      exit(1);
+      return EXIT_FAILURE;
     }
 
   _filter->Run();

@@ -97,7 +97,7 @@ MatrixType SphericalHarmonics(const MatrixType &u, unsigned  m)
   if(m != 22)
     {
     std::cerr << "Have to rebuild SphericalHarmonicsConst.h from Matlab" << std::endl;
-    exit(1);
+    throw;
     }
   unsigned long cols = (m+1)*(m+1);
   MatrixType rval(u.rows(),cols);

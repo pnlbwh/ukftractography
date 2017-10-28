@@ -154,7 +154,7 @@ ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
       break;
     default:
       std::cout << "Unsupported data type for seed file!" << std::endl;
-      exit(1);
+      throw;
     }
 
   return value;
@@ -217,7 +217,7 @@ ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
             break;
           default:
             std::cout << "Unsupported data type for seed file!" << std::endl;
-            exit(1);
+            throw;
           }
 
         ukfPrecisionType w = std::exp(-(dxx + dyy + dzz) / _sigma_mask);
@@ -375,7 +375,7 @@ bool NrrdData::LoadData(const std::string& data_file,
     std::cout
     << "This implementation only accepts masks of type 'signed char', 'unsigned char', 'short', and 'unsigned short'\n";
     std::cout << "Convert your mask using 'unu convert' and rerun.\n";
-    exit(1);
+    throw;
     }
 
   _mask_data = _mask_nrrd->data;

@@ -155,6 +155,5 @@ bool FiberFilter::CheckConditions(const Fiber & fiber)
     }
 
   std::cout << "Error: Should never reach this point!\n";
-  exit(1);
-
+  throw;
 }

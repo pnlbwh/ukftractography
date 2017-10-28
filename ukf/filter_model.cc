@@ -20,7 +20,7 @@ ukfPrecisionType FilterModel::CheckZero(const ukfPrecisionType & local_d) const
     else   // for errors too big exit with exception
       {
       std::cout << "Error, a variable became negative. Most likely something went wrong in the QP\n";
-      exit(1);
+      throw;
       }
     }
   return local_d;

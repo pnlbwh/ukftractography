@@ -21,7 +21,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
   if( raw->dim != static_cast<unsigned int>(DATA_DIMENSION) )
     {
     std::cout << "The dimension of the nrrd data must be " << DATA_DIMENSION << "!" << std::endl;
-    exit(1);
+    throw;
     }
 
   // Check the world coordinate frame
@@ -32,7 +32,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
     )
     {
     std::cout << "Can only handle RAS, LAS and LPS world coordinate frames!" << std::endl;
-    exit(1);
+    throw;
     }
 
   if( nrrdConvert(normalized, raw, nrrdTypeFloat) )    // NOTICE that in the current version of teem, all the key/value
@@ -42,7 +42,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
     char *txt = biffGetDone(NRRD);
     std::cout << txt << std::endl;
     free( txt );
-    exit(1);
+    throw;
     }
 
   nrrdKeyValueClear(normalized);  // Force to erase the key/value pairs
@@ -62,7 +62,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
       if( 3 != sscanf(value, "%50f %50f %50f", &gx, &gy, &gz) )
         {
         std::cout << "The gradients must have 3 components!" << std::endl;
-        exit(1);
+        throw;
         }
       const float gradient_magnitude = sqrt(gx * gx + gy * gy + gz * gz);
       nonZeroGradientFlag.push_back( gradient_magnitude > 0.05F );
@@ -88,12 +88,12 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
   if( numNonZeroGradients == 0 )
     {
     std::cout << "No valid gradients in the data!" << std::endl;
-    exit(1);
+    throw;
     }
   if( numZeroGradients == 0 )
     {
     std::cout << "No zero gradients!" << std::endl;
-    exit(1);
+    throw;
     }
 
   std::cout << "Number of non-zero gradients: " << numNonZeroGradients << std::endl;
@@ -109,20 +109,20 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
       if( listAxis != -1 )
         {
         std::cout << "Too many list axes in the data!" << std::endl;
-        exit(1);
+        throw;
         }
       listAxis = i;
       }
     else if( normalized->axis[i].kind != nrrdKindDomain && normalized->axis[i].kind != nrrdKindSpace )
       {
       std::cout << "Unrecognizable axis kind: axis " << i << " is of kind " << normalized->axis[i].kind << std::endl;
-      exit(1);
+      throw;
       }
     }
   if( listAxis == -1 )
     {
     std::cout << "Can not find the list axis!" << std::endl;
-    exit(1);
+    throw;
     }
 
   assert(nonZeroGradientFlag.size() == normalized->axis[listAxis].size);
@@ -157,7 +157,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
     char *txt = biffGetDone(NRRD);
     std::cout << txt << std::endl;
     free( txt );
-    exit(1);
+    throw;
     }
   nrrdNuke(normalized);
   normalized = temp;
@@ -186,7 +186,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
     char *txt = biffGetDone(NRRD);
     std::cout << txt << std::endl;
     free( txt );
-    exit(-1);
+    throw;
     }
 
   // Average the baseline image
@@ -272,7 +272,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
         if( nrrdKeyValueAdd(normalized, ss.str().c_str(), keyValuePairsOfRaw[i].second.c_str() ) )
           {
           std::cout << "Error while adding key/value pairs!" << std::endl;
-          exit(1);
+          throw;
           }
         }
       totalGradientCounter++;       // No output for 0 gradients to the normalized data
@@ -285,7 +285,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
         char *txt = biffGetDone(NRRD);
         std::cout << txt << std::endl;
         free( txt ); //Values allocated by Nrrd should be removed with free.
-        exit(1);
+        throw;
         }
       }
     }

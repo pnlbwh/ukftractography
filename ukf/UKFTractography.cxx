@@ -65,10 +65,14 @@ int main(int argc, char **argv)
   *
   */
 
-    if (minGAArg.isSet())
+    // check infeasible default value as work-around because
+    // Slicer CLI generates command line arguments for all
+    // parameters, and the CLP doesn't indicate no-arg
+
+    if (minGAArg.isSet() && minGA != 10000)
       {
-      std::cerr << "Error: the `minGA` parameter is no longer valid because GA is not used! Please use 'stoppingThreshold' instead! Please see `--help` for more information" << std::endl;
-      exit(1);
+      std::cerr << "Error: the `minGA` parameter is no longer valid because GA is not used! Please use 'stoppingThreshold' instead! Please see `--help` for more information." << std::endl;
+      return EXIT_FAILURE;
       }
   }
   /* End deprecation section */

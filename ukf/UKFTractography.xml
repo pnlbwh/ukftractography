@@ -453,17 +453,16 @@
                          for changes see: https://github.com/pnlbwh/ukftractography/pull/64  -->
 
     <double hidden="true">
-      <name>minGA</name>
       <longflag>minGA</longflag>
       <label>DEPRECATED REMOVED: minGA (was Stopping Criterion: Terminating GA)</label>
       <description>
         <![CDATA[DEPRECATED REMOVED: this parameter is no longer valid! Please use 'stoppingThreshold' instead! GA is no longer used as a stopping threshold. Please see https://github.com/pnlbwh/ukftractography/pull/64 for more information. (Was: Tractography parameter used in all models. Tractography will stop when the generalized anisotropy (GA) is less than this value. GA is a normalized variance of the input signals (so it does not depend on any model). Note: to extend tracking through low anisotropy areas, this parameter is often more effective than the minFA. This parameter is used by both tensor and NODDI models. Default: 0.1. Range: 0-1.)]]>
       </description>
-      <default>0.1</default>
       <constraints>
         <minimum>0</minimum>
         <maximum>1</maximum>
-        <step>0.01</step>
+          <step>0.01</step>
+        <default>10000</default>
       </constraints>
     </double>
 

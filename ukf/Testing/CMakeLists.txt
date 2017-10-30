@@ -394,5 +394,6 @@ if (${UKFTractography_BUILD_SLICER_EXTENSION})
       ${UKF_UNITTEST_LIB_PATHS}
       --python-code "data_dir = '${INPUT}'; execfile('${UKF_TEST_CLI_PYTHON}')"
       )
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 180)
 
 endif()

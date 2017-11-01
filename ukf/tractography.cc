@@ -91,6 +91,13 @@ Tractography::Tractography(UKFSettings s,
     throw;
     }
 
+  if (_noddi) {
+    if (_record_fa || _record_trace || _record_free_water || _record_tensors) {
+        std::cout << "recordFA, recordTrace, recordFreeWater, recordTensors parameters can only be used with tensor models\n";
+        throw;
+    }
+  }
+
   _cos_theta_max = std::cos( DegToRad( _cos_theta_max ) );
   _cos_theta_min = std::cos( DegToRad( _cos_theta_min ) );
 

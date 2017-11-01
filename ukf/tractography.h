@@ -14,6 +14,43 @@
 
 class ISignalData;
 
+struct UKFSettings {
+  bool record_fa;
+  bool record_nmse;
+  bool record_trace;
+  bool record_state;
+  bool record_cov;
+  bool record_free_water;
+  bool record_tensors;
+  bool record_Vic;
+  bool record_kappa;
+  bool record_Viso;
+  bool transform_position;
+  bool store_glyphs;
+  bool branches_only;
+  ukfPrecisionType fa_min;
+  ukfPrecisionType mean_signal_min;
+  ukfPrecisionType seedFALimit;
+  int num_tensors;
+  int seeds_per_voxel;
+  ukfPrecisionType min_branching_angle;
+  ukfPrecisionType max_branching_angle;
+  bool is_full_model;
+  bool free_water;
+  bool noddi;
+  ukfPrecisionType stepLength;
+  ukfPrecisionType recordLength;
+  ukfPrecisionType maxHalfFiberLength;
+  std::vector<int> labels;
+
+  ukfPrecisionType p0;
+  ukfPrecisionType sigma_signal;
+  ukfPrecisionType sigma_mask;
+  ukfPrecisionType min_radius;
+  ukfPrecisionType full_brain_mean_signal_min;
+  size_t num_threads;
+};
+
 /**
  * \class Tractography
  * \brief This class performs the tractography and saves each step.
@@ -36,27 +73,11 @@ public:
                     _3T_FULL };
 
   /** Constructor, is called from main.cc where all parameters are defined. */
-  Tractography(FilterModel *model, model_type filter_model_type,
-
-               const std::string& output_file, const std::string & output_file_with_second_tensor,
-               const bool record_fa, const bool record_nmse, const bool record_trace,
-               const bool record_state, const bool record_cov, const bool record_free_water, const bool record_tensors,
-               const bool record_Vic, const bool record_kappa,  const bool record_Viso,
-               const bool transform_position, const bool store_glyphs, const bool branchesOnly,
-
-               const ukfPrecisionType fa_min, const ukfPrecisionType mean_signal_min, const ukfPrecisionType seedFALimit,
-               const int num_tensors, const int seeds_per_voxel,
-               const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
-               const bool is_full_model, const bool free_water, const bool noddi,
-               const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
-               const ukfPrecisionType maxHalfFiberLength,
-               const std::vector<int>& labels,
-
-               ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
-               ukfPrecisionType min_radius, ukfPrecisionType full_brain_mean_signal_min,
-
-               const int num_threads
-               );
+  Tractography(UKFSettings settings,
+               FilterModel *model,
+               model_type filter_model_type,
+               const std::string output_file,
+               const std::string output_file_with_second_tensor);
 
   /** Destructor */
   ~Tractography();
@@ -154,8 +175,6 @@ private:
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
 
-  /** Pointer to generic diffusion data */
-  ISignalData *_signal_data;
   /** Pointer to generic filter model */
   FilterModel *_model;
 
@@ -166,6 +185,10 @@ private:
   const std::string _output_file;
   /** Output file for tracts generated with second tensor */
   const std::string _output_file_with_second_tensor;
+
+  /** Pointer to generic diffusion data */
+  ISignalData *_signal_data;
+
   /** Switch for attaching the FA value to the fiber at each point of the tractography */
   const bool _record_fa;
   /**
@@ -208,7 +231,7 @@ private:
   const ukfPrecisionType _sigma_signal;
   const ukfPrecisionType _sigma_mask;
   const ukfPrecisionType _min_radius;
-  // UNUSED  const ukfPrecisionType _full_brain_mean_signal_min;
+
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;

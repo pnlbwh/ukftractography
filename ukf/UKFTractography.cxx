@@ -29,12 +29,14 @@ unsigned int countH=0;
 #include "tractography.h"
 #include "UKFTractographyCLP.h"
 
-// Internal constants
-const ukfPrecisionType SIGMA_MASK                 = 0.5;
-const ukfPrecisionType P0                         = 0.01;
-const ukfPrecisionType MIN_RADIUS                 = 0.87;
-const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN = 0.18;
-const ukfPrecisionType D_ISO                      = 0.003; // Diffusion coefficient of free water
+namespace {
+  // Internal constants
+  const ukfPrecisionType SIGMA_MASK                 = 0.5;
+  const ukfPrecisionType P0                         = 0.01;
+  const ukfPrecisionType MIN_RADIUS                 = 0.87;
+  const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN = 0.18;
+  const ukfPrecisionType D_ISO                      = 0.003; // Diffusion coefficient of free water
+};
 
 // TODO make configurable?
 static const bool verbose = true;

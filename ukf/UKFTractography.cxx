@@ -127,26 +127,10 @@ int main(int argc, char **argv)
     tractsWithSecondTensor.clear() ;	//Reassure the string is empty
   }
 
-  if (numTensor <= 0 || numTensor > 3) {
-    std::cout << "Invalid tensor number!" << std::endl << std::endl ;
-    return 1 ;
-  }
-
   if (l_maxHalfFiberLength <= 0) {
     std::cout << "Invalid maximum half fiber length!" << std::endl ;
     return 1 ;
   }
-
-  if (noddi) {
-    if (recordFA || recordTrace || recordFreeWater || recordTensors) {
-        std::cout << "recordFA, recordTrace, recordFreeWater, recordTensors parameters can only be used with tensor models\n";
-        return 1 ;
-    }
-  }
-//   if (l_stepLength <= 0){
-//     std::cout << "Invalid step length!" << std::endl ;
-//     return 1 ;
-//   }
 
   if (std::ceil(l_maxHalfFiberLength / l_stepLength) <= 1) {
     std::cout << "Too large step length or too small fiber cutoff limit!" << std::endl ;

@@ -1,17 +1,4 @@
-cmake_minimum_required(VERSION 2.8.9) #2.8.9 needed for ExternalProject Simplification
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 OLD)
-endif()
-if(POLICY CMP0017)
-  cmake_policy(SET CMP0017 OLD)
-endif()
-foreach(p
-  CMP0054 # CMake 3.1
-  )
-  if(POLICY ${p})
-    cmake_policy(SET ${p} NEW)
-  endif()
-endforeach()
+cmake_minimum_required(VERSION 3.5)
 
 #-----------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})

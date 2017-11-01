@@ -104,9 +104,6 @@ int main(int argc, char **argv)
 
   bool simpleTensorModel = !fullTensorModel;
 
-
-  std::cout << std::endl;
-
   // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
   //        for entire program (i.e. when used as a slicer modules.
   //        This also addresses the issue when the program is run as part of a batch processing
@@ -116,11 +113,9 @@ int main(int argc, char **argv)
   const BRAINSUtils::StackPushITKDefaultNumberOfThreads TempDefaultNumberOfThreadsHolder(numThreads);
   const int actualNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
   {
-    std::cout << "Found " << actualNumThreadsUsed << " cores on your system.\n";
-    std::cout << "Running tractography with " << actualNumThreadsUsed << " thread(s).\n";
+    std::cout << "Found " << actualNumThreadsUsed << " cores on your system." << std::endl;
+    std::cout << "Running tractography with " << actualNumThreadsUsed << " thread(s)." << std::endl;
   }
-
-  std::cout << std::endl;
 
   // HANDLE ERRORNOUS INPUT
   if (dwiFile.empty() || maskFile.empty() || tracts.empty()) {
@@ -318,13 +313,12 @@ int main(int argc, char **argv)
   } else {
     std::cout << "* seedsPerVoxel: " << seedsPerVoxel << std::endl;
   }
+
   bool noTransformPosition = false;
   bool branchesOnly = false;
-  //if (normalizedDWIData) {
-    //outputNormalizedDWIData = false ;
-  //}
   bool normalizedDWIData = false;
   bool outputNormalizedDWIData = false;
+
 
   ukfVectorType weightsOnTensors(numTensor);
   for (int i = 0; i < numTensor; i++)

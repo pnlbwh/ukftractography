@@ -63,7 +63,7 @@ Tractography::Tractography(UKFSettings s,
     _full_brain(false),
     _noddi(s.noddi),
     _fa_min(s.fa_min), _mean_signal_min(s.mean_signal_min),
-    _seedFALimit(s.seedFALimit),
+    _seeding_threshold(s.seeding_threshold),
     _num_tensors(s.num_tensors),
     _seeds_per_voxel(s.seeds_per_voxel),
     _cos_theta_min(s.min_branching_angle),
@@ -293,7 +293,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         // GA is bigger than 0.18.
         ukfMatrixType signal_tmp(signal_dim * 2, 1);
         signal_tmp.col(0) = signal;
-        if( _full_brain && s2adc(signal_tmp) < _seedFALimit )
+        if( _full_brain && s2adc(signal_tmp) < _seeding_threshold )
           {
           keep = false;
           ++num_mean_signal_too_low;
@@ -345,7 +345,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
       trace2 = trace;
       }
 
-    if( fa <= _seedFALimit )
+    if( fa <= _seeding_threshold )
       {
       ++fa_too_low;
       continue;

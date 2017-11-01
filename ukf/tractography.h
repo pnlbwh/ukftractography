@@ -30,7 +30,7 @@ struct UKFSettings {
   bool branches_only;
   ukfPrecisionType fa_min;
   ukfPrecisionType mean_signal_min;
-  ukfPrecisionType seedFALimit;
+  ukfPrecisionType seeding_threshold;
   int num_tensors;
   int seeds_per_voxel;
   ukfPrecisionType min_branching_angle;
@@ -243,7 +243,7 @@ private:
   // Parameters for the tractography
   const ukfPrecisionType           _fa_min;
   const ukfPrecisionType           _mean_signal_min;
-  const ukfPrecisionType           _seedFALimit;
+  const ukfPrecisionType           _seeding_threshold;
   const int              _num_tensors;
   const int              _seeds_per_voxel;
   ukfPrecisionType                 _cos_theta_min;

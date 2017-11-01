@@ -422,7 +422,7 @@ int main(int argc, char **argv)
     s.branches_only = branchesOnly;
     s.fa_min = l_stoppingFA;
     s.mean_signal_min = l_stoppingThreshold;
-    s.seedFALimit = l_seedingThreshold;
+    s.seeding_threshold = l_seedingThreshold;
     s.num_tensors = numTensor;;
     s.seeds_per_voxel = seedsPerVoxel;
     s.min_branching_angle = l_minBranchingAngle;

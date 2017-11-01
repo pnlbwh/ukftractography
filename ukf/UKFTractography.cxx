@@ -29,7 +29,14 @@ unsigned int countH=0;
 #include "tractography.h"
 #include "UKFTractographyCLP.h"
 
+// Internal constants
+const ukfPrecisionType SIGMA_MASK                 = 0.5;
+const ukfPrecisionType P0                         = 0.01;
+const ukfPrecisionType MIN_RADIUS                 = 0.87;
+const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN = 0.18;
+const ukfPrecisionType D_ISO                      = 0.003; // Diffusion coefficient of free water
 
+// TODO make configurable?
 static const bool verbose = true;
 
 void setAndTell(ukfPrecisionType & x, const ukfPrecisionType y, const std::string & name)
@@ -100,13 +107,6 @@ int main(int argc, char **argv)
 
   std::cout << std::endl;
 
-  // CONSTANTS
-  const ukfPrecisionType SIGMA_MASK 	      = 0.5;
-  const ukfPrecisionType P0 			          = 0.01;
-  const ukfPrecisionType MIN_RADIUS 		    = 0.87;
-  const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN	= 0.18;
-  const ukfPrecisionType D_ISO			        = 0.003; // Diffusion coefficient of free water
-
   // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
   //        for entire program (i.e. when used as a slicer modules.
   //        This also addresses the issue when the program is run as part of a batch processing
@@ -114,10 +114,10 @@ int main(int argc, char **argv)
   //        blindly using all the cores that are found.
   //        This implementation is taken from extensive testing of the BRAINSTools
   const BRAINSUtils::StackPushITKDefaultNumberOfThreads TempDefaultNumberOfThreadsHolder(numThreads);
-  const int actuallNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
+  const int actualNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
   {
-    std::cout << "Found " << actuallNumThreadsUsed << " cores on your system.\n";
-    std::cout << "Running tractography with " << actuallNumThreadsUsed << " thread(s).\n";
+    std::cout << "Found " << actualNumThreadsUsed << " cores on your system.\n";
+    std::cout << "Running tractography with " << actualNumThreadsUsed << " thread(s).\n";
   }
 
   std::cout << std::endl;
@@ -410,30 +410,50 @@ int main(int argc, char **argv)
     }
   }
 
+  // initializing settings
+  UKFSettings s;
+    {
+    s.record_fa = recordFA;
+    s.record_nmse = recordNMSE;
+    s.record_trace = recordTrace;
+    s.record_state = recordState;
+    s.record_cov = recordCovariance;
+    s.record_free_water = recordFreeWater;
+    s.record_tensors = recordTensors;
+    s.record_Vic = recordVic;
+    s.record_kappa = recordKappa;
+    s.record_Viso = recordViso;
+    s.transform_position = !noTransformPosition; // TODO normalize?
+    s.store_glyphs = storeGlyphs;
+    s.branches_only = branchesOnly;
+    s.fa_min = l_stoppingFA;
+    s.mean_signal_min = l_stoppingThreshold;
+    s.seedFALimit = l_seedingThreshold;
+    s.num_tensors = numTensor;;
+    s.seeds_per_voxel = seedsPerVoxel;
+    s.min_branching_angle = l_minBranchingAngle;
+    s.max_branching_angle = l_maxBranchingAngle;
+    s.is_full_model = !simpleTensorModel;
+    s.free_water = freeWater;
+    s.noddi = noddi;
+    s.stepLength = l_stepLength;
+    s.recordLength = l_recordLength;
+    s.maxHalfFiberLength = maxHalfFiberLength;
+    s.labels = labels;
+    s.num_threads = actualNumThreadsUsed;
 
+    // TODO these should be header-initialized once we use C++11
+    s.p0 = P0;
+    s.sigma_signal = SIGMA_SIGNAL;
+    s.sigma_mask = SIGMA_MASK;
+    s.min_radius = MIN_RADIUS;
+    }
+  UKFSettings ukf_settings(s);
 
-  std::cout << std::endl ;
+  // initializing deity object
+  Tractography *tract = new Tractography(ukf_settings, filter_model, filter_model_type,
+                                         tracts, tractsWithSecondTensor);
 
-  Tractography *tract = new Tractography(filter_model, filter_model_type,
-                                         tracts, tractsWithSecondTensor,
-                                         recordFA, recordNMSE, recordTrace, recordState,
-                                         recordCovariance, recordFreeWater, recordTensors,
-                                         recordVic, recordKappa, recordViso,
-                                         !noTransformPosition, storeGlyphs, branchesOnly,
-
-                                         l_stoppingFA, l_stoppingThreshold, l_seedingThreshold,
-                                         numTensor, seedsPerVoxel,
-                                         l_minBranchingAngle, l_maxBranchingAngle,
-                                         !simpleTensorModel, freeWater, noddi,
-
-                                         l_stepLength, l_recordLength, l_maxHalfFiberLength,
-                                         labels,
-
-                                         P0,  SIGMA_SIGNAL, SIGMA_MASK,
-                                         MIN_RADIUS, FULL_BRAIN_MEAN_SIGNAL_MIN,
-
-                                         actuallNumThreadsUsed
-                                        ) ;
 
   // if specified on command line, write out binary tract file
   tract->SetWriteBinary(!writeAsciiTracts);

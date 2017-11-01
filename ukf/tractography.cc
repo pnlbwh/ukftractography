@@ -27,60 +27,61 @@
 // Local forward declaration of callback type.
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
 
-Tractography::Tractography(FilterModel *model, model_type filter_model_type,
+Tractography::Tractography(UKFSettings s,
+                           FilterModel *model,
+                           model_type filter_model_type,
+                           const std::string output_file,
+                           const std::string output_file_with_second_tensor) :
+    // begin initializer list
 
-                           const std::string& output_file, const std::string & output_file_with_second_tensor,
-                           const bool record_fa, const bool record_nmse, const bool record_trace,
-                           const bool record_state,
-                           const bool record_cov, const bool record_free_water,  const bool record_tensors,
-                           const bool record_Vic, const bool record_kappa,  const bool record_Viso,
-                           const bool transform_position, const bool store_glyphs, const bool branchesOnly,
+    _ukf(0, NULL),
+    _model(model),
+    _filter_model_type(filter_model_type),
 
-                           const ukfPrecisionType fa_min, const ukfPrecisionType mean_signal_min,
-                           const ukfPrecisionType seedFALimit,
-                           const int num_tensors, const int seeds_per_voxel,
-                           const ukfPrecisionType minBranchingAngle, const ukfPrecisionType maxBranchingAngle,
-                           const bool is_full_model, const bool free_water, const bool noddi,
-                           const ukfPrecisionType stepLength, const ukfPrecisionType recordLength,
-                           const ukfPrecisionType maxHalfFiberLength,
-                           const std::vector<int>& labels,
+    _output_file(output_file),
+    _output_file_with_second_tensor(output_file_with_second_tensor),
 
-                           ukfPrecisionType p0, ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask,
-                           ukfPrecisionType min_radius,
-                           ukfPrecisionType /* UNUSED full_brain_mean_signal_min */,
+    _record_fa    (s.record_fa),
+    _record_nmse  (s.record_nmse),
+    _record_trace (s.record_trace),
+    _record_state (s.record_state),
+    _record_cov   (s.record_cov),
+    _record_free_water(s.record_free_water),
+    _record_Vic   (s.record_Vic),
+    _record_kappa (s.record_kappa),
+    _record_Viso  (s.record_Viso),
+    _record_tensors(s.record_tensors),
+    _transform_position(s.transform_position),
+    _store_glyphs (s.store_glyphs),
+    _branches_only(s.branches_only),
 
-                           const int num_threads
-                           ) :
-  _ukf(0, NULL), _model(model), _filter_model_type(filter_model_type),
+    _p0(s.p0),
+    _sigma_signal(s.sigma_signal),
+    _sigma_mask(s.sigma_mask),
+    _min_radius(s.min_radius),
+    _max_length(static_cast<int>(std::ceil(s.maxHalfFiberLength / s.stepLength) ) ),
+    _full_brain(false),
+    _noddi(s.noddi),
+    _fa_min(s.fa_min), _mean_signal_min(s.mean_signal_min),
+    _seedFALimit(s.seedFALimit),
+    _num_tensors(s.num_tensors),
+    _seeds_per_voxel(s.seeds_per_voxel),
+    _cos_theta_min(s.min_branching_angle),
+    _cos_theta_max(s.max_branching_angle),
+    _is_full_model(s.is_full_model),
+    _free_water(s.free_water),
+    _stepLength(s.stepLength),
+    _steps_per_record(s.recordLength/s.stepLength),
+    _labels(s.labels),
+    _writeBinary(true),
+    _writeCompressed(true),
+    _num_threads(s.num_threads)
 
-  _output_file(output_file), _output_file_with_second_tensor(output_file_with_second_tensor),
-  _record_fa(record_fa), _record_nmse(record_nmse), _record_trace(record_trace), _record_state(record_state),
-  _record_cov(record_cov), _record_free_water(record_free_water),
-  _record_Vic(record_Vic),
-  _record_kappa(record_kappa), _record_Viso(record_Viso),
-  _record_tensors(record_tensors),
-  _transform_position(transform_position), _store_glyphs(store_glyphs), _branches_only(branchesOnly),
-
-  _p0(p0), _sigma_signal(sigma_signal), _sigma_mask(sigma_mask), _min_radius(min_radius),
-  //UNUSED _full_brain_mean_signal_min(full_brain_mean_signal_min),
-  _max_length(static_cast<int>(std::ceil(maxHalfFiberLength / stepLength) ) ),
-  _full_brain(false),
-  _noddi(noddi),
-  _fa_min(fa_min), _mean_signal_min(mean_signal_min), _seedFALimit(seedFALimit),
-  _num_tensors(num_tensors), _seeds_per_voxel(seeds_per_voxel),
-  _cos_theta_min(minBranchingAngle), _cos_theta_max(maxBranchingAngle),
-  _is_full_model(is_full_model),
-  _free_water(free_water),
-  _stepLength(stepLength),
-  _steps_per_record(recordLength/stepLength),
-  _labels(labels),
-  _writeBinary(true),
-  _writeCompressed(true),
-  _num_threads(num_threads)
+    // end initializer list
 {
   if( _cos_theta_max != ukfZero && _cos_theta_max <= _cos_theta_min )
     {
-    std::cout << "Maximum branching angle must be greater than " << minBranchingAngle << " degrees." << std::endl;
+    std::cout << "Maximum branching angle must be greater than " << _cos_theta_min << " degrees." << std::endl;
     throw;
     }
 
@@ -106,11 +107,11 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
   // for free water case used in the Record function to know where the fw is in the state
   if( _num_tensors == 1 )   // 1 TENSOR CASE /////////////////////////////////////
     {
-    if( !is_full_model && free_water ) // simple model with free water
+    if( !_is_full_model && _free_water ) // simple model with free water
       {
       _nPosFreeWater = 5;
       }
-    else if( is_full_model && free_water ) // full model with free water
+    else if( _is_full_model && _free_water ) // full model with free water
       {
       _nPosFreeWater = 6;
       }
@@ -121,11 +122,11 @@ Tractography::Tractography(FilterModel *model, model_type filter_model_type,
     }
   else if( _num_tensors == 2 )    // 2 TENSOR CASE ////////////////////////////////
     {
-    if( !is_full_model && free_water ) // simple model with free water
+    if( !_is_full_model && _free_water ) // simple model with free water
       {
       _nPosFreeWater = 10;
       }
-    else if( is_full_model && free_water ) // full model with free water
+    else if( _is_full_model && _free_water ) // full model with free water
       {
       _nPosFreeWater = 12;
       }

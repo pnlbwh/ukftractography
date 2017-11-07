@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <ctype.h>
+#include <stdexcept>
 #include "ExpressionEvaluator.h"
 
 ExpressionEvaluator::ExpressionEvaluator()
@@ -153,7 +154,7 @@ std::vector<Fiber> ExpressionEvaluator::evaluateOperand(char operand)
       break;
     default:
       std::cout << "error!\n";
-      return EXIT_FAILURE;
+      throw std::logic_error("Error!");
     }
 
   _filter->Run();

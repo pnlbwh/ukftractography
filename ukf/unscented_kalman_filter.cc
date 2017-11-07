@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <cassert>
-
+#include <stdexcept>
 
 #include <limits>
 #include <algorithm>

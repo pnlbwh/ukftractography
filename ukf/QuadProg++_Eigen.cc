@@ -271,7 +271,7 @@ void cholesky_decomposition(ukfMatrixType& A)
           // raise error
           std::cout << "A" << A;
           os << "Error in cholesky decomposition, sum: " << sum;
-          throw std::logic_error(os.str() );
+          throw std::logic_error(os.str());
           }
         A(i,i) = ::std::sqrt(sum);
         }
@@ -420,7 +420,7 @@ ukfPrecisionType solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
         << "too large." << std::endl
         << "The maximum allowable size for inputs to solve_quadprog is:"
         << mx << std::endl;
-    throw std::logic_error(msg.str() );
+    throw std::logic_error(msg.str());
     }
 
   const int n = G.cols();

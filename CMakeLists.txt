@@ -70,7 +70,7 @@ mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 #-----------------------------------------------------------------------------
 # Required by Slicer extension build system for reasons. See
 #    https://github.com/Slicer/Slicer/commit/b160ec13f276a86306513954ef8b08a5332afc2e
-set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${PROJECT_NAME};RuntimeLibraries;/")
+  set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};RuntimeLibraries;/")
 
 #-----------------------------------------------------------------------------
 # Superbuild script

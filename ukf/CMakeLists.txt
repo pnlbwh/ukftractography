@@ -27,13 +27,6 @@ add_custom_command(OUTPUT ${UKF_GITVER_FILE}
                    DEPENDS _GEN_GITVER)
 
 #-----------------------------------------------------------------------------
-set(MODULE_INCLUDE_DIRECTORIES
-  ${Teem_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/../common
-  ${Eigen_INCLUDE_DIR}
-  )
-
 set(MODULE_SRCS
   BRAINSThreadControl.cxx
   tractography.cc
@@ -62,6 +55,13 @@ set(MODULE_SRCS
   "${UKF_GITVER_FILE}"
   )
 
+set(MODULE_INCLUDE_DIRECTORIES
+  ${Teem_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/../common
+  ${Eigen_INCLUDE_DIR}
+  )
+
 set(MODULE_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -70,10 +70,6 @@ set(MODULE_TARGET_LIBRARIES
   ${Eigen_LIBRARIES}
   )
 
-#-----------------------------------------------------------------------------
-add_subdirectory(Testing)
-
-message( STATUS "XXXX ${SlicerExecutionModel_DEFAULT_CLI_INSTALL_RUNTIME_DESTINATION}")
 #-----------------------------------------------------------------------------
 SEMMacroBuildCLI(
   NAME ${MODULE_NAME}
@@ -90,3 +86,9 @@ SEMMacroBuildCLI(
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
   EXECUTABLE_ONLY
   )
+
+#-----------------------------------------------------------------------------
+add_dependencies(${MODULE_NAME}Lib Eigen)
+
+#-----------------------------------------------------------------------------
+add_subdirectory(Testing)

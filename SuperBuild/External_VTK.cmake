@@ -111,7 +111,7 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
       -P ${CMAKE_CURRENT_BINARY_DIR}/VTK_build_step.cmake)
   endif()
 
-  set(${proj}_GIT_REPOSITORY "${git_protocol}://vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
+  set(${proj}_GIT_REPOSITORY "${git_protocol}://www.vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
   set(${proj}_GIT_TAG "b86da7eef93f75c4a7f524b3644523ae6b651bc4")  # VTK v7.1.1
 
 ## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./

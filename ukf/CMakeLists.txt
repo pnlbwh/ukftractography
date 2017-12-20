@@ -28,7 +28,7 @@ add_custom_command(OUTPUT ${UKF_GITVER_FILE}
 
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
-  BRAINSThreadControl.cxx
+  ../common/BRAINSThreadControl.cxx
   tractography.cc
   unscented_kalman_filter.cc
   seed.cc

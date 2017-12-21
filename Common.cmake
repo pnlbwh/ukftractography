@@ -99,11 +99,6 @@ SETIFEMPTYANDMKDIR(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/li
 SETIFEMPTYANDMKDIR(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 SETIFEMPTYANDMKDIR(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 
-#-----------------------------------------------------------------------------
-SETIFEMPTYANDMKDIR(CMAKE_INSTALL_LIBRARY_DESTINATION lib)
-SETIFEMPTYANDMKDIR(CMAKE_INSTALL_ARCHIVE_DESTINATION lib)
-SETIFEMPTYANDMKDIR(CMAKE_INSTALL_RUNTIME_DESTINATION bin)
-
 #-------------------------------------------------------------------------
 # Augment compiler flags
 #-------------------------------------------------------------------------

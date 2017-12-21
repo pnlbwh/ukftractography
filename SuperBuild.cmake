@@ -45,9 +45,6 @@ option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined versio
 option(USE_SYSTEM_VTK "Build using an externally defined version of VTK" OFF)
 
 #------------------------------------------------------------------------------
-set(SlicerExecutionModel_INSTALL_BIN_DIR bin)
-set(SlicerExecutionModel_INSTALL_LIB_DIR lib)
-set(SlicerExecutionModel_INSTALL_NO_DEVELOPMENT 1)
 set(SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY bin)
 set(SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY lib)
 set(SlicerExecutionModel_DEFAULT_CLI_ARCHIVE_OUTPUT_DIRECTORY lib)

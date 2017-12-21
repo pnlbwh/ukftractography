@@ -6,7 +6,6 @@
  * Also the model choice happens here
 */
 
-unsigned int countH=0;
 #include <cassert>
 #include <string>
 #include <iostream>
@@ -19,6 +18,8 @@ unsigned int countH=0;
 
 #include "vtkNew.h"
 #include "vtkPolyData.h"
+
+extern int countH;
 
 extern "C" {
 

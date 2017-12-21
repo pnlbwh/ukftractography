@@ -78,6 +78,7 @@ endif()
 #-----------------------------------------------------------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 add_subdirectory(ukf)
+add_subdirectory(UKFTractography)
 
 if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   option(USE_fibertractdispersion "Build the fibertractdispersion program" ON)
@@ -91,6 +92,8 @@ if(NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   add_subdirectory(vtk2mask)
   add_subdirectory(vtkFilter)
 endif()
+
+add_subdirectory(InteractiveUKF)
 
 #-----------------------------------------------------------------------------
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)

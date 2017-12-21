@@ -42,6 +42,8 @@
 // TODO implement this switch
 #include "config.h"
 
+UKFTRACTOGRAPHYLIB_EXPORT unsigned int countH=0;
+
 // Local forward declaration of callback type.
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
 
@@ -271,10 +273,6 @@ bool Tractography::SetData(void* data, void* mask, void* seed,
 
   _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
   _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, (Nrrd*)seed, normalizedDWIData);
-
-  _model->set_signal_data(_signal_data);
-
-  _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
 
   return false;
 }

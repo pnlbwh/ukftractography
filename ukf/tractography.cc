@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
-// #include "timer.h"
 #include "filter_model.h"
 #include "ISignalData.h"
 #include "NrrdData.h"
@@ -551,7 +550,7 @@ bool Tractography::Run()
     {
     std::cout << "Tracing " << primary_seed_infos.size() << " primary fibers:" << std::endl;
     raw_primary.resize(primary_seed_infos.size() );
-    // Timer timer ;
+
     WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads,
                                                                   static_cast<int>(primary_seed_infos.size() ) );
 
@@ -572,8 +571,6 @@ bool Tractography::Run()
       }
     threader->SetGlobalDefaultNumberOfThreads(num_of_threads);
     threader->MultipleMethodExecute();
-
-    // std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
 
     // Unpack the branch seeds and their affiliation
     int num_branch_seeds = 0;
@@ -605,7 +602,7 @@ bool Tractography::Run()
     std::cout << "Tracing " << branch_seed_infos.size() << " branches:" << std::endl;
 
     raw_branch.resize(branch_seed_infos.size() );
-    // Timer timer ;
+
     WorkDistribution work_distribution =
       GenerateWorkDistribution(num_of_threads, static_cast<int>(branch_seed_infos.size() ) );
 
@@ -621,13 +618,13 @@ bool Tractography::Run()
 
     itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
     threader->SetNumberOfThreads( num_of_threads );
+
     for( int i = 0; i < num_of_threads; i++ )
       {
       threader->SetMultipleMethod(i, ThreadCallback, &str);
       }
     threader->MultipleMethodExecute();
 
-    // std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
     }
 
   std::vector<UKFFiber> fibers;
@@ -759,8 +756,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
   mat33_t D;
 
   std::cout << "Estimating seed tensors:" << std::endl;
-  // Timer timer ;
-  // boost::progress_display disp(static_cast<unsigned long>(ret.size())) ;
+
   // Unpack data
   for( stdEigVec_t::size_type i = 0; i < s.size(); ++i )
     {
@@ -829,11 +825,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
     ret[i][6] = sigma[0];
     ret[i][7] = sigma[1];
     ret[i][8] = sigma[2];
-
-    // ++disp ; for boost progress bar
     }
-
-  // std::cout << "Time cost: " << timer.elapsed() << std::endl << std::endl ;
 }
 
 void Tractography::Follow3T(const int thread_id,

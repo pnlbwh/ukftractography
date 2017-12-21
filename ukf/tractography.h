@@ -170,6 +170,12 @@ public:
   */
   void SetFilterModelType(model_type m);
 
+  /*
+  * Update filter model type
+  */
+  void UpdateFilterModelType() { this->SetFilterModelType(this->_filter_model_type); }
+
+
   /**
   * Helper functions for library use to set internal data
   */

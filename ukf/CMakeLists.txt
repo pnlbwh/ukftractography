@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME UKFTractography)
+PROJECT(UKFBase)
 
 #-----------------------------------------------------------------------------
 # Generate cpp with git commit hash
@@ -26,6 +26,9 @@ add_custom_target(_GEN_GITVER ALL
 add_custom_command(OUTPUT ${UKF_GITVER_FILE}
                    DEPENDS _GEN_GITVER)
 
+#-----------------------------------------------------------------------------
+find_package(SlicerExecutionModel REQUIRED)
+include(${SlicerExecutionModel_USE_FILE})
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
   ../common/BRAINSThreadControl.cxx
@@ -58,9 +61,10 @@ set(MODULE_SRCS
 
 set(MODULE_INCLUDE_DIRECTORIES
   ${Teem_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../common
-  ${Eigen_INCLUDE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
   )
 
 set(MODULE_TARGET_LIBRARIES
@@ -69,24 +73,22 @@ set(MODULE_TARGET_LIBRARIES
   ${TEEM_LIB} ${ZLIB_LIBRARIES}
   ${VTK_LIBRARIES}
   ${Eigen_LIBRARIES}
+  ${SlicerExecutionModel_LIBRARIES}
   )
 
-#-----------------------------------------------------------------------------
-SEMMacroBuildCLI(
-  NAME ${MODULE_NAME}
-  TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
-  INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
-  ADDITIONAL_SRCS ${MODULE_SRCS}
-  EXECUTABLE_ONLY
-  )
 
-#-----------------------------------------------------------------------------
-SEMMacroBuildCLI(
-  NAME ConvertVTK
-  TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
-  INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
-  EXECUTABLE_ONLY
-  )
+add_library(${PROJECT_NAME}
+            SHARED
+            ${MODULE_SRCS})
 
-#-----------------------------------------------------------------------------
-add_subdirectory(Testing)
+target_include_directories(${PROJECT_NAME} PUBLIC
+                           ${MODULE_INCLUDE_DIRECTORIES})
+
+target_link_libraries(${PROJECT_NAME} ${MODULE_TARGET_LIBRARIES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_BIN_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
+    )

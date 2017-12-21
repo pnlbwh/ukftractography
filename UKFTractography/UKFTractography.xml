@@ -466,6 +466,22 @@
       </constraints>
     </double>
 
+    <boolean hidden="true">
+      <name>shadowExec</name>
+      <longflag>shadowExec</longflag>
+      <label>Set inputs but don't actually run</label>
+      <description>Set inputs but don't actually run</description>
+      <default>true</default>
+    </boolean>
+
+    <boolean hidden="true">
+      <name>AllowMemoryTransfer</name>
+      <longflag>allowMemoryTransfer</longflag>
+      <label>Allow in-memory data transfer</label>
+      <description>Allow in-memory data transfer</description>
+      <default>false</default>
+    </boolean>
+
 </parameters>
 
 </executable>

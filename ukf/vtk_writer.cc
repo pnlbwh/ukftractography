@@ -117,7 +117,7 @@ VtkWriter::VtkWriter(const ISignalData *signal_data, Tractography::model_type fi
 
 
 void VtkWriter
-::PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> polyData,
+::PopulateFibersAndTensors(vtkPolyData* polyData,
                            const std::vector<UKFFiber>& fibers)
 {
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
@@ -269,13 +269,13 @@ VtkWriter
 }
 
 int
-VtkWriter::
-Write(const std::string& file_name,
-      const std::string & tractsWithSecondTensor,
-      const std::vector<UKFFiber>& fibers,
-      bool write_state,
-      bool store_glyphs,
-      bool if_noddi)
+VtkWriter
+::Write(const std::string& file_name,
+        const std::string & tractsWithSecondTensor,
+        const std::vector<UKFFiber>& fibers,
+        bool write_state,
+        bool store_glyphs,
+        bool if_noddi)
 {
   if( fibers.size() == 0 )
     {

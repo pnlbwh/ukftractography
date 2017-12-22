@@ -29,6 +29,7 @@ add_custom_command(OUTPUT ${UKF_GITVER_FILE}
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
   ../common/BRAINSThreadControl.cxx
+  utilities.cc
   tractography.cc
   unscented_kalman_filter.cc
   seed.cc
@@ -36,7 +37,6 @@ set(MODULE_SRCS
   NrrdData.cc
   vtk_writer.cc
   dwi_normalize.cc
-  utilities.cc
   thread.cc
   QuadProg++_Eigen.cc
   filter_model.cc
@@ -52,6 +52,7 @@ set(MODULE_SRCS
   filter_Simple2T.cc
   filter_Simple2T_FW.cc
   filter_Simple3T.cc
+  cli.cc
   "${UKF_GITVER_FILE}"
   )
 

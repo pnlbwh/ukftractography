@@ -11,7 +11,8 @@
 #include "itkMacro.h"
 
 NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
-  : ISignalData(sigma_signal, sigma_mask), _data(NULL), _seed_data(NULL), _mask_data(NULL)
+  : ISignalData(sigma_signal, sigma_mask),
+    _data(NULL), _data_nrrd(NULL), _seed_data(NULL), _mask_data(NULL)
 {
 
 }
@@ -300,6 +301,48 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     }
 }
 
+bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd,
+                       bool normalizedDWIData)
+  {
+  //_data_nrrd = (Nrrd*)data;
+  //_seed_data = (Nrrd*)seed;
+  //_mask_data = (Nrrd*)mask;
+
+  if( LoadSignal(data_nrrd, normalizedDWIData) )
+    {
+    return true;
+    }
+
+  if (seed_nrrd)
+    {
+    this->_seed_nrrd = seed_nrrd;
+    this->_seed_data = seed_nrrd->data;
+    this->_seed_data_type = seed_nrrd->type;
+    assert(_seed_data_type == 2 || _seed_data_type == 3 || _seed_data_type == 5);
+    }
+
+  if( mask_nrrd->type == 1 || mask_nrrd->type == 2 )
+    {
+    this->_mask_num_bytes = 1;
+    }
+  else if( mask_nrrd->type == 3 || mask_nrrd->type == 4 )
+    {
+    this->_mask_num_bytes = 2;
+    }
+  else
+    {
+    std::cout
+    << "This implementation only accepts masks of type 'signed char', 'unsigned char', 'short', and 'unsigned short'\n";
+    std::cout << "Convert your mask using 'unu convert' and rerun.\n";
+    exit(1);
+    }
+
+  this->_mask_nrrd = mask_nrrd;
+  this->_mask_data = mask_nrrd->data;
+
+  return false;
+  }
+
 bool NrrdData::LoadData(const std::string& data_file,
                         const std::string& seed_file,
                         const std::string& mask_file,
@@ -313,8 +356,12 @@ bool NrrdData::LoadData(const std::string& data_file,
     return true;
     }
 
-  if( LoadSignal(data_file, normalizedDWIData) )
+  Nrrd* input_nrrd = nrrdNew();
+  if( nrrdLoad(input_nrrd, data_file.c_str(), NULL) )
     {
+    char *err = biffGetDone(NRRD);
+    std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
+    free( err );
     return true;
     }
 
@@ -333,28 +380,23 @@ bool NrrdData::LoadData(const std::string& data_file,
       }
     }
 
-  _mask_nrrd = nrrdNew();
 
-
+  Nrrd* seed_nrrd = nrrdNew();
   // Load seeds
   if( !seed_file.empty() )
     {
-    _seed_nrrd = nrrdNew();
-    if( nrrdLoad(_seed_nrrd, seed_file.c_str(), NULL) )
+    if( nrrdLoad(seed_nrrd, seed_file.c_str(), NULL) )
       {
       char *err = biffGetDone(NRRD);
       std::cout << "Trouble reading " << seed_file << ": " << err << std::endl;
       free( err );
       return true;
       }
-
-    _seed_data_type = _seed_nrrd->type;
-    assert(_seed_data_type == 2 || _seed_data_type == 3 || _seed_data_type == 5);
-    _seed_data = _seed_nrrd->data;
     }
 
+  Nrrd* mask_nrrd = nrrdNew();
   // Load mask
-  if( nrrdLoad(_mask_nrrd, mask_file.c_str(), NULL) )
+  if( nrrdLoad(mask_nrrd, mask_file.c_str(), NULL) )
     {
     char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
@@ -362,52 +404,23 @@ bool NrrdData::LoadData(const std::string& data_file,
     return true;
     }
 
-  if( _mask_nrrd->type == 1 || _mask_nrrd->type == 2 )
-    {
-    _mask_num_bytes = 1;
-    }
-  else if( _mask_nrrd->type == 3 || _mask_nrrd->type == 4 )
-    {
-    _mask_num_bytes = 2;
-    }
-  else
-    {
-    std::cout
-    << "This implementation only accepts masks of type 'signed char', 'unsigned char', 'short', and 'unsigned short'\n";
-    std::cout << "Convert your mask using 'unu convert' and rerun.\n";
-    throw;
-    }
-
-  _mask_data = _mask_nrrd->data;
-
-  return false;
+  bool status = SetData(input_nrrd, mask_nrrd, seed_nrrd, normalizedDWIData);
+  return status;
 }
 
-bool NrrdData::LoadSignal(const std::string& data_file, const bool normalizedDWIData)
+bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
 {
-  Nrrd *tempNrrd = nrrdNew();
-  _data_nrrd = nrrdNew();
-
-
-  if( nrrdLoad(tempNrrd, data_file.c_str(), NULL) )
-    {
-    char *err = biffGetDone(NRRD);
-    std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
-    free( err );
-    return true;
-    }
+  assert(input_nrrd);
 
   if( normalizedDWIData )
     {
-    nrrdNuke(_data_nrrd);
-    _data_nrrd = tempNrrd;
+    this->_data_nrrd = input_nrrd;
     }
   else
     {
-    dwiNormalize(tempNrrd, _data_nrrd);   // Do preprocessing on the data
-    nrrdNuke(tempNrrd);
+    this->_data_nrrd = nrrdNew();
+    dwiNormalize(input_nrrd, _data_nrrd);   // Do preprocessing on the data
     }
-  tempNrrd = NULL;
 
   // After normalization, the first axis of the nrrd data is the list, namely the gradient axis
 

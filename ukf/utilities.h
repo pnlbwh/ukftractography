@@ -9,6 +9,8 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <iostream>
+
 #include "linalg.h"
 
 #define NaN std::numeric_limits<double>::quiet_NaN()

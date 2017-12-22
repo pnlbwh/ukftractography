@@ -75,20 +75,14 @@ public:
   virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
                         const bool normalizedDWIData, const bool outputNormalizedDWIData) = 0;
 
-  /**
-   * Loading the Signal
-   * \todo this shouldn't be in the interface, because it is only used in the implementation, make it a private function of NrrdData
-  */
-  virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData) = 0;
+  /** Returns the dimensions of the image */
+  virtual vec3_t dim() const = 0;
 
   /** Returns the voxel spacing */
   vec3_t voxel() const
   {
     return _voxel;
   }
-
-  /** Returns the dimensions of the image */
-  virtual vec3_t dim() const = 0;
 
   /** Returns the ijk-to-RAS matrix */
   const ukfMatrixType i2r() const

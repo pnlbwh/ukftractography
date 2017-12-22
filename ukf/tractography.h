@@ -11,8 +11,18 @@
 #include "ukffiber.h"
 #include "seed.h"
 #include "ukf_types.h"
+#include "ukftractographylib_export.h"
 
-class ISignalData;
+class NrrdData;
+class vtkPolyData;
+class Tractography;
+
+// Internal constants
+const ukfPrecisionType SIGMA_MASK                 = 0.5;
+const ukfPrecisionType P0                         = 0.01;
+const ukfPrecisionType MIN_RADIUS                 = 0.87;
+const ukfPrecisionType FULL_BRAIN_MEAN_SIGNAL_MIN = 0.18;
+const ukfPrecisionType D_ISO                      = 0.003; // Diffusion coefficient of free water
 
 struct UKFSettings {
   bool record_fa;
@@ -43,20 +53,44 @@ struct UKFSettings {
   ukfPrecisionType maxHalfFiberLength;
   std::vector<int> labels;
 
+  ukfPrecisionType Qm;
+  ukfPrecisionType Ql;
+  ukfPrecisionType Qw;
+  ukfPrecisionType Qkappa;
+  ukfPrecisionType Qvic;
+  ukfPrecisionType Rs;
+
   ukfPrecisionType p0;
   ukfPrecisionType sigma_signal;
   ukfPrecisionType sigma_mask;
   ukfPrecisionType min_radius;
   ukfPrecisionType full_brain_mean_signal_min;
   size_t num_threads;
-};
+  int filter_model_type; // TODO refactor
+
+  /*
+  *  TODO refactor
+  */
+  bool writeAsciiTracts;
+  bool writeUncompressedTracts;
+
+  // TODO MRMLID support?
+  std::string output_file;
+  std::string output_file_with_second_tensor;
+  std::string dwiFile;
+  std::string seedsFile;
+  std::string maskFile;
+  };
 
 /**
  * \class Tractography
  * \brief This class performs the tractography and saves each step.
 */
-class Tractography
+class UKFTRACTOGRAPHYLIB_EXPORT Tractography
 {
+
+friend class vtkSlicerInteractiveUKFLogic;
+
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -73,11 +107,7 @@ public:
                     _3T_FULL };
 
   /** Constructor, is called from main.cc where all parameters are defined. */
-  Tractography(UKFSettings settings,
-               FilterModel *model,
-               model_type filter_model_type,
-               const std::string output_file,
-               const std::string output_file_with_second_tensor);
+  Tractography(UKFSettings settings);
 
   /** Destructor */
   ~Tractography();
@@ -88,6 +118,21 @@ public:
   */
   bool LoadFiles(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
                  const bool normalized_DWI_data, const bool output_normalized_DWI_data);
+
+  /**
+   * Directly set the data volume pointers
+  */
+
+  bool SetData(void* data, void* mask, void* seed, bool normalizedDWIData);
+
+  /**
+   * Directly set the seed locations
+  */
+
+  void SetSeeds(stdVec_t seeds)
+    {
+    _ext_seeds = seeds;
+    }
 
   /**
    * Creates the seeds and initilizes them by finding the tensor directions,
@@ -120,8 +165,18 @@ public:
   */
   void Follow1T(const int thread_id, const SeedPointInfo& seed, UKFFiber& fiber);
 
+  /*
+  * Set filter model type
+  */
+  void SetFilterModelType(model_type m);
+
+  /**
+  * Helper functions for library use to set internal data
+  */
   void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
   void SetWriteCompressed(bool wb) { this->_writeCompressed = wb; }
+  void SetOutputPolyData(vtkPolyData* pd) { this->_outputPolyData = pd; }
+
 private:
   /**
    * Calculate six tensor coefficients by solving B * d = log(s), where d are
@@ -175,19 +230,13 @@ private:
   /** Vector of Pointers to Unscented Kalaman Filters. One for each thread. */
   std::vector<UnscentedKalmanFilter *> _ukf;
 
-  /** Pointer to generic filter model */
-  FilterModel *_model;
-
-  /** Type of the filter model */
-  model_type _filter_model_type;
-
   /** Output file for tracts generated with first tensor */
   const std::string _output_file;
   /** Output file for tracts generated with second tensor */
   const std::string _output_file_with_second_tensor;
 
   /** Pointer to generic diffusion data */
-  ISignalData *_signal_data;
+  NrrdData *_signal_data;
 
   /** Switch for attaching the FA value to the fiber at each point of the tractography */
   const bool _record_fa;
@@ -232,6 +281,8 @@ private:
   const ukfPrecisionType _sigma_mask;
   const ukfPrecisionType _min_radius;
 
+  ukfVectorType weights_on_tensors;
+
   /** Maximal number of points in the tract */
   const int _max_length;
   bool      _full_brain;
@@ -241,23 +292,37 @@ private:
   int _nPosFreeWater;
 
   // Parameters for the tractography
-  const ukfPrecisionType           _fa_min;
-  const ukfPrecisionType           _mean_signal_min;
-  const ukfPrecisionType           _seeding_threshold;
-  const int              _num_tensors;
-  const int              _seeds_per_voxel;
-  ukfPrecisionType                 _cos_theta_min;
-  ukfPrecisionType                 _cos_theta_max;
-  const bool             _is_full_model;
-  const bool             _free_water;
-  const ukfPrecisionType           _stepLength;
-  const int                 _steps_per_record;
-  const std::vector<int> _labels;
+  ukfPrecisionType  _fa_min;
+  ukfPrecisionType  _mean_signal_min;
+  ukfPrecisionType  _seeding_threshold;
+  int               _num_tensors;
+  int               _seeds_per_voxel;
+  ukfPrecisionType  _cos_theta_min;
+  ukfPrecisionType  _cos_theta_max;
+  bool              _is_full_model;
+  bool              _free_water;
+  ukfPrecisionType  _stepLength;
+  int               _steps_per_record;
+  std::vector<int>  _labels;
+  stdVec_t _ext_seeds;
+
+  ukfPrecisionType Qm;
+  ukfPrecisionType Ql;
+  ukfPrecisionType Qw;
+  ukfPrecisionType Qkappa;
+  ukfPrecisionType Qvic;
+  ukfPrecisionType Rs;
 
   bool _writeBinary;
   bool _writeCompressed;
   // Threading control
   const int _num_threads;
+
+  vtkPolyData* _outputPolyData;
+
+  // TODO smartpointer
+  model_type _filter_model_type;
+  FilterModel *_model;
 };
 
 #endif  // TRACTOGRAPHY_H_

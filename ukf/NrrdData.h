@@ -87,19 +87,21 @@ public:
   virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
                         const bool normalizedDWIData, const bool outputNormalizedDWIData);
 
-  /**
-    * Load the signal, called by LoadData
-    * \todo Should be a private function of this class, and not implementing ISignalData
-  */
-  virtual bool LoadSignal(const std::string& data_file, const bool normalizedDWIData);
+
+  virtual bool SetData(Nrrd* data, Nrrd* seed, Nrrd* mask, bool normalizedDWIData);
 
   /** Returns the dimensions of the signal in each directions as a vector */
-  virtual vec3_t dim() const
+  vec3_t dim() const
   {
     return _dim;
   }
 
 private:
+  /**
+    * Load the signal, called by LoadData
+    * \todo Should be a private function of this class, and not implementing ISignalData
+  */
+  bool LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData);
 
   /** The volume dimensions */
   vec3_t _dim;
@@ -109,7 +111,6 @@ private:
   /** gradient directions of the diffusion image */
   stdVec_t _gradients;
 
-  /** b-values of the diffusion image */
   ukfVectorType _b_values;
 
   /** pointer diffusion data as float */

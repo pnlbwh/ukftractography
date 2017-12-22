@@ -3,6 +3,15 @@
  * \brief implementation of tractography.h
 */
 
+// System includes
+#include <fstream>
+#include <iostream>
+
+// VTK includes
+#include "vtkNew.h"
+#include "vtkPolyData.h"
+
+// UKF includes
 #include "tractography.h"
 #include <algorithm>
 #include <cmath>
@@ -13,12 +22,22 @@
 #include "utilities.h"
 #include "vtk_writer.h"
 #include "thread.h"
-// #include "UKFMultiThreader.h"
 #include "itkMultiThreader.h"
 #include "math_utilities.h"
 
-#include <fstream>
-#include <iostream>
+// filters
+#include "filter_Full1T.h"
+#include "filter_Full1T_FW.h"
+#include "filter_Full2T.h"
+#include "filter_Full2T_FW.h"
+#include "filter_Full3T.h"
+#include "filter_NODDI1F.h"
+#include "filter_NODDI2F.h"
+#include "filter_Simple1T.h"
+#include "filter_Simple1T_FW.h"
+#include "filter_Simple2T.h"
+#include "filter_Simple2T_FW.h"
+#include "filter_Simple3T.h"
 
 // TODO implement this switch
 #include "config.h"
@@ -26,19 +45,17 @@
 // Local forward declaration of callback type.
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
 
-Tractography::Tractography(UKFSettings s,
-                           FilterModel *model,
-                           model_type filter_model_type,
-                           const std::string output_file,
-                           const std::string output_file_with_second_tensor) :
+Tractography::Tractography(UKFSettings s) :
+
     // begin initializer list
 
     _ukf(0, NULL),
-    _model(model),
-    _filter_model_type(filter_model_type),
+    _model(NULL),
 
-    _output_file(output_file),
-    _output_file_with_second_tensor(output_file_with_second_tensor),
+    _filter_model_type((model_type)s.filter_model_type),
+    _output_file(s.output_file),
+    _output_file_with_second_tensor(s.output_file_with_second_tensor),
+    _outputPolyData(NULL),
 
     _record_fa    (s.record_fa),
     _record_nmse  (s.record_nmse),
@@ -74,7 +91,14 @@ Tractography::Tractography(UKFSettings s,
     _labels(s.labels),
     _writeBinary(true),
     _writeCompressed(true),
-    _num_threads(s.num_threads)
+    _num_threads(s.num_threads),
+
+    Qm(s.Qm),
+    Ql(s.Ql),
+    Qw(s.Qw),
+    Qkappa(s.Qkappa),
+    Qvic(s.Qvic),
+    Rs(s.Rs)
 
     // end initializer list
 {
@@ -141,6 +165,28 @@ Tractography::Tractography(UKFSettings s,
       _nPosFreeWater = 10;
       }
     }
+
+  // set up tensor weights
+  this->weights_on_tensors.resize(_num_tensors);
+  for (int i = 0; i < _num_tensors; i++)
+    {
+    this->weights_on_tensors[i]=(1.0 / _num_tensors) ;
+    }
+
+  ukfPrecisionType weight_accumu = 0 ;
+  for (int i = 0; i < _num_tensors; i++)
+    {
+    weight_accumu += weights_on_tensors[i] ;
+    }
+  if (std::abs(weight_accumu - 1.0) > 0.000001)
+    {
+    std::cout << "The weights on different tensors must add up to 1!" << std::endl << std::endl ;
+    throw;
+    }
+  else
+    {
+    weights_on_tensors.norm(); // Normalize for all to add up to 1.
+    }
 }
 
 Tractography::~Tractography()
@@ -149,6 +195,88 @@ Tractography::~Tractography()
     {
     delete _signal_data;
     }
+  if (this->_model)
+  {
+    delete this->_model; // TODO smartpointer
+  }
+}
+
+void Tractography::SetFilterModelType(Tractography::model_type m)
+{
+  if (this->_model) {
+    delete this->_model; // TODO smartpointer
+  }
+
+  this->_filter_model_type = m;
+
+  // TODO refactor this NODDI switch
+  if (m == _1T_FW && this->_noddi && this->_num_tensors == 1) {
+    _model = new NODDI1F(Qm, Qkappa, Qvic, Rs, this->weights_on_tensors, this->_noddi);
+  }
+  else if (m == _2T_FW && this->_noddi && this->_num_tensors == 2) {
+    _model = new NODDI2F(Qm, Qkappa, Qvic, Rs, this->weights_on_tensors, this->_noddi);
+  }
+  else if (m == _1T) {
+    _model = new Simple1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _1T_FW) {
+    _model = new Simple1T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
+  }
+  else if (m == _1T_FULL) {
+    _model = new Full1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _1T_FW_FULL) {
+    _model = new Full1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _2T) {
+    _model = new Simple2T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _2T_FW) {
+    _model = new Simple2T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
+  }
+  else if (m == _2T_FULL) {
+    _model = new Full2T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _2T_FW_FULL) {
+    _model = new Full2T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
+  }
+  else if (m == _3T) {
+    _model = new Simple3T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else if (m == _3T_FULL) {
+    _model = new Full3T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
+  }
+  else {
+    std::cerr << "Unknown filter type!" << std::endl;
+    assert(false);
+  }
+
+  _model->set_signal_data(_signal_data);
+  _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
+}
+
+bool Tractography::SetData(void* data, void* mask, void* seed,
+                           bool normalizedDWIData)
+{
+  if (!data || !mask)
+    {
+    std::cout << "Invalid input Nrrd pointers!" << std::endl;
+    return true;
+    }
+
+  if (!seed)
+    {
+    _full_brain = true;
+    }
+
+  _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
+  _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, (Nrrd*)seed, normalizedDWIData);
+
+  _model->set_signal_data(_signal_data);
+
+  _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
+
+  return false;
 }
 
 bool Tractography::LoadFiles(const std::string& data_file,
@@ -172,11 +300,6 @@ bool Tractography::LoadFiles(const std::string& data_file,
     _signal_data = NULL;
     return true;
     }
-
-  _model->set_signal_data(_signal_data);
-
-  _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
-
   return false;
 }
 
@@ -194,7 +317,11 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     itkGenericExceptionMacro(<< "No label data!");
     }
 
-  if( !_full_brain )
+  if(!_ext_seeds.empty())
+    {
+    seeds = _ext_seeds;
+    }
+  else if(!_full_brain)
     {
     _signal_data->GetSeeds(_labels, seeds);
     }
@@ -534,6 +661,11 @@ bool Tractography::Run()
                                                                  // branch attached
 
   Init(primary_seed_infos);
+  if (primary_seed_infos.size() < 1)
+    {
+    std::cerr << "No valid seed points available!" << std::endl;
+    return false;
+    }
 
   const int num_of_threads = std::min(_num_threads, static_cast<int>(primary_seed_infos.size() ) );
   // const int num_of_threads = 8;
@@ -629,20 +761,42 @@ bool Tractography::Run()
 
   std::vector<UKFFiber> fibers;
   PostProcessFibers(raw_primary, raw_branch, branch_seed_affiliation, _branches_only, fibers);
-  std::cout << "fiber size after postprocessibers: " << fibers.size() << std::endl;
+  std::cout << "fiber size after PostProcessFibers: " << fibers.size() << std::endl;
   if ( fibers.size()  == 0 )
   {
+    std::cout << "No fibers! Returning." << fibers.size() << std::endl;
     return EXIT_FAILURE;
   }
 
   // Write the fiber data to the output vtk file.
-  VtkWriter writer(_signal_data, _filter_model_type, _record_tensors);
-  // possibly write binary VTK file.
-  writer.SetWriteBinary(this->_writeBinary);
-  writer.SetWriteCompressed(this->_writeCompressed);
-
+  VtkWriter writer(_signal_data, this->_filter_model_type, _record_tensors);
   writer.set_transform_position(_transform_position);
-  const int writeStatus = writer.Write(_output_file, _output_file_with_second_tensor, fibers, _record_state, _store_glyphs, _noddi);
+
+  int writeStatus = EXIT_SUCCESS;
+  if (this->_outputPolyData != NULL)
+  // TODO refactor this is bad control flow
+    {
+    writer.PopulateFibersAndTensors(this->_outputPolyData, fibers);
+    this->_outputPolyData->Modified();
+    }
+  else
+    {
+    vtkNew<vtkPolyData> pd;
+    this->SetOutputPolyData(pd.GetPointer());
+    writer.PopulateFibersAndTensors(this->_outputPolyData, fibers);
+    this->_outputPolyData->Modified();
+
+    // possibly write binary VTK file.
+    writer.SetWriteBinary(this->_writeBinary);
+    writer.SetWriteCompressed(this->_writeCompressed);
+
+    writeStatus = writer.Write(_output_file, _output_file_with_second_tensor,
+                                         fibers, _record_state, _store_glyphs, _noddi);
+
+    // TODO refactor!
+    this->SetOutputPolyData(NULL);
+    }
+
   // Clear up the kalman filters
   for( size_t i = 0; i < _ukf.size(); i++ )
     {

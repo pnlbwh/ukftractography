@@ -64,6 +64,13 @@ public:
   /** set the WriteBinary flag */
   void SetWriteBinary(bool wb) { this->_writeBinary = wb; }
   void SetWriteCompressed(bool wc) { this->_writeCompressed = wc; }
+
+  /**
+   * Writes the fibers and all values attached to them to a VTK file
+  */
+  void PopulateFibersAndTensors(vtkPolyData* polyData,
+                                const std::vector<UKFFiber>& fibers);
+
 protected:
   /**
    * Convert a point from the internal representation into what VTK expects
@@ -98,11 +105,7 @@ protected:
     }
 
   void WritePolyData(vtkSmartPointer <vtkPolyData> pd, const char *filename) const;
-  /**
-   * Writes the fibers and all values attached to them to a VTK file
-  */
-  void PopulateFibersAndTensors(vtkSmartPointer<vtkPolyData> polyData,
-                                const std::vector<UKFFiber>& fibers);
+
   /**
    * \brief Reconstructs the tensor from the state for each case
    * \param[out] D The calculated diffusion tensor

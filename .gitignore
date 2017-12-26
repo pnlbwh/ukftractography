@@ -20,3 +20,6 @@
 
 # emacs cruft
 *~
+
+# macOS cruft
+.DS_Store

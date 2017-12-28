@@ -11,7 +11,7 @@
 #include "ukffiber.h"
 #include "seed.h"
 #include "ukf_types.h"
-#include "ukftractographylib_export.h"
+#include "ukf_exports.h"
 
 class NrrdData;
 class vtkPolyData;

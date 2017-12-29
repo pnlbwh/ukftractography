@@ -100,8 +100,9 @@ Tractography::Tractography(UKFSettings s) :
     Qw(s.Qw),
     Qkappa(s.Qkappa),
     Qvic(s.Qvic),
-    Rs(s.Rs)
+    Rs(s.Rs),
 
+    debug(false)
     // end initializer list
 {
   if( _cos_theta_max != ukfZero && _cos_theta_max <= _cos_theta_min )
@@ -678,7 +679,8 @@ bool Tractography::Run()
   std::vector<UKFFiber> raw_primary;
 
     {
-    std::cout << "Tracing " << primary_seed_infos.size() << " primary fibers:" << std::endl;
+    if (this->debug) std::cout << "Tracing " << primary_seed_infos.size() << " primary fibers:" << std::endl;
+
     raw_primary.resize(primary_seed_infos.size() );
 
     WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads,
@@ -709,7 +711,7 @@ bool Tractography::Run()
       num_branch_seeds += static_cast<int>(str.branching_seed_info_vec->at(i).size() );
       }
 
-    std::cout << "branch_seeds size: " << num_branch_seeds << std::endl;
+    if (this->debug) std::cout << "branch_seeds size: " << num_branch_seeds << std::endl;
     branch_seed_infos.resize(num_branch_seeds);
     branch_seed_affiliation.resize(num_branch_seeds);
 
@@ -729,7 +731,7 @@ bool Tractography::Run()
   if( _is_branching )
     {
     assert(_num_tensors == 2 || _num_tensors == 3);
-    std::cout << "Tracing " << branch_seed_infos.size() << " branches:" << std::endl;
+    if (this->debug) std::cout << "Tracing " << branch_seed_infos.size() << " branches:" << std::endl;
 
     raw_branch.resize(branch_seed_infos.size() );
 
@@ -759,7 +761,9 @@ bool Tractography::Run()
 
   std::vector<UKFFiber> fibers;
   PostProcessFibers(raw_primary, raw_branch, branch_seed_affiliation, _branches_only, fibers);
-  std::cout << "fiber size after PostProcessFibers: " << fibers.size() << std::endl;
+
+  if (this->debug) std::cout << "fiber size after PostProcessFibers: " << fibers.size() << std::endl;
+
   if ( fibers.size()  == 0 )
   {
     std::cout << "No fibers! Returning." << fibers.size() << std::endl;
@@ -877,8 +881,6 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
   //   std::cout << b[i] << ", ";
   // }
 
-  std::cout << std::endl;
-
   assert(ret.size() == s.size() );
 
   // Build B matrix.
@@ -907,7 +909,7 @@ void Tractography::UnpackTensor(const ukfVectorType& b,       // b - bValues
   // Temporary variables.
   mat33_t D;
 
-  std::cout << "Estimating seed tensors:" << std::endl;
+  if (this->debug) std::cout << "Estimating seed tensors:" << std::endl;
 
   // Unpack data
   for( stdEigVec_t::size_type i = 0; i < s.size(); ++i )

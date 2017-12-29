@@ -39,6 +39,7 @@ class vtkMRMLScalarVolumeNode;
 class vtkMRMLMarkupsFiducialNode;
 class vtkMRMLDiffusionWeightedVolumeNode;
 class vtkMRMLCommandLineModuleNode;
+class vtkTrivialProducer;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_INTERACTIVEUKF_MODULE_LOGIC_EXPORT
@@ -52,9 +53,10 @@ public:
 
   bool InitTractography(vtkMRMLCommandLineModuleNode*);
 
-  void SetInputVolumes(vtkMRMLDiffusionWeightedVolumeNode*,
-                       vtkMRMLScalarVolumeNode*,
-                       vtkMRMLScalarVolumeNode*);
+  void SetDataNodes(vtkMRMLDiffusionWeightedVolumeNode*,
+                    vtkMRMLScalarVolumeNode*,
+                    vtkMRMLScalarVolumeNode*,
+                    vtkMRMLModelNode*);
   void RunFromSeedPoints(vtkMRMLDiffusionWeightedVolumeNode*,
                          vtkMRMLModelNode*,
                          vtkMRMLMarkupsFiducialNode*);
@@ -80,6 +82,7 @@ protected:
   virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node);
   virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* node);
 private:
+  vtkTrivialProducer* producer;
 
   vtkSlicerInteractiveUKFLogic(const vtkSlicerInteractiveUKFLogic&); // Not implemented
   void operator=(const vtkSlicerInteractiveUKFLogic&); // Not implemented

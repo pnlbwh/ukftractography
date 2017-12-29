@@ -258,7 +258,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
         self.interactFrame.enabled = 0
         return
 
-      self.logic.SetInputVolumes(dwi, mask, None)
+      self.logic.SetDataNodes(dwi, mask, None, fbnode)
       self.enableInteraction()
       
       if (markups != None):

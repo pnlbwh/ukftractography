@@ -25,6 +25,7 @@
 #include <vtkMRMLScene.h>
 #include <vtkNRRDWriter.h>
 #include <vtkMRMLModelNode.h>
+#include <vtkMRMLModelDisplayNode.h>
 #include <vtkMRMLMarkupsFiducialNode.h>
 #include <vtkMRMLDiffusionWeightedVolumeNode.h>
 #include <vtkMRMLCommandLineModuleNode.h>
@@ -37,6 +38,9 @@
 #include <vtkPolyData.h>
 #include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
+#include <vtkAlgorithm.h>
+#include <vtkAlgorithmOutput.h>
+#include <vtkTrivialProducer.h>
 
 // Teem includes
 #include "teem/nrrd.h"
@@ -54,13 +58,15 @@ static Tractography* g_tracto;
 vtkStandardNewMacro(vtkSlicerInteractiveUKFLogic);
 
 //----------------------------------------------------------------------------
-vtkSlicerInteractiveUKFLogic::vtkSlicerInteractiveUKFLogic()
+vtkSlicerInteractiveUKFLogic::vtkSlicerInteractiveUKFLogic() :
+  producer(vtkTrivialProducer::New())
 {
 }
 
 //----------------------------------------------------------------------------
 vtkSlicerInteractiveUKFLogic::~vtkSlicerInteractiveUKFLogic()
 {
+  producer->Delete();
 }
 
 //----------------------------------------------------------------------------
@@ -147,11 +153,16 @@ void setWriterProps(vtkMRMLVolumeNode* vol, vtkNRRDWriter* writer)
 
 
 //---------------------------------------------------------------------------
-void vtkSlicerInteractiveUKFLogic::SetInputVolumes(
+void vtkSlicerInteractiveUKFLogic::SetDataNodes(
     vtkMRMLDiffusionWeightedVolumeNode* dwiNode,
     vtkMRMLScalarVolumeNode* maskNode,
-    vtkMRMLScalarVolumeNode* seedNode)
+    vtkMRMLScalarVolumeNode* seedNode,
+    vtkMRMLModelNode* fbNode)
 {
+  assert(dwiNode->IsA("vtkMRMLDiffusionWeightedVolumeNode"));
+  assert(maskNode->IsA("vtkMRMLScalarVolumeNode"));
+  assert(fbNode->IsA("vtkMRMLFiberBundleNode"));
+
   vtkNew<vtkNRRDWriter> writer;
 
   writer->SetInputConnection(dwiNode->GetImageDataConnection());
@@ -198,6 +209,13 @@ void vtkSlicerInteractiveUKFLogic::SetInputVolumes(
 
   tract->SetData(nrrd, mask, seed, false /*normalizedDWIData*/);
   tract->UpdateFilterModelType();
+
+  vtkPolyData* pd = vtkPolyData::New();
+  //SafeDownCast(producer->GetOutputDataObject(0));
+  this->producer->SetOutput(pd);
+  pd->Delete();
+
+  fbNode->SetPolyDataConnection(this->producer->GetOutputPort());
 }
 
 //---------------------------------------------------------------------------
@@ -217,13 +235,15 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
     return;
     }
 
-  vtkPolyData* pd = fbNode->GetPolyData();
-  if (pd == NULL)
+  vtkPolyData* pd = vtkPolyData::SafeDownCast(producer->GetOutputDataObject(0));
+  if (!pd)
     {
-    pd = vtkPolyData::New();
-    fbNode->SetAndObservePolyData(pd);
-    pd->Delete();
+    std::cerr << "No polydata!" << std::endl;
+    assert(pd);
+    return;
     }
+  // avoid crashes and sync issues during update
+  pd->Reset();
 
   vtkNew<vtkTransform> RASxfmIJK;
   vtkNew<vtkMatrix4x4> RAStoIJK;
@@ -245,7 +265,10 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
   tract->SetOutputPolyData(pd);
   tract->Run();
 
-  fbNode->SetAndObservePolyData(pd);
+  // TODO fix
+  // work around https://issues.slicer.org/view.php?id=3786
+  this->producer->Update();
+  this->producer->Modified();
 }
 
 void vtkSlicerInteractiveUKFLogic::set_seedsPerVoxel(double val)      { g_tracto->_seeds_per_voxel = val; };

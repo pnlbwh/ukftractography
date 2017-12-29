@@ -183,6 +183,8 @@ public:
   void SetWriteCompressed(bool wb) { this->_writeCompressed = wb; }
   void SetOutputPolyData(vtkPolyData* pd) { this->_outputPolyData = pd; }
 
+  void SetDebug(bool v) { this->debug = v; }
+
 private:
   /**
    * Calculate six tensor coefficients by solving B * d = log(s), where d are
@@ -329,6 +331,8 @@ private:
   // TODO smartpointer
   model_type _filter_model_type;
   FilterModel *_model;
+
+  bool debug;
 };
 
 #endif  // TRACTOGRAPHY_H_

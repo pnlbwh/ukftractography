@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME UKFCLI)
+set(MODULE_NAME UKFTractography)
 
 set(MODULE_INCLUDE_DIRECTORIES
   ${Teem_INCLUDE_DIRS}
@@ -18,12 +18,12 @@ set(MODULE_TARGET_LIBRARIES
   UKFBase
   )
 
+
 #-----------------------------------------------------------------------------
 SEMMacroBuildCLI(
   NAME UKFTractography
   TARGET_LIBRARIES ${MODULE_TARGET_LIBRARIES}
   INCLUDE_DIRECTORIES ${MODULE_INCLUDE_DIRECTORIES}
-  ADDITIONAL_SRCS ${MODULE_SRCS}
   EXECUTABLE_ONLY
   )
 

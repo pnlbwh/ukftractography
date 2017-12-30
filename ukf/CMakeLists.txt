@@ -27,12 +27,17 @@ add_custom_command(OUTPUT ${UKF_GITVER_FILE}
                    DEPENDS _GEN_GITVER)
 
 #-----------------------------------------------------------------------------
+# SlicerExecutionModel
 find_package(SlicerExecutionModel REQUIRED)
-include(${SlicerExecutionModel_USE_FILE})
+include(${GenerateCLP_USE_FILE})
+# TODO remove
+generateclp(${UKF_SRC}/UKFTractography/UKFTractography.cxx ${UKF_SRC}/UKFTractography/UKFTractography.xml)
+
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
   ../common/BRAINSThreadControl.cxx
   utilities.cc
+  cli.cc
   tractography.cc
   unscented_kalman_filter.cc
   seed.cc
@@ -55,8 +60,8 @@ set(MODULE_SRCS
   filter_Simple2T.cc
   filter_Simple2T_FW.cc
   filter_Simple3T.cc
-  cli.cc
   "${UKF_GITVER_FILE}"
+  UKFTractographyCLP.h
   )
 
 set(MODULE_INCLUDE_DIRECTORIES
@@ -64,6 +69,7 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${Eigen_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/../common
+  ${CMAKE_CURRENT_SOURCE_DIR}/../UKFTractography
   ${CMAKE_CURRENT_BINARY_DIR}
   )
 
@@ -75,7 +81,6 @@ set(MODULE_TARGET_LIBRARIES
   ${Eigen_LIBRARIES}
   ${SlicerExecutionModel_LIBRARIES}
   )
-
 
 add_library(${PROJECT_NAME}
             SHARED

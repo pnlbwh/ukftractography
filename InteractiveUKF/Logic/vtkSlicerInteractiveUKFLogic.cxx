@@ -51,6 +51,7 @@
 // UKF includes
 #include <tractography.h>
 #include <cli.h>
+#include "BRAINSThreadControl.h"
 
 static Tractography* g_tracto;
 
@@ -77,10 +78,25 @@ void vtkSlicerInteractiveUKFLogic::PrintSelf(ostream& os, vtkIndent indent)
 
 static int CLILoader(int argc, char** argv)
 {
-  UKFSettings settings;
-  ukf_parse_cli(argc, argv, settings);
+  UKFSettings ukf_settings;
+  ukf_parse_cli(argc, argv, ukf_settings);
 
-  g_tracto = new Tractography(settings);
+  // NOTE:  When used as share libary one must be careful not to permanently reset number of threads
+  //        for entire program (i.e. when used as a slicer modules.
+  //        This also addresses the issue when the program is run as part of a batch processing
+  //        system so that the number of cores allocated by scheduler is respected rather than
+  //        blindly using all the cores that are found.
+  //        This implementation is taken from extensive testing of the BRAINSTools
+  // (this object will be deleted by RAII and return to original thread count)
+  const BRAINSUtils::StackPushITKDefaultNumberOfThreads TempDefaultNumberOfThreadsHolder(ukf_settings.num_threads);
+  const int actualNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
+  ukf_settings.num_threads = actualNumThreadsUsed;
+  {
+    std::cout << "Found " << actualNumThreadsUsed << " cores on your system." << std::endl;
+    std::cout << "Running tractography with " << actualNumThreadsUsed << " thread(s)." << std::endl;
+  }
+
+  g_tracto = new Tractography(ukf_settings);
 
   return EXIT_SUCCESS;
 }
@@ -104,7 +120,6 @@ bool vtkSlicerInteractiveUKFLogic::InitTractography(vtkMRMLCommandLineModuleNode
   vtkNew<vtkSlicerCLIModuleLogic> cli_logic;
   cli_logic->SetMRMLScene(this->GetMRMLScene());
   cli_logic->SetMRMLApplicationLogic(this->GetMRMLApplicationLogic());
-//  cli_logic->SetAllowInMemoryTransfer(true);
   cli_logic->ApplyAndWait(cli.GetPointer(), false);
 
   return EXIT_SUCCESS;
@@ -198,12 +213,10 @@ void vtkSlicerInteractiveUKFLogic::SetDataNodes(
     seed = (Nrrd*)seedWriter->MakeNRRD();
     }
 
-  std::cout << "Addr of g_tracto: " << g_tracto << std::endl;
-
   Tractography* tract = dynamic_cast<Tractography*>(g_tracto);
   if (!tract)
     {
-    std::cerr << "No g_tracto!" << std::endl;
+    std::cerr << "Uninitialized UKFTractography!" << std::endl;
     return;
     }
 
@@ -231,7 +244,7 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
   Tractography* tract = dynamic_cast<Tractography*>(g_tracto);
   if (!tract)
     {
-    std::cerr << "No g_tracto!" << std::endl;
+    std::cerr << "Uninitialized UKFTractography!" << std::endl;
     return;
     }
 

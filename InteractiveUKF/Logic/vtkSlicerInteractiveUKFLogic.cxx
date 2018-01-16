@@ -284,14 +284,38 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
   this->producer->Modified();
 }
 
-void vtkSlicerInteractiveUKFLogic::set_seedsPerVoxel(double val)      { g_tracto->_seeds_per_voxel = val; };
-void vtkSlicerInteractiveUKFLogic::set_stoppingFA(double val)         { g_tracto->_fa_min = val; };
-void vtkSlicerInteractiveUKFLogic::set_seedingThreshold(double val)   { g_tracto->_seeding_threshold = val; };
-void vtkSlicerInteractiveUKFLogic::set_stoppingThreshold(double val)  { g_tracto->_mean_signal_min = val; };
-void vtkSlicerInteractiveUKFLogic::set_numTensor(size_t val)          { g_tracto->_num_tensors = val; };
-void vtkSlicerInteractiveUKFLogic::set_stepLength(double val)         { g_tracto->_stepLength = val; };
-void vtkSlicerInteractiveUKFLogic::set_recordLength(double val)
-  { g_tracto->_steps_per_record = val/g_tracto->_stepLength; };
+void vtkSlicerInteractiveUKFLogic::set_seedsPerVoxel(double val) {
+  if (!g_tracto) return;
+  g_tracto->_seeds_per_voxel = val;
+}
 
-void vtkSlicerInteractiveUKFLogic::set_noddi(bool val)                { g_tracto->_noddi = val; }
+void vtkSlicerInteractiveUKFLogic::set_stoppingFA(double val){
+  if (!g_tracto) return;
+  g_tracto->_fa_min = val;
+}
+void vtkSlicerInteractiveUKFLogic::set_seedingThreshold(double val) {
+  if (!g_tracto) return;
+  g_tracto->_seeding_threshold = val;
+}
+void vtkSlicerInteractiveUKFLogic::set_stoppingThreshold(double val) {
+  if (!g_tracto) return;
+  g_tracto->_mean_signal_min = val;
+}
+void vtkSlicerInteractiveUKFLogic::set_numTensor(size_t val) {
+  if (!g_tracto) return;
+  g_tracto->_num_tensors = val;
+}
+void vtkSlicerInteractiveUKFLogic::set_stepLength(double val) {
+  if (!g_tracto) return;
+  g_tracto->_stepLength = val;
+}
+void vtkSlicerInteractiveUKFLogic::set_recordLength(double val) {
+  if (!g_tracto) return;
+  g_tracto->_steps_per_record = val/g_tracto->_stepLength;
+}
+
+void vtkSlicerInteractiveUKFLogic::set_noddi(bool val) {
+  if (!g_tracto) return;
+  g_tracto->_noddi = val;
+}
 

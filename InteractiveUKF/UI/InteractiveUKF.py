@@ -1,14 +1,20 @@
-
-import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
-import logging
-
 from slicer.util import findChild, findChildren
+
+import logging
+import textwrap
+import unittest
 
 #
 # InteractiveUKF
 #
+
+def showMissingDataWarning(self):
+  qt.QMessageBox(qt.QMessageBox.Warning,
+                 "Error: missing inputs",
+                 "Please select all inputs before proceeding").exec_()
+  return
 
 class InteractiveUKF(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
@@ -19,15 +25,19 @@ class InteractiveUKF(ScriptedLoadableModule):
     import string
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "Interactive UKF"
-    self.parent.categories = ["Diffusion"]
+    self.parent.categories = ["Diffusion.Tractography"]
     self.parent.dependencies = []
-    self.parent.contributors = ["Isaiah Norton (BWH)"]
-    self.parent.helpText = """
-"""
+    self.parent.contributors = ["Isaiah Norton (BWH), Lauren O'Donnell (BWH)"]
+    self.parent.helpText = textwrap.dedent(
+      """
+      """)
     self.parent.helpText += self.getDefaultModuleDocumentationLink()
-    self.parent.acknowledgementText = """
-Supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community. See http://www.slicer.org for details.  Module implemented by Steve Pieper.
-"""
+    self.parent.acknowledgementText = textwrap.dedent(
+      """
+      SlicerDMRI supported by NIH NCI ITCR U01CA199459 (Open Source Diffusion MRI
+      Technology For Brain Cancer Research), and made possible by NA-MIC, NAC,
+      BIRN, NCIGT, and the Slicer Community.
+      """)
 
 #
 # InteractiveUKFWidget
@@ -48,7 +58,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
   def __del__(self):
-    self.unsetConnections()
+    self.disableSeeding()
 
   def setup(self):
     ScriptedLoadableModuleWidget.setup(self)
@@ -66,7 +76,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.tabFrame = qt.QTabWidget(self.parent)
     self.tabFrame.setLayout(qt.QHBoxLayout())
     self.parent.layout().addWidget(self.tabFrame)
-    
+
     self.cliWidget = slicer.modules.ukftractography.createNewWidgetRepresentation()
     self.cliWidget.setMRMLScene(slicer.mrmlScene)
 
@@ -83,7 +93,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       if len(w) > 0:
         w = w[0]
         cliw.layout().removeWidget(w)
-        w.hide() 
+        w.hide()
 
     # named selector widgets correspond to CLI argument name
     for name in ["labels", "seedsFile"]:
@@ -102,6 +112,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
 
     # get handles to important selectors
     self.cliSelector = slicer.util.findChild(cliw, "MRMLCommandLineModuleNodeSelector")
+    self.cliSelector.hide()
     self.dwiSelector = slicer.util.findChild(cliw, "dwiFile")
     self.fiberBundleSelector = slicer.util.findChild(cliw, "tracts")
     self.maskSelector = slicer.util.findChild(cliw, "maskFile")
@@ -109,11 +120,11 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     # add widget to tab frame
     self.tabFrame.addTab(self.cliWidget, "Setup")
 
-    # Interactor frame  
+    # Interactor frame
     self.interactFrame = qt.QFrame(self.parent)
     self.interactFrame.setLayout(qt.QVBoxLayout())
     self.tabFrame.addTab(self.interactFrame, "Interact")
-    
+
     # selector widget and frame
     self.markupSelectorFrame = qt.QFrame(self.parent)
     self.markupSelectorFrame.setLayout(qt.QVBoxLayout())
@@ -140,13 +151,10 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     # enable checkbox
     self.enableCBFrame = qt.QFrame(self.markupSelectorFrame)
     self.enableCBFrame.setLayout(qt.QHBoxLayout())
-    
-    self.enableSeedingCB = qt.QCheckBox()
-    self.enableCBFrame.layout().addWidget(self.enableSeedingCB)
 
-    self.enableSeedingCBLabel = qt.QLabel("Enable interactive seeding")
-    self.enableCBFrame.layout().addWidget(self.enableSeedingCBLabel)
-    self.enableCBFrame.layout().addStretch(0)
+    self.enableSeedingCB = ctk.ctkCheckablePushButton()
+    self.enableSeedingCB.text = "Update (check for interactive)"
+    self.enableCBFrame.layout().addWidget(self.enableSeedingCB)
 
     self.markupSelectorFrame.layout().addWidget(self.enableCBFrame)
     self.interactFrame.layout().addWidget(self.markupSelectorFrame)
@@ -155,7 +163,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.optsFrame.setLayout(qt.QVBoxLayout())
     self.interactFrame.layout().addWidget(self.optsFrame)
 
-    # Move seeding options frame to interactor 
+    # Move seeding options frame to interactor
     with It(slicer.util.findChildren(cliw, text="Tractography Options")[0]) as w:
       self.tractOpts = w
       cliw.layout().removeWidget(w)
@@ -173,33 +181,50 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       self.c_recordLength = findChild(w, "recordLength")
       self.c_recordLength.setValue(2)
       # TODO numThread?
-      # TODO maxTract, NMSE    
+      # TODO maxTract, NMSE
 
-    # Move tensor options frame to interactor 
+    # Move tensor options frame to interactor
     with It(slicer.util.findChildren(cliw, text="Tensor Model (default)")[0]) as w:
       self.tractTensorOpts = w
       cliw.layout().removeWidget(w)
       self.optsFrame.layout().addWidget(w)
 
-    # Move NODDI options frame to interactor 
+    # Move NODDI options frame to interactor
     with It(slicer.util.findChildren(cliw, text="NODDI Model")[0]) as w:
       self.noddiOpts = w
       cliw.layout().removeWidget(w)
       self.optsFrame.layout().addWidget(w)
       self.c_noddi = findChild(w, "noddi")
 
+    # Event handling
     self.tabFrame.connect('currentChanged(int)', self.onTabChanged)
-    self.enableSeedingCB.connect('stateChanged(int)', self.onSeedingCBChanged)
-    print("setting mrmlScene: ", slicer.mrmlScene)
+    self.enableSeedingCB.connect('checkStateChanged(Qt::CheckState)', self.onSeedingCBChanged)
+    self.enableSeedingCB.connect('clicked(bool)', self.onSeedingCBClicked)
     self.logic.SetMRMLScene(slicer.mrmlScene)
 
     # This needs to be last so that all widgets are pushed to top
-    self.interactFrame.layout().addStretch(0) 
+    self.interactFrame.layout().addStretch(0)
 
-  def enableInteraction(self):
+    #==== end setup()
+
+
+  def enableSeeding(self):
     self.interactFrame.enabled = True
     self.optsFrame.enabled = False
-    self.enableSeedingCB.enabled = False 
+
+    cliNode = self.cliSelector.currentNode()
+    dwi = self.dwiSelector.currentNode()
+    fbnode = self.fiberBundleSelector.currentNode()
+    mask = self.maskSelector.currentNode()
+
+    assert(cliNode and dwi and fbnode and mask)
+
+    # run CLI entrypoint to set parameters and calculate averaged volume
+    self.logic.SetMRMLScene(slicer.mrmlScene)
+    self.logic.SetMRMLApplicationLogic(slicer.app.applicationLogic())
+    self.logic.InitTractography(cliNode)
+    # synchronous, slowish step
+    self.logic.SetDataNodes(dwi, mask, None, fbnode)
 
     self.c_recordLength.connect('valueChanged(double)', self.on_recordLength)
     self.c_Qm.connect('valueChanged(double)', self.on_Qm)
@@ -211,10 +236,10 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.c_stepLength.connect('valueChanged(double)', self.on_stepLength)
     self.c_noddi.connect('stateChanged(int)', self.on_noddi)
 
-  def disableInteraction(self):
+
+  def disableSeeding(self):
     self.interactFrame.enabled = False
     self.optsFrame.enabled = False
-    self.enableSeedingCB.enabled = False 
 
     self.c_seedsPerVoxel.disconnect('valueChanged(double)', self.on_seedsPerVoxel)
     self.c_seedingThreshold.disconnect('valueChanged(double)', self.on_seedingThreshold)
@@ -226,72 +251,96 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.c_recordLength.disconnect('valueChanged(double)', self.on_recordLength)
     self.c_noddi.disconnect('stateChanged(int)', self.on_noddi)
 
+    self.disableInteraction()
+
+
   def markupNodeSelected(self, state):
-    self.optsFrame.enabled = state
     self.enableSeedingCB.enabled = state
+    self.optsFrame.enabled = state
+
+
+  def enableInteraction(self):
+    markups = self.markupSelector.currentNode()
+    if markups:
+      self.tag = markups.AddObserver(slicer.vtkMRMLMarkupsNode.PointModifiedEvent,
+                                     self.onMarkupsChanged)
+
+
+  def disableInteraction(self):
+    markups = self.markupSelector.currentNode()
+    if markups and (markups.HasObserver(slicer.vtkMRMLMarkupsNode.PointModifiedEvent)):
+      markups.RemoveObserver(self.tag)
+
 
   def onTabChanged(self, index):
     # I/O selector tab
     if index == 0:
-      self.disableInteraction()
+      self.disableSeeding()
       return
-    
-    # interaction tab
+
+    # Interaction tab
     elif index == 1:
       cliNode = self.cliSelector.currentNode()
-      if not cliNode:
-        raise("Missing MRMLCommandLineNode!")
-
-      # run CLI entrypoint to set parameters and calculate averaged volume
-      #self.cliWidget.apply(1) # 1: run synchronously
-      self.logic.SetMRMLScene(slicer.mrmlScene)
-      self.logic.SetMRMLApplicationLogic(slicer.app.applicationLogic())
-      self.logic.InitTractography(cliNode)
-      
       dwi = self.dwiSelector.currentNode()
       fbnode = self.fiberBundleSelector.currentNode()
       mask = self.maskSelector.currentNode()
       markups = self.markupSelector.currentNode()
-  
-      # disable interaction and return if no nodes selected
-      if (dwi == None or fbnode == None):
-        self.interactFrame.enabled = 0
-        return
 
-      self.logic.SetDataNodes(dwi, mask, None, fbnode)
-      self.enableInteraction()
-      
-      if (markups != None):
-        self.enableSeedingCB.enabled = True
+      if cliNode and dwi and fbnode and mask:
+        self.enableSeeding()
+        return
+      else:
+        self.disableSeeding()
+        self.tabFrame.currentIndex = 0 # return to input selector
+        showMissingDataWarning()
+      return
+
     else:
-      raise("Unhandled tab!")
+      raise(Exception("Unhandled tab!"))
+
 
   def onMarkupsChanged(self, markupNode, event):
-    self.runSeeding(markupNode)
+    if not markupNode:
+      self.disableInteraction()
+      return
+    else:
+      self.runSeeding(markupNode)
+      return
+    raise(Exception("No onMarkupsChanged action available!"))
+
 
   def onSeedingCBChanged(self, state):
     markups = self.markupSelector.currentNode()
-    if state == 0 or markups == None:
-      markups.RemoveObservers(slicer.vtkMRMLMarkupsNode.PointModifiedEvent,
-                              self.onMarkupsChanged)
+    if state != qt.Qt.Checked or markups == None:
+      self.disableInteraction()
       return
 
-    markups.AddObserver(slicer.vtkMRMLMarkupsNode.PointModifiedEvent,
-                        self.onMarkupsChanged)
+    self.enableSeedingCB.setChecked(True)
+    self.enableInteraction()
+    self.runSeeding(markups)
+
+
+  def onSeedingCBClicked(self, state):
+    markups = self.markupSelector.currentNode()
+    if markups == None:
+      return
+
+    self.enableSeedingCB.setChecked(self.enableSeedingCB.checkState)
+    self.runSeeding(markups)
 
   def runSeeding(self, markupNode):
     dwi = self.dwiSelector.currentNode()
     fbnode = self.fiberBundleSelector.currentNode()
 
     if markupNode == None or fbnode == None:
-      raise("No markup node selected in InteractiveUKF.py:runSeeding(...)")
+      raise(Exception("No markup node selected in InteractiveUKF.py:runSeeding(...)"))
       return
 
     self.logic.RunFromSeedPoints(dwi, fbnode, markupNode)
 
   def rerunSeeding(self):
     markups = self.markupSelector.currentNode()
-    # TODO safety check 
+    # TODO safety check
     self.runSeeding(markups)
 
   def on_seedsPerVoxel(self, value):
@@ -311,7 +360,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     if not self.logic: return
     self.logic.set_stoppingThreshold(value)
     self.rerunSeeding()
-  
+
   def on_numTensor(self):
     bg = self.c_numTensors.children()[0]
     val = bg.checkedButton().text
@@ -322,12 +371,12 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     if not self.logic: return
     self.logic.set_stoppingThreshold(value)
     self.rerunSeeding()
- 
+
   def on_Qm(self, value):
     if not self.logic: return
     self.logic.set_Qm(value)
     self.rerunSeeding()
- 
+
   def on_recordLength(self,value):
     if not self.logic: return
     self.logic.set_recordLength(value)
@@ -335,7 +384,6 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
 
   def on_noddi(self,value):
     if not self.logic: return
-    print("on_noddi: ", value)
     if value == 2: # Qt::Checked
       self.logic.set_noddi(True)
     else:
@@ -345,10 +393,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
 #on_seedsPerVoxel
 #on_seedingThreshold
 #on_stoppingThreshold
-#on_numTensor
-#on_stepLength
 #on_Qm
-#on_recordLength
 
 
 

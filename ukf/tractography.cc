@@ -6,6 +6,9 @@
 // System includes
 #include <fstream>
 #include <iostream>
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
 
 // VTK includes
 #include "vtkNew.h"
@@ -13,9 +16,6 @@
 
 // UKF includes
 #include "tractography.h"
-#include <algorithm>
-#include <cmath>
-#include <iomanip>
 #include "filter_model.h"
 #include "ISignalData.h"
 #include "NrrdData.h"

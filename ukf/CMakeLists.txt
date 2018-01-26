@@ -80,13 +80,15 @@ set(MODULE_TARGET_LIBRARIES
   ${CMAKE_THREAD_LIBS_INIT}
   ${TEEM_LIB} ${ZLIB_LIBRARIES}
   ${VTK_LIBRARIES}
-  ${Eigen_LIBRARIES}
   ${SlicerExecutionModel_LIBRARIES}
   )
 
 add_library(${PROJECT_NAME}
             SHARED
             ${MODULE_SRCS})
+
+# Add ordering dependency on Eigen external project target.
+add_dependencies(UKFBase EP_Eigen)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
                            ${MODULE_INCLUDE_DIRECTORIES})

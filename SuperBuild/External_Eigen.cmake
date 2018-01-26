@@ -36,7 +36,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     )
 
   ### --- End Project specific additions
-  ExternalProject_Add(${proj}
+  ExternalProject_Add(EP_Eigen
     ${${proj}_EP_ARGS}
     GIT_REPOSITORY ${${proj}_GIT_REPOSITORY}
     GIT_TAG ${${proj}_GIT_TAG}

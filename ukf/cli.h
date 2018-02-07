@@ -1,3 +1,4 @@
+#include "ukf_exports.h"
 #include "tractography.h"
 
-UKFTRACTOGRAPHYLIB_EXPORT int ukf_parse_cli(int argc, char** argv, UKFSettings& s);
+UKFCLILIB_EXPORTS int ukf_parse_cli(int argc, char** argv, UKFSettings& s);

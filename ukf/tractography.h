@@ -86,7 +86,7 @@ struct UKFSettings {
  * \class Tractography
  * \brief This class performs the tractography and saves each step.
 */
-class UKFTRACTOGRAPHYLIB_EXPORT Tractography
+class UKFBASELIB_EXPORTS Tractography
 {
 
 friend class vtkSlicerInteractiveUKFLogic;

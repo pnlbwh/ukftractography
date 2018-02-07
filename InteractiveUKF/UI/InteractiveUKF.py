@@ -10,7 +10,7 @@ import unittest
 # InteractiveUKF
 #
 
-def showMissingDataWarning(self):
+def showMissingDataWarning():
   qt.QMessageBox(qt.QMessageBox.Warning,
                  "Error: missing inputs",
                  "Please select all inputs before proceeding").exec_()
@@ -43,15 +43,11 @@ class InteractiveUKF(ScriptedLoadableModule):
 # InteractiveUKFWidget
 #
 
+# helper class for cleaner multi-operation blocks on a single node.
 class It():
-  def __init__(self, node):
-    self.node = node
-
-  def __enter__(self):
-    return self.node
-
-  def __exit__(self, type, value, traceback):
-    return False
+  def __init__(self, node): self.node = node
+  def __enter__(self): return self.node
+  def __exit__(self, type, value, traceback): return False
 
 class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:

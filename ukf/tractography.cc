@@ -42,7 +42,7 @@
 // TODO implement this switch
 #include "config.h"
 
-UKFTRACTOGRAPHYLIB_EXPORT unsigned int countH=0;
+UKFBASELIB_EXPORTS unsigned int countH=0;
 
 // Local forward declaration of callback type.
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);

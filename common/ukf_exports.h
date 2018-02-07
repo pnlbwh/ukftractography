@@ -19,13 +19,26 @@
 #ifndef __UKFExport_h
 #define __UKFExport_h
 
+
 #if defined(WIN32) && !defined(UKF_STATIC)
- #if defined(UKF_EXPORTS)
-  #define UKFTRACTOGRAPHYLIB_EXPORT __declspec( dllexport )
+ #if defined(UKFBase_EXPORTS)
+  #define UKFBASELIB_EXPORTS __declspec( dllexport )
  #else
-  #define UKFTRACTOGRAPHYLIB_EXPORT __declspec( dllimport )
+  #define UKFBASELIB_EXPORTS __declspec( dllimport )
  #endif
 #else
- #define UKFTRACTOGRAPHYLIB_EXPORT
+ #define UKFBASELIB_EXPORTS
 #endif
+
+#if defined(WIN32) && !defined(UKF_STATIC)
+ #if defined(UKFCLI_EXPORTS)
+  #define UKFCLILIB_EXPORTS __declspec( dllexport )
+ #else
+  #define UKFCLILIB_EXPORTS __declspec( dllimport )
+ #endif
+#else
+ #define UKFCLILIB_EXPORTS
+#endif
+
+
 #endif

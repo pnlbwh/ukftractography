@@ -23,7 +23,7 @@ extern int countH;
 
 extern "C" {
 
-UKFTRACTOGRAPHYLIB_EXPORT int ModuleEntryPoint(int argc, char **argv)
+UKFCLILIB_EXPORTS int ModuleEntryPoint(int argc, char **argv)
 {
   UKFSettings ukf_settings;
 

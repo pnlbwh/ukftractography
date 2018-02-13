@@ -301,10 +301,6 @@ void vtkSlicerInteractiveUKFLogic::set_stoppingThreshold(double val) {
   if (!g_tracto) return;
   g_tracto->_mean_signal_min = val;
 }
-void vtkSlicerInteractiveUKFLogic::set_numTensor(size_t val) {
-  if (!g_tracto) return;
-  g_tracto->_num_tensors = val;
-}
 void vtkSlicerInteractiveUKFLogic::set_stepLength(double val) {
   if (!g_tracto) return;
   g_tracto->_stepLength = val;
@@ -314,8 +310,20 @@ void vtkSlicerInteractiveUKFLogic::set_recordLength(double val) {
   g_tracto->_steps_per_record = val/g_tracto->_stepLength;
 }
 
+// these calls invalidate the model and must call UpdateFilterModelType()
+void vtkSlicerInteractiveUKFLogic::set_numTensor(size_t val) {
+  if (!g_tracto) return;
+  g_tracto->_num_tensors = val;
+  g_tracto->UpdateFilterModelType();
+}
 void vtkSlicerInteractiveUKFLogic::set_noddi(bool val) {
   if (!g_tracto) return;
   g_tracto->_noddi = val;
+  g_tracto->UpdateFilterModelType();
 }
 
+void vtkSlicerInteractiveUKFLogic::set_freeWater(bool val) {
+  if (!g_tracto) return;
+  g_tracto->_free_water = val;
+  g_tracto->UpdateFilterModelType();
+}

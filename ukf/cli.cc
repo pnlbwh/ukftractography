@@ -71,8 +71,6 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   // If sigmaSignal is not set minimum of voxel size is used for interpolation
   ukfPrecisionType SIGMA_SIGNAL = sigmaSignal;
 
-  bool simpleTensorModel = !fullTensorModel;
-
   // HANDLE ERRORNOUS INPUT
   if (dwiFile.empty() || maskFile.empty() || tracts.empty()) {
     std::cout << "Error! Must indicate DWI data, mask and tracts output files!" << std::endl << std::endl ;
@@ -110,7 +108,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   }
 
   // SETTING THE DEFAULT PARAMETERS
-  std::string strModel = simpleTensorModel ? "simple model" : "full model";
+  std::string strModel = fullTensorModel ? "full model" : "simple model";
   std::string strFreeWater = freeWater ? " with free water estimation" : "";
 
   std::cout << "Using the " << numTensor << "T " << strModel << strFreeWater << ". Setting the default parameters accordingly:\n";
@@ -154,7 +152,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     } else if (numTensor == 1) {
         ukf_setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
     } else {
-      if (!simpleTensorModel) {
+      if (fullTensorModel) {
         ukf_setAndTell(l_Qm, 0.002, "Qm");//l_Qm = 0.002;
       } else {
         ukf_setAndTell(l_Qm, 0.001, "Qm");//l_Qm = 0.001; was 0.003, changed to 0.001 for new Interp3Signal
@@ -190,7 +188,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     if (numTensor == 1) {
       ukf_setAndTell(l_Rs, 0.01, "Rs");//l_Rs = 0.02;
     } else {
-      if (!simpleTensorModel) {
+      if (fullTensorModel) {
         ukf_setAndTell(l_Rs, 0.01, "Rs");// = 0.01;
       } else {
         ukf_setAndTell(l_Rs, 0.02, "Rs");//was l_Rs = 0.015;for old Interp3Signal
@@ -254,56 +252,6 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     std::cout << "* seedsPerVoxel: " << seedsPerVoxel << std::endl;
   }
 
-  // Initialize the tractography object.
-  Tractography::model_type filter_model_type = Tractography::_1T;
-
-  if (noddi){
-    // TODO refactor this is terrible
-    if (numTensor == 1){
-      std::cout << "Using NODDI 1-Fiber model." << std::endl;
-      filter_model_type = Tractography::_1T_FW; // same vtk writer can be used
-    } else if (numTensor == 2){
-      std::cout << "Using NODDI 2-Fiber model." << std::endl;
-      filter_model_type = Tractography::_2T_FW; // same vtk writer can be used
-    }
-  } else if (numTensor == 1) {
-    if (simpleTensorModel && !freeWater) {
-      std::cout << "Using 1-tensor simple model." << std::endl;
-      filter_model_type = Tractography::_1T;
-    } else if (simpleTensorModel && freeWater) {
-      std::cout << "Using 1-tensor simple model with free water estimation." << std::endl;
-      filter_model_type = Tractography::_1T_FW;
-    } else if (!simpleTensorModel && !freeWater) {
-      std::cout << "Using 1-tensor full model." << std::endl;
-      filter_model_type = Tractography::_1T_FULL;
-    } else if (!simpleTensorModel && freeWater) {
-      std::cout << "Using 1-tensor full model with free water estimation." << std::endl;
-      filter_model_type = Tractography::_1T_FW_FULL;
-    }
-  } else if (numTensor == 2) {
-    if (simpleTensorModel && !freeWater) {
-      std::cout << "Using 2-tensor simple model." << std::endl;
-      filter_model_type = Tractography::_2T;
-    } else if (simpleTensorModel && freeWater) {
-      std::cout << "Using 2-tensor simple model with free water estimation." << std::endl;
-      filter_model_type = Tractography::_2T_FW;
-    } else if (!simpleTensorModel && !freeWater) {
-      std::cout << "Using 2-tensor full model." << std::endl;
-      filter_model_type = Tractography::_2T_FULL;
-    } else if (!simpleTensorModel && freeWater) {
-      std::cout << "Using 2-tensor full model with free water estimation." << std::endl;
-      filter_model_type = Tractography::_2T_FW_FULL;
-    }
-  } else if (numTensor == 3) {
-    if (simpleTensorModel) {
-      std::cout << "Using 3-tensor simple model." << std::endl;
-      filter_model_type = Tractography::_3T;
-    } else {
-      std::cout << "Using 3-tensor full model." << std::endl;
-      filter_model_type = Tractography::_3T_FULL;
-    }
-  }
-
   // initializing settings
   //UKFSettings& s -- from function argument
     {
@@ -327,7 +275,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     s.seeds_per_voxel = seedsPerVoxel;
     s.min_branching_angle = l_minBranchingAngle;
     s.max_branching_angle = l_maxBranchingAngle;
-    s.is_full_model = !simpleTensorModel;
+    s.is_full_model = fullTensorModel;
     s.free_water = freeWater;
     s.noddi = noddi;
     s.stepLength = l_stepLength;
@@ -348,8 +296,6 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     s.sigma_signal = SIGMA_SIGNAL;
     s.sigma_mask = SIGMA_MASK;
     s.min_radius = MIN_RADIUS;
-
-    s.filter_model_type = filter_model_type;
 
     s.output_file = tracts;
     s.output_file_with_second_tensor = tractsWithSecondTensor;

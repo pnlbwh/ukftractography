@@ -66,7 +66,6 @@ struct UKFSettings {
   ukfPrecisionType min_radius;
   ukfPrecisionType full_brain_mean_signal_min;
   size_t num_threads;
-  int filter_model_type; // TODO refactor
 
   /*
   *  TODO refactor
@@ -166,14 +165,9 @@ public:
   void Follow1T(const int thread_id, const SeedPointInfo& seed, UKFFiber& fiber);
 
   /*
-  * Set filter model type
-  */
-  void SetFilterModelType(model_type m);
-
-  /*
   * Update filter model type
   */
-  void UpdateFilterModelType() { this->SetFilterModelType(this->_filter_model_type); }
+  void UpdateFilterModelType();
 
 
   /**

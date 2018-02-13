@@ -70,6 +70,7 @@ public:
   void set_stepLength(double val);
   void set_recordLength(double val);
   void set_noddi(bool val);
+  void set_freeWater(bool val);
 
 protected:
   vtkSlicerInteractiveUKFLogic();

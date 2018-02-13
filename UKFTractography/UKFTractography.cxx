@@ -67,8 +67,7 @@ UKFCLILIB_EXPORTS int ModuleEntryPoint(int argc, char **argv)
       itkGenericExceptionMacro(<< "::LoadFiles failed with unknown error.");
       }
 
-    // set filter model TODO: refactor?
-    tract->SetFilterModelType((Tractography::model_type)ukf_settings.filter_model_type);
+    tract->UpdateFilterModelType();
 
     // Run the tractography.
     writeStatus = tract->Run();

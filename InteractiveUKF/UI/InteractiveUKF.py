@@ -66,7 +66,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.fileDialog = None
 
 
-    # Instantiate and connect widgets ...
+    # Instantiate and connect widgets
     #
 
     self.tabFrame = qt.QTabWidget(self.parent)
@@ -97,12 +97,14 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
         cliw.layout().removeWidget(w)
         w.hide()
 
-    with It(slicer.util.findChildren(cliw, text="Tensor Model (default)")[0]) as w:
-      w.collapsed = True
-
-    #
-    # Finished customizing
-    ######################
+    with It(slicer.util.findChildren(cliw, text="UKF Tractography", className="ctkCollapsibleButton")[0]) as w:
+      with It(slicer.util.findChildren(w, text="IO", className="ctkCollapsibleButton")[0]) as iow:
+        w.layout().removeWidget(iow)
+        w.parent().layout().addWidget(iow)
+        w.parent().layout().removeWidget(w)
+        w.parent().layout().addStretch(1)
+        w.hide()
+        self.ioSelector = iow
 
     ######################
 
@@ -113,10 +115,19 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.fiberBundleSelector = slicer.util.findChild(cliw, "tracts")
     self.maskSelector = slicer.util.findChild(cliw, "maskFile")
 
-    # add widget to tab frame
+    # add Setup widget to tab frame
     self.tabFrame.addTab(self.cliWidget, "Setup")
 
-    # Interactor frame
+    # Add "Next" button
+    with It(qt.QPushButton(self.parent)) as w:
+      w.text = "Next step: Interact"
+      w.setStyleSheet("background-color: lightgray")
+      self.ioSelector.layout().addItem(
+        qt.QSpacerItem(0, 10, qt.QSizePolicy.Expanding, qt.QSizePolicy.Fixed))
+      self.ioSelector.layout().addWidget(w)
+      w.connect('clicked(bool)', lambda: self.tabFrame.setCurrentIndex(1))
+
+    # add Interact widget to tab frame
     self.interactFrame = qt.QFrame(self.parent)
     self.interactFrame.setLayout(qt.QVBoxLayout())
     self.tabFrame.addTab(self.interactFrame, "Interact")
@@ -176,14 +187,23 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       self.c_Qm = findChild(w, "Qm")
       self.c_recordLength = findChild(w, "recordLength")
       self.c_recordLength.setValue(2)
+
       # TODO numThread?
       # TODO maxTract, NMSE
 
     # Move tensor options frame to interactor
     with It(slicer.util.findChildren(cliw, text="Tensor Model (default)")[0]) as w:
+      findChild(w, "recordFA").setChecked(False)
+      findChild(w, "recordTrace").setChecked(False)
+      findChild(w, "recordFreeWater").setChecked(False)
+      findChild(w, "recordTensors").setChecked(False)
+
+      self.c_useFreeWater = findChild(w, "freeWater")
       self.tractTensorOpts = w
+
       cliw.layout().removeWidget(w)
       self.optsFrame.layout().addWidget(w)
+      w.collapsed = True
 
     # Move NODDI options frame to interactor
     with It(slicer.util.findChildren(cliw, text="NODDI Model")[0]) as w:
@@ -191,6 +211,10 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       cliw.layout().removeWidget(w)
       self.optsFrame.layout().addWidget(w)
       self.c_noddi = findChild(w, "noddi")
+
+    #
+    # Finished customizing
+    ######################
 
     # Event handling
     self.tabFrame.connect('currentChanged(int)', self.onTabChanged)
@@ -231,6 +255,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.c_numTensor.connect('valueChanged()', self.on_numTensor)
     self.c_stepLength.connect('valueChanged(double)', self.on_stepLength)
     self.c_noddi.connect('stateChanged(int)', self.on_noddi)
+    self.c_useFreeWater.connect('stateChanged(int)', self.on_freeWater)
 
 
   def disableSeeding(self):
@@ -246,6 +271,8 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.c_Qm.disconnect('valueChanged(double)', self.on_Qm)
     self.c_recordLength.disconnect('valueChanged(double)', self.on_recordLength)
     self.c_noddi.disconnect('stateChanged(int)', self.on_noddi)
+    self.c_useFreeWater.disconnect('stateChanged(int)', self.on_freeWater)
+
 
     self.disableInteraction()
 
@@ -358,7 +385,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     self.rerunSeeding()
 
   def on_numTensor(self):
-    bg = self.c_numTensors.children()[0]
+    bg = self.c_numTensor.children()[0]
     val = bg.checkedButton().text
     self.logic.set_numTensor(int(val))
     self.rerunSeeding()
@@ -384,6 +411,11 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       self.logic.set_noddi(True)
     else:
       self.logic.set_noddi(False)
+    self.rerunSeeding()
+
+  def on_freeWater(self, value):
+    if not self.logic: return
+    self.logic.set_freeWater(value)
     self.rerunSeeding()
 
 #on_seedsPerVoxel

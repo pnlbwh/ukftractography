@@ -54,7 +54,7 @@ Tractography::Tractography(UKFSettings s) :
     _ukf(0, NULL),
     _model(NULL),
 
-    _filter_model_type((model_type)s.filter_model_type),
+    _filter_model_type(Tractography::_1T),
     _output_file(s.output_file),
     _output_file_with_second_tensor(s.output_file_with_second_tensor),
     _outputPolyData(NULL),
@@ -84,8 +84,8 @@ Tractography::Tractography(UKFSettings s) :
     _seeding_threshold(s.seeding_threshold),
     _num_tensors(s.num_tensors),
     _seeds_per_voxel(s.seeds_per_voxel),
-    _cos_theta_min(s.min_branching_angle),
-    _cos_theta_max(s.max_branching_angle),
+    _cos_theta_min(std::cos(DegToRad(s.min_branching_angle))),
+    _cos_theta_max(std::cos(DegToRad(s.max_branching_angle))),
     _is_full_model(s.is_full_model),
     _free_water(s.free_water),
     _stepLength(s.stepLength),
@@ -105,9 +105,84 @@ Tractography::Tractography(UKFSettings s) :
     debug(false)
     // end initializer list
 {
-  if( _cos_theta_max != ukfZero && _cos_theta_max <= _cos_theta_min )
+}
+
+Tractography::~Tractography()
+{
+  if( _signal_data )
     {
-    std::cout << "Maximum branching angle must be greater than " << _cos_theta_min << " degrees." << std::endl;
+    delete _signal_data;
+    }
+  if (this->_model)
+  {
+    delete this->_model; // TODO smartpointer
+  }
+}
+
+void Tractography::UpdateFilterModelType()
+{
+  if (!this->_signal_data)
+    {
+    return;
+    }
+
+  if (this->_model) {
+    delete this->_model; // TODO smartpointer
+  }
+
+  Tractography::model_type _filter_model_type = Tractography::_1T;
+  bool simpleTensorModel = !(_is_full_model);
+
+  if (_noddi){
+    // TODO refactor this is terrible
+    if (_num_tensors == 1){
+      std::cout << "Using NODDI 1-Fiber model." << std::endl;
+      _filter_model_type = Tractography::_1T_FW; // same vtk writer can be used
+    } else if (_num_tensors == 2){
+      std::cout << "Using NODDI 2-Fiber model." << std::endl;
+      _filter_model_type = Tractography::_2T_FW; // same vtk writer can be used
+    }
+  } else if (_num_tensors == 1) {
+    if (simpleTensorModel && !_free_water) {
+      std::cout << "Using 1-tensor simple model." << std::endl;
+      _filter_model_type = Tractography::_1T;
+    } else if (simpleTensorModel && _free_water) {
+      std::cout << "Using 1-tensor simple model with free water estimation." << std::endl;
+      _filter_model_type = Tractography::_1T_FW;
+    } else if (!simpleTensorModel && !_free_water) {
+      std::cout << "Using 1-tensor full model." << std::endl;
+      _filter_model_type = Tractography::_1T_FULL;
+    } else if (!simpleTensorModel && _free_water) {
+      std::cout << "Using 1-tensor full model with free water estimation." << std::endl;
+      _filter_model_type = Tractography::_1T_FW_FULL;
+    }
+  } else if (_num_tensors == 2) {
+    if (simpleTensorModel && !_free_water) {
+      std::cout << "Using 2-tensor simple model." << std::endl;
+      _filter_model_type = Tractography::_2T;
+    } else if (simpleTensorModel && _free_water) {
+      std::cout << "Using 2-tensor simple model with free water estimation." << std::endl;
+      _filter_model_type = Tractography::_2T_FW;
+    } else if (!simpleTensorModel && !_free_water) {
+      std::cout << "Using 2-tensor full model." << std::endl;
+      _filter_model_type = Tractography::_2T_FULL;
+    } else if (!simpleTensorModel && _free_water) {
+      std::cout << "Using 2-tensor full model with free water estimation." << std::endl;
+      _filter_model_type = Tractography::_2T_FW_FULL;
+    }
+  } else if (_num_tensors == 3) {
+    if (simpleTensorModel) {
+      std::cout << "Using 3-tensor simple model." << std::endl;
+      _filter_model_type = Tractography::_3T;
+    } else {
+      std::cout << "Using 3-tensor full model." << std::endl;
+      _filter_model_type = Tractography::_3T_FULL;
+    }
+  }
+
+  if( (_cos_theta_max != ukfOne) && (_cos_theta_max <= _cos_theta_min) )
+    {
+    std::cout << "Maximum branching angle must be greater than " << RadToDeg(_cos_theta_min) << " degrees." << std::endl;
     throw;
     }
 
@@ -119,13 +194,10 @@ Tractography::Tractography(UKFSettings s) :
 
   if (_noddi) {
     if (_record_fa || _record_trace || _record_free_water || _record_tensors) {
-        std::cout << "recordFA, recordTrace, recordFreeWater, recordTensors parameters can only be used with tensor models\n";
+        std::cout << "recordFA, recordTrace, record_free_water, recordTensors parameters can only be used with tensor models\n";
         throw;
     }
   }
-
-  _cos_theta_max = std::cos( DegToRad( _cos_theta_max ) );
-  _cos_theta_min = std::cos( DegToRad( _cos_theta_min ) );
 
   // Double check branching.
   _is_branching = _num_tensors > 1 && _cos_theta_max < ukfOne;  // The branching is enabled when the maximum branching
@@ -190,63 +262,43 @@ Tractography::Tractography(UKFSettings s) :
     {
     weights_on_tensors.norm(); // Normalize for all to add up to 1.
     }
-}
 
-Tractography::~Tractography()
-{
-  if( _signal_data )
-    {
-    delete _signal_data;
-    }
-  if (this->_model)
-  {
-    delete this->_model; // TODO smartpointer
-  }
-}
-
-void Tractography::SetFilterModelType(Tractography::model_type m)
-{
-  if (this->_model) {
-    delete this->_model; // TODO smartpointer
-  }
-
-  this->_filter_model_type = m;
 
   // TODO refactor this NODDI switch
-  if (m == _1T_FW && this->_noddi && this->_num_tensors == 1) {
+  if (_filter_model_type == _1T_FW && this->_noddi && this->_num_tensors == 1) {
     _model = new NODDI1F(Qm, Qkappa, Qvic, Rs, this->weights_on_tensors, this->_noddi);
   }
-  else if (m == _2T_FW && this->_noddi && this->_num_tensors == 2) {
+  else if (_filter_model_type == _2T_FW && this->_noddi && this->_num_tensors == 2) {
     _model = new NODDI2F(Qm, Qkappa, Qvic, Rs, this->weights_on_tensors, this->_noddi);
   }
-  else if (m == _1T) {
+  else if (_filter_model_type == _1T) {
     _model = new Simple1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _1T_FW) {
+  else if (_filter_model_type == _1T_FW) {
     _model = new Simple1T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
   }
-  else if (m == _1T_FULL) {
+  else if (_filter_model_type == _1T_FULL) {
     _model = new Full1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _1T_FW_FULL) {
+  else if (_filter_model_type == _1T_FW_FULL) {
     _model = new Full1T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _2T) {
+  else if (_filter_model_type == _2T) {
     _model = new Simple2T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _2T_FW) {
+  else if (_filter_model_type == _2T_FW) {
     _model = new Simple2T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
   }
-  else if (m == _2T_FULL) {
+  else if (_filter_model_type == _2T_FULL) {
     _model = new Full2T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _2T_FW_FULL) {
+  else if (_filter_model_type == _2T_FW_FULL) {
     _model = new Full2T_FW(Qm, Ql, Qw, Rs, this->weights_on_tensors, this->_free_water, D_ISO);
   }
-  else if (m == _3T) {
+  else if (_filter_model_type == _3T) {
     _model = new Simple3T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
-  else if (m == _3T_FULL) {
+  else if (_filter_model_type == _3T_FULL) {
     _model = new Full3T(Qm, Ql, Rs, this->weights_on_tensors, this->_free_water);
   }
   else {

@@ -71,7 +71,6 @@ set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   ${ITK_EXTERNAL_NAME}
   VTK
   teem
-  Eigen
   Boost
   )
 

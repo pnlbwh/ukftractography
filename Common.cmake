@@ -29,8 +29,8 @@ find_package(Git REQUIRED)
 # Eigen version settings
 #-----------------------------------------------------------------------------
 
-set(Eigen_GIT_REPOSITORY "${git_protocol}://github.com/BRAINSia/eigen.git")
-set(Eigen_GIT_TAG "032b16f4853237fb70f20d9028ee0ad5d543b0b2")
+set(Eigen_GIT_REPOSITORY "${git_protocol}://github.com/eigenteam/eigen-git-mirror")
+set(Eigen_GIT_TAG "3.3.4")
 
 #-----------------------------------------------------------------------------
 # Build option(s)

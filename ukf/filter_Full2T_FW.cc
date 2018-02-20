@@ -24,11 +24,9 @@ void Full2T_FW::F(ukfMatrixType& X) const
     }
 }
 
-extern unsigned int countH;
 void Full2T_FW::H(const   ukfMatrixType& X,
                   ukfMatrixType& Y) const
 {
-  countH++;
   assert(_signal_dim > 0);
   assert(X.rows() == static_cast<unsigned int>(_state_dim) &&
          (X.cols() == static_cast<unsigned int>(2 * _state_dim + 1) ||

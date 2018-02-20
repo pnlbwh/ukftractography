@@ -30,15 +30,4 @@
  #define UKFBASELIB_EXPORTS
 #endif
 
-#if defined(WIN32) && !defined(UKF_STATIC)
- #if defined(UKFCLI_EXPORTS)
-  #define UKFCLILIB_EXPORTS __declspec( dllexport )
- #else
-  #define UKFCLILIB_EXPORTS __declspec( dllimport )
- #endif
-#else
- #define UKFCLILIB_EXPORTS
-#endif
-
-
 #endif

@@ -2,6 +2,7 @@
 #define FULL2T_FW_H__
 
 #include "filter_model.h"
+
 /**
  * \struct Full2T_FW
  * \brief Full 2-Tensor model with free water

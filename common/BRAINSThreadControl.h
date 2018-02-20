@@ -4,6 +4,7 @@
 #include <itksys/SystemTools.hxx>
 #include <sstream>
 #include "itkMultiThreader.h"
+#include "ukf_exports.h"
 
 namespace BRAINSUtils
 {
@@ -24,7 +25,7 @@ namespace BRAINSUtils
  * the behavior of all other programs
  * in slicer.
  */
-class StackPushITKDefaultNumberOfThreads
+class UKFBASELIB_EXPORTS StackPushITKDefaultNumberOfThreads
 {
 public:
   StackPushITKDefaultNumberOfThreads(const int desiredCount);

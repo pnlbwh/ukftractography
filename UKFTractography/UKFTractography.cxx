@@ -19,11 +19,10 @@
 #include "vtkNew.h"
 #include "vtkPolyData.h"
 
-extern int countH;
 
 extern "C" {
 
-UKFCLILIB_EXPORTS int ModuleEntryPoint(int argc, char **argv)
+int ModuleEntryPoint(int argc, char **argv)
 {
   UKFSettings ukf_settings;
 
@@ -71,7 +70,6 @@ UKFCLILIB_EXPORTS int ModuleEntryPoint(int argc, char **argv)
 
     // Run the tractography.
     writeStatus = tract->Run();
-    std::cout << "H count = " << countH << std::endl;
     }
   catch( itk::ExceptionObject & err )
     {

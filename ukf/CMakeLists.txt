@@ -23,7 +23,7 @@ add_custom_target(_GEN_GITVER ALL
     )
 
 # dummy output so we can depend on it in the external macro, because CMake.
-add_custom_command(OUTPUT ${UKF_GITVER_FILE}
+add_custom_command(OUTPUT "${UKF_GITVER_FILE}"
                    DEPENDS _GEN_GITVER)
 
 #-----------------------------------------------------------------------------

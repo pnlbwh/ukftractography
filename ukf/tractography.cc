@@ -42,8 +42,6 @@
 // TODO implement this switch
 #include "config.h"
 
-UKFBASELIB_EXPORTS unsigned int countH=0;
-
 // Local forward declaration of callback type.
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
 

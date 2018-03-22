@@ -23,7 +23,7 @@
 
 // Slicer includes
 #include <vtkMRMLScene.h>
-#include <vtkNRRDWriter.h>
+#include <vtkTeemNRRDWriter.h>
 #include <vtkMRMLModelNode.h>
 #include <vtkMRMLModelDisplayNode.h>
 #include <vtkMRMLMarkupsFiducialNode.h>
@@ -159,7 +159,7 @@ void vtkSlicerInteractiveUKFLogic
 }
 
 //---------------------------------------------------------------------------
-void setWriterProps(vtkMRMLVolumeNode* vol, vtkNRRDWriter* writer)
+void setWriterProps(vtkMRMLVolumeNode* vol, vtkTeemNRRDWriter* writer)
 {
   vtkNew<vtkMatrix4x4> ijkToRas;
   vol->GetIJKToRASMatrix(ijkToRas.GetPointer());
@@ -178,7 +178,7 @@ void vtkSlicerInteractiveUKFLogic::SetDataNodes(
   assert(maskNode->IsA("vtkMRMLScalarVolumeNode"));
   assert(fbNode->IsA("vtkMRMLFiberBundleNode"));
 
-  vtkNew<vtkNRRDWriter> writer;
+  vtkNew<vtkTeemNRRDWriter> writer;
 
   writer->SetInputConnection(dwiNode->GetImageDataConnection());
   setWriterProps((vtkMRMLVolumeNode*)dwiNode, writer.GetPointer());
@@ -198,13 +198,13 @@ void vtkSlicerInteractiveUKFLogic::SetDataNodes(
 
   Nrrd* nrrd = (Nrrd*)writer->MakeNRRD();
 
-  vtkNew<vtkNRRDWriter> maskWriter;
+  vtkNew<vtkTeemNRRDWriter> maskWriter;
   maskWriter->SetInputConnection(maskNode->GetImageDataConnection());
   setWriterProps((vtkMRMLVolumeNode*)maskNode, maskWriter.GetPointer());
 
   Nrrd* mask = (Nrrd*)maskWriter->MakeNRRD();
 
-  vtkNew<vtkNRRDWriter> seedWriter;
+  vtkNew<vtkTeemNRRDWriter> seedWriter;
   Nrrd* seed = NULL;
   if (seedNode)
     {

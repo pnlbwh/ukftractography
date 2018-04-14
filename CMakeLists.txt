@@ -1,21 +1,20 @@
 cmake_minimum_required(VERSION 3.5)
+#-----------------------------------------------------------------------------
+# Enable C++11
+#-----------------------------------------------------------------------------
+set(_msg "Setting C++ standard")
+message(STATUS "${_msg}")
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+message(STATUS "${_msg} - C++${CMAKE_CXX_STANDARD}")
 
 #-----------------------------------------------------------------------------
 set(UKF_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
-include(ExternalProject)
-include(ExternalProjectDependency)
-
-#-----------------------------------------------------------------------------
-if(APPLE)
-  # Note: By setting CMAKE_OSX_* variables before any enable_language() or project() calls,
-  #       we ensure that the bitness, and C++ standard library will be properly detected.
-  include(SlicerBlockSetCMakeOSXVariables)
-  mark_as_superbuild(
-    VARS CMAKE_OSX_ARCHITECTURES:STRING CMAKE_OSX_SYSROOT:PATH CMAKE_OSX_DEPLOYMENT_TARGET:STRING
-    ALL_PROJECTS
-    )
-endif()
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
+include(SlicerBlockSetCMakeOSXVariables)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)
 
@@ -78,12 +77,12 @@ mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
 #-----------------------------------------------------------------------------
 
 if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
-  project(SuperBuild_${PRIMARY_PROJECT_NAME})  # <- NOTE: Project name for pre-requisites is different form main project
+  project(SuperBuild_${PRIMARY_PROJECT_NAME} LANGUAGES C CXX)  # <- NOTE: Project name for pre-requisites is different form main project
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
   return()
 else()
   # Building against Slicer
-  project(${PRIMARY_PROJECT_NAME})             # <- NOTE: Here is the main project name setting
+  project(${PRIMARY_PROJECT_NAME} LANGUAGES C CXX)             # <- NOTE: Here is the main project name setting
   include("${CMAKE_CURRENT_SOURCE_DIR}/${PRIMARY_PROJECT_NAME}.cmake")
   return()
 endif()

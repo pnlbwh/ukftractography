@@ -1,11 +1,25 @@
-#-----------------------------------------------------------------------------
-# Update CMake module path
-#------------------------------------------------------------------------------
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
+include(ExternalProject)
+include(ExternalProjectDependency)
 
 #-----------------------------------------------------------------------------
-enable_language(C)
-enable_language(CXX)
+if(APPLE)
+  # Note: By setting CMAKE_OSX_* variables before any enable_language() or project() calls,
+  #       we ensure that the bitness, and C++ standard library will be properly detected.
+  mark_as_superbuild(
+    VARS
+      CMAKE_OSX_ARCHITECTURES:STRING
+      CMAKE_OSX_SYSROOT:PATH
+      CMAKE_OSX_DEPLOYMENT_TARGET:STRING
+    ALL_PROJECTS
+    )
+endif()
+mark_as_superbuild(
+    VARS
+      CMAKE_CXX_STANDARD:STRING
+      CMAKE_CXX_STANDARD_REQUIRED:BOOL
+      CMAKE_CXX_EXTENSIONS:BOOL
+    ALL_PROJECTS
+)
 
 #-----------------------------------------------------------------------------
 enable_testing()
@@ -13,6 +27,7 @@ include(CTest)
 
 include(CMakeDependentOption)
 include(ExternalProjectDependency)
+include(ExternalProjectGenerateProjectDescription)
 
 #-----------------------------------------------------------------------------
 # Git protocol option

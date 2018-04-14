@@ -22,7 +22,7 @@ endif()
 
 if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
-  set(EXTERNAL_PROJECT_OPTIONAL_ARGS)
+  set(EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS)
 
   set(CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG)
   if(CTEST_USE_LAUNCHERS)
@@ -35,24 +35,41 @@ if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     # supports detection of release and debug libraries. Specifying only
     # the release variable is enough to ensure the variable PNG_LIBRARY
     # is internally set if the project is built either in Debug or Release.
-    list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
+    list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
       -DPNG_LIBRARY_RELEASE:FILEPATH=${PNG_LIBRARY}
       )
   else()
-    list(APPEND EXTERNAL_PROJECT_OPTIONAL_ARGS
+    list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
       -DPNG_LIBRARY:FILEPATH=${PNG_LIBRARY}
       )
   endif()
 
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY
+    "${EP_GIT_PROTOCOL}://github.com/Slicer/teem"
+    QUIET
+    )
+
+  ExternalProject_SetIfNotDefined(
+    ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
+    "e4746083c0e1dc0c137124c41eca5d23adf73bfa"
+    QUIET
+    )
+
+  set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
+  set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
-    GIT_REPOSITORY "${git_protocol}://github.com/Slicer/teem"
-    GIT_TAG slicer-2015-04-14-r6245
-    SOURCE_DIR teem
-    BINARY_DIR teem-build
-    CMAKE_ARGS -Wno-dev --no-warn-unused-cli
+    GIT_REPOSITORY "${${CMAKE_PROJECT_NAME}_${proj}_GIT_REPOSITORY}"
+    GIT_TAG "${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}"
+    SOURCE_DIR ${EP_SOURCE_DIR}
+    BINARY_DIR ${EP_BINARY_DIR}
     CMAKE_CACHE_ARGS
-      ${COMMON_EXTERNAL_PROJECT_ARGS}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+      # Not needed -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
       -DBUILD_TESTING:BOOL=OFF
       -DBUILD_SHARED_LIBS:BOOL=OFF
       ${CMAKE_PROJECT_INCLUDE_EXTERNAL_PROJECT_ARG}
@@ -69,13 +86,15 @@ if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       -DTeem_VTK_MANGLE:BOOL=OFF ## NOT NEEDED FOR EXTERNAL ZLIB outside of vtk
       -DPNG_PNG_INCLUDE_DIR:PATH=${PNG_INCLUDE_DIR}
       -DTeem_PNG_DLLCONF_IPATH:PATH=${VTK_DIR}/Utilities
-      ${EXTERNAL_PROJECT_OPTIONAL_ARGS}
+      ${EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS}
     INSTALL_COMMAND ""
     DEPENDS
       ${${proj}_DEPENDENCIES}
     )
 
-  set(Teem_DIR ${CMAKE_BINARY_DIR}/teem-build)
+  ExternalProject_GenerateProjectDescription_Step(${proj})
+
+  set(Teem_DIR ${EP_BINARY_DIR})
 
   #-----------------------------------------------------------------------------
   # Launcher setting specific to build tree

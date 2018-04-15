@@ -70,6 +70,7 @@ set(ITK_EXTERNAL_NAME ITKv${ITK_VERSION_MAJOR})
 set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   SlicerExecutionModel
   ${ITK_EXTERNAL_NAME}
+  Eigen
   VTK
   teem
   Boost

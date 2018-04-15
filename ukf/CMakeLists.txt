@@ -87,8 +87,10 @@ add_library(${PROJECT_NAME}
             SHARED
             ${MODULE_SRCS})
 
-# Add ordering dependency on Eigen external project target.
-add_dependencies(UKFBase EP_Eigen)
+if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  # Add ordering dependency on Eigen external project target.
+  add_dependencies(UKFBase Eigen)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
                            ${MODULE_INCLUDE_DIRECTORIES})

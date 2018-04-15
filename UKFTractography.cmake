@@ -45,7 +45,7 @@ else()
     set (Eigen_DIR ${CMAKE_CURRENT_BINARY_DIR}/Eigen)
     set (Eigen_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/Eigen-build)
     ExternalProject_Add(
-      EP_Eigen
+      Eigen
       DOWNLOAD_DIR      ${Eigen_DIR}
       SOURCE_DIR        ${Eigen_DIR}
       BINARY_DIR        ${Eigen_BUILD_DIR}

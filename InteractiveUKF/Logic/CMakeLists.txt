@@ -2,7 +2,7 @@ project(vtkSlicer${MODULE_NAME}ModuleLogic)
 
 set(KIT ${PROJECT_NAME})
 
-set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_MODULE_LOGIC_EXPORT")
+set(${KIT}_EXPORT_DIRECTIVE "VTK_SLICER_${MODULE_NAME_UPPER}_LOGIC_EXPORT")
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_SOURCE_DIR}/../../ukf
@@ -21,6 +21,9 @@ set(${KIT}_TARGET_LIBRARIES
   )
 
 #-----------------------------------------------------------------------------
+# This should have been set by UseSlicer...
+set(BUILD_SHARED_LIBS ON)
+
 SlicerMacroBuildModuleLogic(
   NAME ${KIT}
   EXPORT_DIRECTIVE ${${KIT}_EXPORT_DIRECTIVE}

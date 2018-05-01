@@ -42,7 +42,7 @@ class vtkMRMLCommandLineModuleNode;
 class vtkTrivialProducer;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
-class VTK_SLICER_INTERACTIVEUKF_MODULE_LOGIC_EXPORT
+class VTK_SLICER_INTERACTIVEUKF_LOGIC_EXPORT
   vtkSlicerInteractiveUKFLogic : public vtkSlicerModuleLogic
 {
 public:

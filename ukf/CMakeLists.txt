@@ -37,6 +37,7 @@ generateclp(UKFCLI_SOURCE "${UKF_SRC}/UKFTractography/UKFTractography.xml")
 
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
+  "${UKF_GITVER_FILE}"
   ../common/BRAINSThreadControl.cxx
   utilities.cc
   cli.cc
@@ -62,7 +63,6 @@ set(MODULE_SRCS
   filter_Simple2T.cc
   filter_Simple2T_FW.cc
   filter_Simple3T.cc
-  "${UKF_GITVER_FILE}"
   UKFTractographyCLP.h
   )
 
@@ -83,23 +83,33 @@ set(MODULE_TARGET_LIBRARIES
   ${SlicerExecutionModel_LIBRARIES}
   )
 
-add_library(${PROJECT_NAME}
-            SHARED
-            ${MODULE_SRCS})
+add_library(
+    ${PROJECT_NAME} SHARED
+    ${MODULE_SRCS})
 
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   # Add ordering dependency on Eigen external project target.
   add_dependencies(UKFBase Eigen)
+
+  set(CMAKE_INSTALL_RUNTIME_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR}")
+  set(CMAKE_INSTALL_LIBRARY_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
+  set(CMAKE_INSTALL_ARCHIVE_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
 endif()
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-                           ${MODULE_INCLUDE_DIRECTORIES})
+target_include_directories(
+    ${PROJECT_NAME} PUBLIC
+    ${MODULE_INCLUDE_DIRECTORIES})
 
-target_link_libraries(${PROJECT_NAME} ${MODULE_TARGET_LIBRARIES})
+target_link_libraries(
+    ${PROJECT_NAME} ${MODULE_TARGET_LIBRARIES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_BIN_DIR}"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${Slicer_QTLOADABLEMODULES_LIB_DIR}"
-    )
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+
+install(
+    TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION "${CMAKE_INSTALL_RUNTIME_DESTINATION}" COMPONENT RuntimeLibraries
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBRARY_DESTINATION}" COMPONENT RuntimeLibraries
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_ARCHIVE_DESTINATION}" COMPONENT Development)

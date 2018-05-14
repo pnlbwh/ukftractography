@@ -1,5 +1,5 @@
-get_filename_component(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/../../ukf/Data/Input REALPATH)
-get_filename_component(BASELINE ${CMAKE_CURRENT_SOURCE_DIR}/../../ukf/Data/Baseline REALPATH)
+get_filename_component(INPUT ${CMAKE_CURRENT_SOURCE_DIR}/../../UKFTractography/Data/Input REALPATH)
+get_filename_component(BASELINE ${CMAKE_CURRENT_SOURCE_DIR}/../../UKFTractography/Data/Baseline REALPATH)
 set(TESTING_RESULTS_DIRECTORY "${CMAKE_BINARY_DIR}/Testing/Temporary")
 
 file(MAKE_DIRECTORY ${TESTING_RESULTS_DIRECTORY}) ## Need to generate the directory for writing the temporary test outputs to

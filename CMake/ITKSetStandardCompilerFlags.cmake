@@ -107,7 +107,7 @@ function(check_compiler_warning_flags c_warning_flags_var cxx_warning_flags_var)
     -Winvalid-pch
     -Wno-format-nonliteral
     -Wpointer-arith
-    # -Wshadow For gcc 4.6 series this generates so many warnings in common cases that it becomes unweildy. gcc 4.8 changed the behavior back.
+    -Wshadow
 
     -Wunused
     -Wwrite-strings

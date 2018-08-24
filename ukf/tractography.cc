@@ -22,8 +22,15 @@
 #include "utilities.h"
 #include "vtk_writer.h"
 #include "thread.h"
-#include "itkMultiThreader.h"
 #include "math_utilities.h"
+
+
+#if ITK_VERSION_MAJOR >= 5
+  #include "itkMultiThreaderBase.h"
+  #include "itkPlatformMultiThreader.h"
+#else
+  #include "itkMultiThreader.h"
+#endif
 
 // filters
 #include "filter_Full1T.h"
@@ -734,8 +741,11 @@ bool Tractography::Run()
 
     WorkDistribution work_distribution = GenerateWorkDistribution(num_of_threads,
                                                                   static_cast<int>(primary_seed_infos.size() ) );
-
+#if ITK_VERSION_MAJOR >= 5
+    itk::PlatformMultiThreader::Pointer threader = itk::PlatformMultiThreader::New();
+#else
     itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
+#endif
     threader->SetNumberOfThreads( num_of_threads );
     thread_struct str;
     str.tractography_ = this;
@@ -797,7 +807,11 @@ bool Tractography::Run()
     str.branching_seed_info_vec = new std::vector<std::vector<SeedPointInfo> >(num_of_threads);
     str.branching_seed_affiliation_vec = new std::vector<std::vector<BranchingSeedAffiliation> >(num_of_threads);
 
+#if ITK_VERSION_MAJOR >= 5
+    itk::PlatformMultiThreader::Pointer threader = itk::PlatformMultiThreader::New();
+#else
     itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
+#endif
     threader->SetNumberOfThreads( num_of_threads );
 
     for( int i = 0; i < num_of_threads; i++ )

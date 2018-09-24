@@ -83,11 +83,13 @@ set(MODULE_TARGET_LIBRARIES
     ${SlicerExecutionModel_LIBRARIES}
     )
 
-add_library(
-    ${PROJECT_NAME} SHARED
-    ${MODULE_SRCS})
-
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+
+    add_library(
+        ${PROJECT_NAME} SHARED
+        ${MODULE_SRCS})
+
+
     # Add ordering dependency on Eigen external project target.
     add_dependencies(UKFBase Eigen)
 
@@ -104,6 +106,13 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
       RUNTIME DESTINATION "${CMAKE_INSTALL_RUNTIME_DESTINATION}" COMPONENT RuntimeLibraries
       LIBRARY DESTINATION "${CMAKE_INSTALL_LIBRARY_DESTINATION}" COMPONENT RuntimeLibraries
       ARCHIVE DESTINATION "${CMAKE_INSTALL_ARCHIVE_DESTINATION}" COMPONENT Development)
+
+else()
+    # NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION})
+
+    add_library(
+        ${PROJECT_NAME} STATIC
+        ${MODULE_SRCS})
 
 endif()
 

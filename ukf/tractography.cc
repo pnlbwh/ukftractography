@@ -3,6 +3,15 @@
  * \brief implementation of tractography.h
 */
 
+#include <itkMacro.h> // needed for ITK_VERSION_MAJOR
+#if ITK_VERSION_MAJOR >= 5
+#include "itkMultiThreaderBase.h"
+#include "itkPlatformMultiThreader.h"
+#else
+
+#include "itkMultiThreader.h"
+#endif
+
 // System includes
 #include <fstream>
 #include <iostream>
@@ -24,14 +33,6 @@
 #include "thread.h"
 #include "math_utilities.h"
 
-
-#if ITK_VERSION_MAJOR >= 5
-  #include "itkMultiThreaderBase.h"
-  #include "itkPlatformMultiThreader.h"
-#else
-  #include "itkMultiThreader.h"
-#endif
-
 // filters
 #include "filter_Full1T.h"
 #include "filter_Full1T_FW.h"
@@ -47,22 +48,18 @@
 #include "filter_Simple3T.h"
 
 // TODO implement this switch
-#include "config.h"
-
-// Local forward declaration of callback type.
-ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
+//#include "config.h"
 
 Tractography::Tractography(UKFSettings s) :
 
     // begin initializer list
 
     _ukf(0, NULL),
-    _model(NULL),
 
-    _filter_model_type(Tractography::_1T),
+
+
     _output_file(s.output_file),
     _output_file_with_second_tensor(s.output_file_with_second_tensor),
-    _outputPolyData(NULL),
 
     _record_fa    (s.record_fa),
     _record_nmse  (s.record_nmse),
@@ -96,9 +93,6 @@ Tractography::Tractography(UKFSettings s) :
     _stepLength(s.stepLength),
     _steps_per_record(s.recordLength/s.stepLength),
     _labels(s.labels),
-    _writeBinary(true),
-    _writeCompressed(true),
-    _num_threads(s.num_threads),
 
     Qm(s.Qm),
     Ql(s.Ql),
@@ -107,6 +101,14 @@ Tractography::Tractography(UKFSettings s) :
     Qvic(s.Qvic),
     Rs(s.Rs),
 
+    _writeBinary(true),
+    _writeCompressed(true),
+
+    _num_threads(s.num_threads),
+    _outputPolyData(NULL),
+
+    _filter_model_type(Tractography::_1T),
+    _model(NULL),
     debug(false)
     // end initializer list
 {
@@ -743,10 +745,13 @@ bool Tractography::Run()
                                                                   static_cast<int>(primary_seed_infos.size() ) );
 #if ITK_VERSION_MAJOR >= 5
     itk::PlatformMultiThreader::Pointer threader = itk::PlatformMultiThreader::New();
+    threader->SetNumberOfWorkUnits( num_of_threads );
+    std::vector<std::thread> vectorOfThreads;
+    vectorOfThreads.reserve(num_of_threads);
 #else
     itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
-#endif
     threader->SetNumberOfThreads( num_of_threads );
+#endif
     thread_struct str;
     str.tractography_ = this;
     str.seed_infos_ = &primary_seed_infos;
@@ -758,10 +763,24 @@ bool Tractography::Run()
     str.branching_seed_affiliation_vec = new std::vector<std::vector<BranchingSeedAffiliation> >(num_of_threads);
     for( int i = 0; i < num_of_threads; i++ )
       {
+#if ITK_VERSION_MAJOR >= 5
+      vectorOfThreads.push_back( std::thread(ThreadCallback, i, &str ) );
+#else
       threader->SetMultipleMethod(i, ThreadCallback, &str);
+#endif
       }
     threader->SetGlobalDefaultNumberOfThreads(num_of_threads);
+#if ITK_VERSION_MAJOR >= 5
+    for(auto & li : vectorOfThreads )
+      {
+      if(li.joinable())
+        {
+        li.join();
+        }
+      }
+#else
     threader->MultipleMethodExecute();
+#endif
 
     // Unpack the branch seeds and their affiliation
     int num_branch_seeds = 0;
@@ -809,17 +828,34 @@ bool Tractography::Run()
 
 #if ITK_VERSION_MAJOR >= 5
     itk::PlatformMultiThreader::Pointer threader = itk::PlatformMultiThreader::New();
+    threader->SetNumberOfWorkUnits( num_of_threads );
+    std::vector<std::thread> vectorOfThreads;
+    vectorOfThreads.reserve(num_of_threads);
 #else
     itk::MultiThreader::Pointer threader = itk::MultiThreader::New();
-#endif
     threader->SetNumberOfThreads( num_of_threads );
+#endif
+
 
     for( int i = 0; i < num_of_threads; i++ )
       {
+#if ITK_VERSION_MAJOR >= 5
+      vectorOfThreads.push_back( std::thread( ThreadCallback, i, &str ) );
+#else
       threader->SetMultipleMethod(i, ThreadCallback, &str);
+#endif
       }
+#if ITK_VERSION_MAJOR >= 5
+    for(auto & li : vectorOfThreads )
+    {
+      if(li.joinable())
+      {
+      li.join();
+      }
+    }
+#else
     threader->MultipleMethodExecute();
-
+#endif
     }
 
   std::vector<UKFFiber> fibers;

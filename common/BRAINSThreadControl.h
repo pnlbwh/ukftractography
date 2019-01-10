@@ -3,7 +3,14 @@
 
 #include <itksys/SystemTools.hxx>
 #include <sstream>
+
+#include <itkMacro.h> // needed for ITK_VERSION_MAJOR
+#if ITK_VERSION_MAJOR < 5
 #include "itkMultiThreader.h"
+#else
+#include "itkMultiThreaderBase.h"
+#endif
+
 #include "ukf_exports.h"
 
 namespace BRAINSUtils
@@ -28,7 +35,7 @@ namespace BRAINSUtils
 class UKFBASELIB_EXPORTS StackPushITKDefaultNumberOfThreads
 {
 public:
-  StackPushITKDefaultNumberOfThreads(const int desiredCount);
+  explicit StackPushITKDefaultNumberOfThreads(const int desiredCount);
   ~StackPushITKDefaultNumberOfThreads();
 protected:
   StackPushITKDefaultNumberOfThreads();                                                 // Purposefully not implemented

@@ -1,7 +1,13 @@
 #include "tractography.h"
 #include "utilities.h"
 
+#include <itkMacro.h> // needed for ITK_VERSION_MAJOR
+#if ITK_VERSION_MAJOR < 5
 #include "itkMultiThreader.h"
+#else
+#include "itkMultiThreaderBase.h"
+#endif
+
 #include "UKFTractographyCLP.h"
 
 // TODO make configurable?

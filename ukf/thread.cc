@@ -5,7 +5,15 @@
 */
 
 #include "thread.h"
+#include <itkMacro.h> // needed for ITK_VERSION_MAJOR
+#if ITK_VERSION_MAJOR < 5
 #include "itkMultiThreader.h"
+#else
+#include "itkMultiThreaderBase.h"
+#include <thread>
+#include "itkPlatformMultiThreader.h"
+#endif
+
 #include <cassert>
 
 WorkDistribution GenerateWorkDistribution(const int num_threads, const int total_num_works)
@@ -56,12 +64,20 @@ WorkDistribution GenerateWorkDistribution(const int num_threads, const int total
 // }
 // }
 
+#if ITK_VERSION_MAJOR >= 5
+itk::ITK_THREAD_RETURN_TYPE ThreadCallback(int id_, thread_struct * str)
+#else
 ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg)
+#endif
 {
+
+#if ITK_VERSION_MAJOR >= 5
+#else
   int id_ =
     ( (itk::MultiThreader::ThreadInfoStruct *)( arg ) )->ThreadID;
   thread_struct *str =
     (thread_struct *)( ( (itk::MultiThreader::ThreadInfoStruct *)( arg ) )->UserData );
+#endif
   WorkDistribution                                     work_distribution = *str->work_distribution;
   WorkList &                                           work_list_ = work_distribution[id_];
   std::vector<UKFFiber>&                                  output_fiber_group_ = *str->output_fiber_group_;
@@ -90,6 +106,9 @@ ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg)
 
     assert(branching_seed_info_vec[id_].size() == branching_seed_affiliation_vec[id_].size() );
     }
-
+#if ITK_VERSION_MAJOR >= 5
+  return itk::ITK_THREAD_RETURN_DEFAULT_VALUE;
+#else
   return ITK_THREAD_RETURN_VALUE;
+#endif
 }

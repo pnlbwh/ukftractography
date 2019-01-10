@@ -9,6 +9,10 @@
 
 #include <vector>
 #include "tractography.h"
+#include "itkMacro.h"
+#if ITK_VERSION_MAJOR >= 5
+#include "itkMultiThreaderBase.h"
+#endif
 
 typedef std::vector<int>      WorkList;
 typedef std::vector<WorkList> WorkDistribution;
@@ -38,5 +42,11 @@ struct thread_struct
   std::vector<std::vector<SeedPointInfo> >* branching_seed_info_vec;
   std::vector<std::vector<BranchingSeedAffiliation> >* branching_seed_affiliation_vec;
   };
+
+#if ITK_VERSION_MAJOR >= 5
+extern itk::ITK_THREAD_RETURN_TYPE ThreadCallback(int id_, thread_struct *str);
+#else
+extern ITK_THREAD_RETURN_TYPE ThreadCallback(void *arg);
+#endif
 
 #endif

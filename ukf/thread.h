@@ -10,8 +10,11 @@
 #include <vector>
 #include "tractography.h"
 #include "itkMacro.h"
-#if ITK_VERSION_MAJOR >= 5
-#include "itkMultiThreaderBase.h"
+
+#if ITK_VERSION_MAJOR < 5
+#  include "itkMultiThreader.h"
+#else
+#  include "itkMultiThreaderBase.h"
 #endif
 
 typedef std::vector<int>      WorkList;

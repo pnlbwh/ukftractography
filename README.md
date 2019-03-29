@@ -70,8 +70,9 @@ Basic Usage
 
 ### 1. As Command Line Module
 
-The executable will be called 'UKFTractography', and can be found in the bin directory
-of your build folder. 
+The executable is called 'UKFTractography'. It can be found in:
+    
+    <build-dir>/UKFTractography-build/UKFTractography/bin/
 
 In order to see all options run.
 

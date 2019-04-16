@@ -249,7 +249,11 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
        vtkMRMLModelNode* fbNode,
        vtkMRMLMarkupsFiducialNode* markupsNode)
 {
+#ifdef NDEBUG
+  (void)fbNode;
+#else
   assert(fbNode->IsA("vtkMRMLFiberBundleNode"));
+#endif
   assert(markupsNode->IsA("vtkMRMLMarkupsNode"));
   assert(dwiNode->IsA("vtkMRMLDiffusionWeightedVolumeNode"));
 
@@ -276,7 +280,7 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
   RASxfmIJK->SetMatrix(RAStoIJK.GetPointer());
   stdVec_t seeds;
 
-  for (size_t i = 0; i < markupsNode->GetNumberOfFiducials(); i++)
+  for (int i = 0; i < markupsNode->GetNumberOfFiducials(); i++)
     {
     vec3_t pos_in, pos_out;
     markupsNode->GetNthFiducialPosition(i, pos_in.data());

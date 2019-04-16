@@ -24,26 +24,7 @@ if(DEFINED VTK_SOURCE_DIR AND NOT EXISTS ${VTK_SOURCE_DIR})
   message(FATAL_ERROR "VTK_SOURCE_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-
 if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
-
-  set(CUSTOM_BUILD_COMMAND)
-  if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
-    # Use $(MAKE) as build command to propagate parallel make option
-    set(CUSTOM_BUILD_COMMAND BUILD_COMMAND "$(MAKE)")
-    set(make_command_definition -DMAKE_COMMAND=$(MAKE) )
-  else()
-    set(make_command_definition -DMAKE_COMMAND=${CMAKE_MAKE_PROGRAM})
-  endif()
-
-  if(UNIX)
-    configure_file(SuperBuild/VTK_build_step.cmake.in
-      ${CMAKE_CURRENT_BINARY_DIR}/VTK_build_step.cmake
-      @ONLY)
-    set(CUSTOM_BUILD_COMMAND BUILD_COMMAND ${CMAKE_COMMAND}
-      ${make_command_definition}
-      -P ${CMAKE_CURRENT_BINARY_DIR}/VTK_build_step.cmake)
-  endif()
 
   set(${proj}_GIT_REPOSITORY "${git_protocol}://www.vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
   set(${proj}_GIT_TAG "b86da7eef93f75c4a7f524b3644523ae6b651bc4")  # VTK v7.1.1
@@ -57,7 +38,6 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-build
     GIT_REPOSITORY "${${proj}_GIT_REPOSITORY}"
     GIT_TAG ${${proj}_GIT_TAG}
-    ${CUSTOM_BUILD_COMMAND}
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
       ${COMMON_EXTERNAL_PROJECT_ARGS}

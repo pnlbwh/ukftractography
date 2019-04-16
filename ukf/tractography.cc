@@ -1627,8 +1627,8 @@ void Tractography::Step2T(const int thread_id,
   covariance = covariance_new;
 
   const vec3_t old_dir = m1;   // Direction in last step
-  ukfPrecisionType fa_tensor_1;
-  ukfPrecisionType fa_tensor_2;
+  ukfPrecisionType fa_tensor_1 = ukfZero;
+  ukfPrecisionType fa_tensor_2 = ukfZero;
   if(_noddi)
     {
     initNormalized(m1, state[0], state[1], state[2]);

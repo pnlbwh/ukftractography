@@ -8,4 +8,4 @@ foreach(libname BLAS/SRC/libblas.a
   configure_file(${clapack_prefix}/${libname}
     ${prereqs}/lib/${fname} COPYONLY)
 
-endforeach(libname)
+endforeach()

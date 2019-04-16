@@ -64,12 +64,11 @@ mark_as_superbuild(
 #------------------------------------------------------------------------------
 # ${PRIMARY_PROJECT_NAME} dependency list
 #------------------------------------------------------------------------------
-set(ITK_EXTERNAL_NAME ITKv${ITK_VERSION_MAJOR})
 
 ## for i in SuperBuild/*; do  echo $i |sed 's/.*External_\([a-zA-Z]*\).*/\1/g'|fgrep -v cmake|fgrep -v Template; done|sort -u
 set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   SlicerExecutionModel
-  ${ITK_EXTERNAL_NAME}
+  ITK
   Eigen
   VTK
   teem
@@ -184,7 +183,6 @@ mark_as_superbuild(
   VARS
     BUILD_EXAMPLES:BOOL
     BUILD_TESTING:BOOL
-    ITK_VERSION_MAJOR:STRING
   )
 
 #-----------------------------------------------------------------------------

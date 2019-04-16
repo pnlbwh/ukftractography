@@ -1,6 +1,5 @@
 
-set(proj ITKv4)
-set(ITK_EXTERNAL_NAME ${proj})
+set(proj ITK)
 # Set dependency list
 set(${proj}_DEPENDENCIES "zlib")
 

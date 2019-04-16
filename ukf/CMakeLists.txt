@@ -31,9 +31,9 @@ add_custom_command(OUTPUT "${UKF_GITVER_FILE}"
 find_package(SlicerExecutionModel REQUIRED)
 include(${GenerateCLP_USE_FILE})
 
-set(UKFCLI_CXX "${UKF_SRC}/UKFTractography/UKFTractography.cxx")
+set(UKFCLI_CXX "${UKFTractography_SOURCE_DIR}/UKFTractography/UKFTractography.cxx")
 # TODO remove
-generateclp(UKFCLI_SOURCE "${UKF_SRC}/UKFTractography/UKFTractography.xml")
+generateclp(UKFCLI_SOURCE "${UKFTractography_SOURCE_DIR}/UKFTractography/UKFTractography.xml")
 
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS

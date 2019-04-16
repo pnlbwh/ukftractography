@@ -27,8 +27,6 @@ endif()
 
 if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
-  set(BUILD_SHARED_LIBS OFF)
-
   set(CUSTOM_BUILD_COMMAND)
   if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
     # Use $(MAKE) as build command to propagate parallel make option

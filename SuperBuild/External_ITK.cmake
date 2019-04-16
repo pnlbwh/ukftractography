@@ -38,16 +38,6 @@ if(NOT DEFINED ITK_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       )
   endif()
 
-  if(${CMAKE_PROJECT_NAME}USE_PYTHONQT)
-    # XXX Ensure python executable used for ITKModuleHeaderTest
-    #     is the same as Slicer.
-    #     This will keep the sanity check implemented in SlicerConfig.cmake
-    #     quiet.
-    list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
-      -DPYTHON_EXECUTABLE:PATH=${PYTHON_EXECUTABLE}
-      )
-  endif()
-
   set(EP_SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj})
   set(EP_BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
 

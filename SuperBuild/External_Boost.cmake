@@ -51,7 +51,6 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     URL ${${proj}_URL}
     URL_MD5 ${${proj}_MD5}
     SOURCE_DIR ${BOOST_SOURCE_DIR}
-    ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
     CONFIGURE_COMMAND ${CMAKE_COMMAND}
     ${CLANG_ARG}
     -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/${proj}

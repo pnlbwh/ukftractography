@@ -12,7 +12,7 @@
 
 NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
   : ISignalData(sigma_signal, sigma_mask),
-    _data(NULL), _data_nrrd(NULL), _seed_data(NULL), _mask_data(NULL)
+    _data(NULL), _seed_data(NULL), _mask_data(NULL), _data_nrrd(NULL)
 {
 
 }

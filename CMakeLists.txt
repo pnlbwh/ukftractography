@@ -35,13 +35,12 @@ set(PRIMARY_PROJECT_NAME UKFTractography)
 #-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
+# Extension meta-information
+#-----------------------------------------------------------------------------
 set(EXTENSION_NAME  UKFTractography)
 set(EXTENSION_HOMEPAGE "http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage")
 set(EXTENSION_CATEGORY "Diffusion.Tractography")
 set(EXTENSION_CONTRIBUTORS "Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Ryan Eckbo, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin")
-set(EXTENSION_MAJOR_VERSION 1)
-set(EXTENSION_MINOR_VERSION 2)
-set(EXTENSION_PATCH_VERSION 0)
 set(EXTENSION_STATUS "Alpha")
 set(EXTENSION_DEPENDS "NA")
 set(EXTENSION_DESCRIPTION "This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. ")

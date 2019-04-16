@@ -91,7 +91,7 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
 
 
     # Add ordering dependency on Eigen external project target.
-    add_dependencies(UKFBase Eigen)
+    add_dependencies(UKFBase UKF-Eigen)
 
     set(CMAKE_INSTALL_RUNTIME_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR}")
     set(CMAKE_INSTALL_LIBRARY_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")

@@ -115,24 +115,13 @@ SETIFEMPTYANDMKDIR(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bi
 # Augment compiler flags
 #-------------------------------------------------------------------------
 include(ITKSetStandardCompilerFlags)
-#------------------------------------------------------------------------
+
 # Check for clang -- c++11 necessary for boost
-#------------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER}${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang.*")
   set(CMAKE_COMPILER_IS_CLANGXX ON CACHE BOOL "compiler is CLang")
 endif()
 
-#-----------------------------------------------------------------------------
-# Add needed flag for gnu on linux like enviroments to build static common libs
-# suitable for linking with shared object libs.
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-  if(NOT "${CMAKE_CXX_FLAGS}" MATCHES "-fPIC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  endif()
-  if(NOT "${CMAKE_C_FLAGS}" MATCHES "-fPIC")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-  endif()
-endif()
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${ITK_REQUIRED_C_FLAGS}" CACHE STRING "CMake C Flags" FORCE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ITK_REQUIRED_CXX_FLAGS}" CACHE STRING "CMake CXX Flags" FORCE)

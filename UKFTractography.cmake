@@ -99,6 +99,7 @@ endif()
 
 #-----------------------------------------------------------------------------
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
+  include(${Slicer_EXTENSION_GENERATE_CONFIG})
   include(${Slicer_EXTENSION_CPACK})
 endif()
 

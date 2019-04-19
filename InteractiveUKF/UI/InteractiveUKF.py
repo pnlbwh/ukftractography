@@ -1,3 +1,4 @@
+from __future__ import print_function
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import findChild, findChildren
@@ -44,7 +45,7 @@ class InteractiveUKF(ScriptedLoadableModule):
 #
 
 # helper class for cleaner multi-operation blocks on a single node.
-class It():
+class It(object):
   def __init__(self, node): self.node = node
   def __enter__(self): return self.node
   def __exit__(self, type, value, traceback): return False
@@ -319,7 +320,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
       return
 
     else:
-      raise(Exception("Unhandled tab!"))
+      raise Exception("Unhandled tab!")
 
 
   def onMarkupsChanged(self, markupNode, event):
@@ -329,7 +330,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     else:
       self.runSeeding(markupNode)
       return
-    raise(Exception("No onMarkupsChanged action available!"))
+    raise Exception("No onMarkupsChanged action available!")
 
 
   def onSeedingCBChanged(self, state):
@@ -356,7 +357,7 @@ class InteractiveUKFWidget(ScriptedLoadableModuleWidget):
     fbnode = self.fiberBundleSelector.currentNode()
 
     if markupNode == None or fbnode == None:
-      raise(Exception("No markup node selected in InteractiveUKF.py:runSeeding(...)"))
+      raise Exception("No markup node selected in InteractiveUKF.py:runSeeding(...)")
       return
 
     self.logic.RunFromSeedPoints(dwi, fbnode, markupNode)

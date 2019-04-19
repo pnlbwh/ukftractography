@@ -769,7 +769,12 @@ bool Tractography::Run()
       threader->SetMultipleMethod(i, ThreadCallback, &str);
 #endif
       }
+#if ITK_VERSION_MAJOR < 5
     threader->SetGlobalDefaultNumberOfThreads(num_of_threads);
+#else
+    itk::MultiThreaderBase::SetGlobalDefaultNumberOfThreads(num_of_threads);
+#endif
+
 #if ITK_VERSION_MAJOR >= 5
     for(auto & li : vectorOfThreads )
       {

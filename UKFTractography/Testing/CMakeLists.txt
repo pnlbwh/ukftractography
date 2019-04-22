@@ -392,7 +392,7 @@ if (${UKFTractography_BUILD_SLICER_EXTENSION})
       NAME ${testname}
       COMMAND ${Slicer_LAUNCHER_EXECUTABLE}
       ${UKF_UNITTEST_LIB_PATHS}
-      --python-code "data_dir = '${INPUT}'; execfile('${UKF_TEST_CLI_PYTHON}')"
+      --python-code "data_dir = '${INPUT}'; exec(open('${UKF_TEST_CLI_PYTHON}').read(), globals())"
       )
     set_tests_properties(${testname} PROPERTIES TIMEOUT 180)
 

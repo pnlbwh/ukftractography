@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-PROJECT(UKFBase)
+project(UKFBase)
 
 #-----------------------------------------------------------------------------
 # Generate cpp with git commit hash
@@ -31,9 +31,9 @@ add_custom_command(OUTPUT "${UKF_GITVER_FILE}"
 find_package(SlicerExecutionModel REQUIRED)
 include(${GenerateCLP_USE_FILE})
 
-set(UKFCLI_CXX "${UKF_SRC}/UKFTractography/UKFTractography.cxx")
+set(UKFCLI_CXX "${UKFTractography_SOURCE_DIR}/UKFTractography/UKFTractography.cxx")
 # TODO remove
-generateclp(UKFCLI_SOURCE "${UKF_SRC}/UKFTractography/UKFTractography.xml")
+generateclp(UKFCLI_SOURCE "${UKFTractography_SOURCE_DIR}/UKFTractography/UKFTractography.xml")
 
 #-----------------------------------------------------------------------------
 set(MODULE_SRCS
@@ -91,7 +91,7 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
 
 
     # Add ordering dependency on Eigen external project target.
-    add_dependencies(UKFBase Eigen)
+    add_dependencies(${PROJECT_NAME} UKF-Eigen)
 
     set(CMAKE_INSTALL_RUNTIME_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_BIN_DIR}")
     set(CMAKE_INSTALL_LIBRARY_DESTINATION "${Slicer_INSTALL_QTLOADABLEMODULES_LIB_DIR}")
@@ -106,6 +106,8 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
       RUNTIME DESTINATION "${CMAKE_INSTALL_RUNTIME_DESTINATION}" COMPONENT RuntimeLibraries
       LIBRARY DESTINATION "${CMAKE_INSTALL_LIBRARY_DESTINATION}" COMPONENT RuntimeLibraries
       ARCHIVE DESTINATION "${CMAKE_INSTALL_ARCHIVE_DESTINATION}" COMPONENT Development)
+
+    set_property(GLOBAL APPEND PROPERTY Slicer_TARGETS ${PROJECT_NAME})
 
 else()
     # NOT ${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION})

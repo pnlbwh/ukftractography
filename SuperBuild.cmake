@@ -23,19 +23,6 @@ else()
   set(gen "${CMAKE_GENERATOR}")
 endif()
 
-
-# With CMake 2.8.9 or later, the UPDATE_COMMAND is required for updates to occur.
-# For earlier versions, we nullify the update state to prevent updates and
-# undesirable rebuild.
-option(FORCE_EXTERNAL_BUILDS "Force rebuilding of external project (if they are updated)" ON)
-if(CMAKE_VERSION VERSION_LESS 2.8.9 OR NOT FORCE_EXTERNAL_BUILDS)
-  set(cmakeversion_external_update UPDATE_COMMAND)
-  set(cmakeversion_external_update_value "" )
-else()
-  set(cmakeversion_external_update LOG_UPDATE )
-  set(cmakeversion_external_update_value 1)
-endif()
-
 #-----------------------------------------------------------------------------
 set(EXTERNAL_PROJECT_BUILD_TYPE "Release" CACHE STRING "Default build type for support libraries")
 set_property(CACHE EXTERNAL_PROJECT_BUILD_TYPE PROPERTY
@@ -64,12 +51,11 @@ mark_as_superbuild(
 #------------------------------------------------------------------------------
 # ${PRIMARY_PROJECT_NAME} dependency list
 #------------------------------------------------------------------------------
-set(ITK_EXTERNAL_NAME ITKv${ITK_VERSION_MAJOR})
 
 ## for i in SuperBuild/*; do  echo $i |sed 's/.*External_\([a-zA-Z]*\).*/\1/g'|fgrep -v cmake|fgrep -v Template; done|sort -u
 set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
   SlicerExecutionModel
-  ${ITK_EXTERNAL_NAME}
+  ITK
   Eigen
   VTK
   teem
@@ -184,7 +170,6 @@ mark_as_superbuild(
   VARS
     BUILD_EXAMPLES:BOOL
     BUILD_TESTING:BOOL
-    ITK_VERSION_MAJOR:STRING
   )
 
 #-----------------------------------------------------------------------------

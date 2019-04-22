@@ -1,6 +1,5 @@
 
-set(proj ITKv4)
-set(ITK_EXTERNAL_NAME ${proj})
+set(proj ITK)
 # Set dependency list
 set(${proj}_DEPENDENCIES "zlib")
 
@@ -36,16 +35,6 @@ if(NOT DEFINED ITK_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     # where long is only 32-bits (msvc)
     set(EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
       -DITK_USE_64BITS_IDS:BOOL=ON
-      )
-  endif()
-
-  if(${CMAKE_PROJECT_NAME}USE_PYTHONQT)
-    # XXX Ensure python executable used for ITKModuleHeaderTest
-    #     is the same as Slicer.
-    #     This will keep the sanity check implemented in SlicerConfig.cmake
-    #     quiet.
-    list(APPEND EXTERNAL_PROJECT_OPTIONAL_CMAKE_CACHE_ARGS
-      -DPYTHON_EXECUTABLE:PATH=${PYTHON_EXECUTABLE}
       )
   endif()
 

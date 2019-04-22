@@ -49,6 +49,13 @@ endif()
 # are searched for if not already found in ``EXTERNAL_PROJECT_DIR``.
 
 #.rst:
+# .. cmake:variable:: EXTERNAL_PROJECT_ADDITIONAL_DIRS
+#
+# If set, this variable represents additional directories in which external project files
+# are searched for if not already found in ``EXTERNAL_PROJECT_DIR`` and
+# ``EXTERNAL_PROJECT_ADDITIONAL_DIR``.
+
+#.rst:
 # .. cmake:variable:: EXTERNAL_PROJECT_FILE_PREFIX
 #
 # This variable describes the prefix of the external project files looked up in
@@ -85,7 +92,7 @@ endif()
 #.rst:
 # .. cmake:variable:: EP_GIT_PROTOCOL
 #
-# The value of this variable is controled by the option ``<SUPERBUILD_TOPLEVEL_PROJECT>_USE_GIT_PROTOCOL``
+# The value of this variable is controlled by the option ``<SUPERBUILD_TOPLEVEL_PROJECT>_USE_GIT_PROTOCOL``
 # automatically defined by including this CMake module. Setting this option allows to update the value of
 # ``EP_GIT_PROTOCOL`` variable.
 #
@@ -458,7 +465,8 @@ function(_sb_get_external_project_arguments proj varname)
     get_property(${proj}_EP_PROPERTY_${property} GLOBAL PROPERTY ${proj}_EP_PROPERTY_${property})
     get_property(${_ALL_PROJECT_IDENTIFIER}_EP_PROPERTY_${property} GLOBAL PROPERTY ${_ALL_PROJECT_IDENTIFIER}_EP_PROPERTY_${property})
     set(_all ${${proj}_EP_PROPERTY_${property}} ${${_ALL_PROJECT_IDENTIFIER}_EP_PROPERTY_${property}})
-    if(_all)
+    list(LENGTH _all _num_properties)
+    if(_num_properties GREATER 0)
       list(APPEND _ep_arguments ${property} ${_all})
     endif()
   endforeach()
@@ -579,6 +587,41 @@ function(_sb_is_optional proj output_var)
   endif()
   set(${output_var} ${optional} PARENT_SCOPE)
 endfunction()
+
+#.rst:
+# .. cmake:function:: ExternalProject_Add_Dependencies
+#
+# .. code-block:: cmake
+#
+#  ExternalProject_Add_Dependencies(<project_name>
+#      DEPENDS <dep1> [<dep2> [...]]
+#    )
+#
+#
+# .. code-block:: cmake
+#
+#  DEPENDS  List of additional dependencies to associat with `<project_name>`.
+#
+macro(ExternalProject_Add_Dependencies project_name)
+  set(options)
+  set(oneValueArgs)
+  set(multiValueArgs DEPENDS)
+  cmake_parse_arguments(_epad "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  # Sanity checks
+  if(x${project_name} STREQUAL xDEPENDS)
+    message(FATAL_ERROR "Argument <project_name> is missing !")
+  endif()
+  if(_epad_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Invalid arguments: ${_epad_UNPARSED_ARGUMENTS}")
+  endif()
+
+  if(NOT _epad_DEPENDS)
+    message(FATAL_ERROR "Argument DEPENDS is missing")
+  endif()
+
+  set_property(GLOBAL PROPERTY SB_${project_name}_ADDITIONAL_DEPENDS ${_epad_DEPENDS})
+endmacro()
 
 #.rst:
 # .. cmake:function:: ExternalProject_Include_Dependencies
@@ -715,6 +758,11 @@ macro(ExternalProject_Include_Dependencies project_name)
     #message("[${project_name}] Setting _sb_SB_VAR with default value '${_sb_SB_VAR}'")
   endif()
 
+  # Try to detect if superbuild variable was improperly passed
+  if("${_sb_SB_VAR}" STREQUAL "_SUPERBUILD")
+    message(FATAL_ERROR "SUPERBUILD_VAR value is incorrectly set to '_SUPERBUILD'")
+  endif()
+
   # Set local variables
   set(_sb_DEPENDS ${${_sb_DEPENDS_VAR}})
   set(_sb_USE_SYSTEM ${${_sb_USE_SYSTEM_VAR}})
@@ -734,6 +782,12 @@ macro(ExternalProject_Include_Dependencies project_name)
   if(${_sb_proj} STREQUAL ${SUPERBUILD_TOPLEVEL_PROJECT} AND NOT DEFINED SB_FIRST_PASS)
     message(STATUS "SuperBuild - First pass")
     set(SB_FIRST_PASS TRUE)
+  endif()
+
+  # Extra dependencies specified using "ExternalProject_Add_Dependencies"
+  get_property(_sb_ADDITIONAL_DEPENDS GLOBAL PROPERTY SB_${_sb_proj}_ADDITIONAL_DEPENDS)
+  if(NOT "x${_sb_ADDITIONAL_DEPENDS}" STREQUAL "x")
+    list(APPEND _sb_DEPENDS ${_sb_ADDITIONAL_DEPENDS})
   endif()
 
   set(_sb_REQUIRED_DEPENDS)
@@ -789,15 +843,25 @@ macro(ExternalProject_Include_Dependencies project_name)
   foreach(dep ${_sb_DEPENDS})
     get_property(_included GLOBAL PROPERTY SB_${dep}_FILE_INCLUDED)
     if(NOT _included)
-      # XXX - Refactor - Add a single variable named 'EXTERNAL_PROJECT_DIRS'
       if(EXISTS "${EXTERNAL_PROJECT_DIR}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake")
         include(${EXTERNAL_PROJECT_DIR}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake)
       elseif(EXISTS "${${dep}_FILEPATH}")
+        # Originally implemented to support CTK buildsystem
         include(${${dep}_FILEPATH})
       elseif(EXISTS "${EXTERNAL_PROJECT_ADDITIONAL_DIR}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake")
         include(${EXTERNAL_PROJECT_ADDITIONAL_DIR}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake)
       else()
-        message(FATAL_ERROR "Can't find ${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake")
+        set(_found_ep_cmake FALSE)
+        foreach(_external_project_additional_dir ${EXTERNAL_PROJECT_ADDITIONAL_DIRS})
+          if(EXISTS "${_external_project_additional_dir}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake")
+            include(${_external_project_additional_dir}/${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake)
+            set(_found_ep_cmake TRUE)
+            break()
+          endif()
+        endforeach()
+        if(NOT _found_ep_cmake)
+          message(FATAL_ERROR "Can't find ${EXTERNAL_PROJECT_FILE_PREFIX}${dep}.cmake")
+        endif()
       endif()
       set_property(GLOBAL PROPERTY SB_${dep}_FILE_INCLUDED 1)
     endif()
@@ -958,13 +1022,16 @@ endfunction()
 #
 #  ExternalProject_SetIfNotDefined(<var> <defaultvalue> [OBFUSCATE] [QUIET])
 #
-# The default value is set with:
-#  (1) if set, the value environment variable <var>.
-#  (2) if set, the value of local variable variable <var>.
-#  (3) if none of the above, the value passed as a parameter.
+# If *NOT* already defined, the variable <var> is set with:
+#  (1) the value of the environment variable <var>, if defined.
+#  (2) the value of the local variable variable <var>, if defined.
+#  (3) if none of the above is defined, the <defaultvalue> passed as a parameter.
 #
-# Setting the optional parameter 'OBFUSCATE' will display 'OBFUSCATED' instead of the real value.
-# Setting the optional parameter 'QUIET' will not display any message.
+# Passing the optional parameter 'OBFUSCATE' will display 'OBFUSCATED' instead of the real value.
+# Passing the optional parameter 'QUIET' will not display any message.
+#
+# For convenience, the value of the cache variable named <var> will
+# be displayed if it was set and if QUIET has not been passed.
 macro(ExternalProject_SetIfNotDefined var defaultvalue)
   set(_obfuscate FALSE)
   set(_quiet FALSE)
@@ -996,6 +1063,14 @@ macro(ExternalProject_SetIfNotDefined var defaultvalue)
     endif()
     set(${var} "${defaultvalue}")
   endif()
+  get_property(_is_set CACHE ${var} PROPERTY VALUE SET)
+  if(_is_set AND NOT _quiet)
+    set(_value "${${var}}")
+    if(_obfuscate)
+      set(_value "OBFUSCATED")
+    endif()
+    message(STATUS "Cache variable '${var}' set to '${_value}'")
+  endif()
 endmacro()
 
 #.rst:
@@ -1018,3 +1093,4 @@ function(ExternalProject_AlwaysConfigure proj)
     ALWAYS 1
     )
 endfunction()
+

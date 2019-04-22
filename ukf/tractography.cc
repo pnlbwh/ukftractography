@@ -769,7 +769,12 @@ bool Tractography::Run()
       threader->SetMultipleMethod(i, ThreadCallback, &str);
 #endif
       }
+#if ITK_VERSION_MAJOR < 5
     threader->SetGlobalDefaultNumberOfThreads(num_of_threads);
+#else
+    itk::MultiThreaderBase::SetGlobalDefaultNumberOfThreads(num_of_threads);
+#endif
+
 #if ITK_VERSION_MAJOR >= 5
     for(auto & li : vectorOfThreads )
       {
@@ -1627,8 +1632,8 @@ void Tractography::Step2T(const int thread_id,
   covariance = covariance_new;
 
   const vec3_t old_dir = m1;   // Direction in last step
-  ukfPrecisionType fa_tensor_1;
-  ukfPrecisionType fa_tensor_2;
+  ukfPrecisionType fa_tensor_1 = ukfZero;
+  ukfPrecisionType fa_tensor_2 = ukfZero;
   if(_noddi)
     {
     initNormalized(m1, state[0], state[1], state[2]);

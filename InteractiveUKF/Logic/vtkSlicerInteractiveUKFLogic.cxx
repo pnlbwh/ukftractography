@@ -31,6 +31,14 @@
 #include <vtkMRMLCommandLineModuleNode.h>
 #include <vtkSlicerCLIModuleLogic.h>
 
+// ITK includes
+#include <itkVersion.h>
+#if ITK_VERSION_MAJOR >= 5
+#include <itkMultiThreaderBase.h>
+#else
+#include <itkMultiThreader.h>
+#endif
+
 // VTK includes
 #include <vtkNew.h>
 #include <vtkIntArray.h>
@@ -89,7 +97,11 @@ static int CLILoader(int argc, char** argv)
   //        This implementation is taken from extensive testing of the BRAINSTools
   // (this object will be deleted by RAII and return to original thread count)
   const BRAINSUtils::StackPushITKDefaultNumberOfThreads TempDefaultNumberOfThreadsHolder(ukf_settings.num_threads);
+#if ITK_VERSION_MAJOR >= 5
+  const int actualNumThreadsUsed = itk::MultiThreaderBase::GetGlobalDefaultNumberOfThreads();
+#else
   const int actualNumThreadsUsed = itk::MultiThreader::GetGlobalDefaultNumberOfThreads();
+#endif
   ukf_settings.num_threads = actualNumThreadsUsed;
   {
     std::cout << "Found " << actualNumThreadsUsed << " cores on your system." << std::endl;
@@ -237,7 +249,11 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
        vtkMRMLModelNode* fbNode,
        vtkMRMLMarkupsFiducialNode* markupsNode)
 {
+#ifdef NDEBUG
+  (void)fbNode;
+#else
   assert(fbNode->IsA("vtkMRMLFiberBundleNode"));
+#endif
   assert(markupsNode->IsA("vtkMRMLMarkupsNode"));
   assert(dwiNode->IsA("vtkMRMLDiffusionWeightedVolumeNode"));
 
@@ -264,7 +280,7 @@ void vtkSlicerInteractiveUKFLogic::RunFromSeedPoints
   RASxfmIJK->SetMatrix(RAStoIJK.GetPointer());
   stdVec_t seeds;
 
-  for (size_t i = 0; i < markupsNode->GetNumberOfFiducials(); i++)
+  for (int i = 0; i < markupsNode->GetNumberOfFiducials(); i++)
     {
     vec3_t pos_in, pos_out;
     markupsNode->GetNthFiducialPosition(i, pos_in.data());

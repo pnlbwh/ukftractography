@@ -19,6 +19,14 @@
 #ifndef __UKFExport_h
 #define __UKFExport_h
 
+/** Disable some common warnings in MS VC++ */
+#if defined( _MSC_VER )
+
+// 'identifier' : class 'type' needs to have dll-interface to be used by
+// clients of class 'type2'
+#pragma warning ( disable : 4251 )
+
+#endif
 
 #if defined(WIN32) && !defined(UKF_STATIC)
  #if defined(UKFBase_EXPORTS)

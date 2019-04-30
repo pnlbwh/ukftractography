@@ -7,10 +7,6 @@
 #ifndef LINALG_H_
 #define LINALG_H_
 
-#if defined(WIN32)
-#define hypot _hypot
-#endif
-
 #include <cmath>
 #include "ukf_types.h"
 

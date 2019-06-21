@@ -34,36 +34,45 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 
   ### --- Project specific additions here
   set(Boost_Install_Dir ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install)
-  set(Boost_Configure_Script ${CMAKE_CURRENT_LIST_DIR}/External_Boost_configureboost.cmake)
-  set(Boost_Build_Script ${CMAKE_CURRENT_LIST_DIR}/External_Boost_buildboost.cmake)
+  
+  if(CMAKE_COMPILER_IS_CLANGXX)
+    set(CLANG_ARG -DCMAKE_COMPILER_IS_CLANGXX:BOOL=ON)
+  endif()
 
   ### --- End Project specific additions
-# SVN is too slow SVN_REPOSITORY http://svn.boost.org/svn/boost/trunk
-# SVN is too slow SVN_REVISION -r "82586"
-  set(${proj}_URL http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz )
-  set(${proj}_MD5 93780777cfbf999a600f62883bd54b17 )
   if(CMAKE_COMPILER_IS_CLANGXX)
     set(CLANG_ARG -DCMAKE_COMPILER_IS_CLANGXX:BOOL=ON)
   endif()
   set(BOOST_SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/${proj})
-  ExternalProject_Add(${proj}
-    ${${proj}_EP_ARGS}
-    URL ${${proj}_URL}
-    URL_MD5 ${${proj}_MD5}
-    SOURCE_DIR ${BOOST_SOURCE_DIR}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND}
-    ${CLANG_ARG}
-    -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/${proj}
-    -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir}
-    -P ${Boost_Configure_Script}
-    INSTALL_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND ${CMAKE_COMMAND}
-    -DBUILD_DIR:PATH=${CMAKE_CURRENT_BINARY_DIR}/Boost
-    -DBOOST_INSTALL_DIR:PATH=${Boost_Install_Dir} -P ${Boost_Build_Script}
-  )
-  set(BOOST_ROOT        ${BOOST_SOURCE_DIR})
-  set(BOOST_INCLUDE_DIR ${BOOST_SOURCE_DIR})
+
+  set( Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz")
+  set( Boost_md5 fea771fe8176828fabf9c09242ee8c26 )
+  set( Boost_Bootstrap_Command ./bootstrap.sh )
+  set( Boost_b2_Command ./b2 )
+  
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(Boost_address_model 64)
+else()
+  set(Boost_address_model 32)
+endif()
+
+ ExternalProject_Add(${proj}
+	${${proj}_EP_ARGS}
+	BUILD_IN_SOURCE 1
+	URL ${Boost_url}
+	URL_MD5 ${Boost_md5}
+	UPDATE_COMMAND ""
+	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
+	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static,shared 
+	INSTALL_COMMAND ""
+	)
+
+  set(BOOST_ROOT        ${Boost_Install_Dir})
+  set(BOOST_INCLUDE_DIR ${Boost_Install_Dir}/include)
+  set(Boost_LIBRARY_DIR ${Boost_Install_Dir}/lib)
+  message(STATUS "BOOST_ROOT is " ${BOOST_ROOT})
+  message(STATUS "Boost_LIBRARY_DIR is " ${Boost_LIBRARY_DIR})
+
 else()
   if(${USE_SYSTEM_${extProjName}})
     find_package(${proj} ${${extProjName}_REQUIRED_VERSION} REQUIRED)
@@ -74,4 +83,10 @@ else()
   ExternalProject_Add_Empty(${proj} "${${proj}_DEPENDENCIES}")
 endif()
 
-list(APPEND ${CMAKE_PROJECT_NAME}_SUPERBUILD_EP_VARS ${extProjName}_DIR:PATH)
+mark_as_superbuild(
+  VARS
+    ${extProjName}_DIR:PATH
+  LABELS
+    "FIND_PACKAGE"
+)
+

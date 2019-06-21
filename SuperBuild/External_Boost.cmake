@@ -45,16 +45,49 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
   endif()
   set(BOOST_SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/${proj})
 
-  set( Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz")
-  set( Boost_md5 fea771fe8176828fabf9c09242ee8c26 )
-  set( Boost_Bootstrap_Command ./bootstrap.sh )
-  set( Boost_b2_Command ./b2 )
+  if(UNIX)
+    set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz")
+    set(Boost_md5 fea771fe8176828fabf9c09242ee8c26)
+    set(Boost_Bootstrap_Command ./bootstrap.sh)
+    set(Boost_b2_Command ./b2)
+  else()
+    if(WIN32)
+      set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.zip")
+      set(Boost_md5 a110ebd91a3d2c34c72ace09c92ae50b)
+      set(Boost_Bootstrap_Command bootstrap.bat)
+      set(Boost_b2_Command b2.exe)
+    endif()
+  endif()
+
+  if(MSVC10)
+    list(APPEND Boost_b2_Command toolset=msvc-10.0)
+  elseif(MSVC11)
+    list(APPEND Boost_b2_Command toolset=msvc-11.0)
+  elseif(MSVC12)
+    list(APPEND Boost_b2_Command toolset=msvc-12.0)
+  elseif(MSVC14)
+    list(APPEND Boost_b2_Command toolset=msvc-14.0)
+  elseif(XCODE_VERSION)
+    list(APPEND Boost_b2_Command toolset=clang)
+  elseif(ENV{CC})
+  # CMake apprarently puts the full path of the compiler into CC
+  # The user might specify a non-default gcc compiler through ENV
+    message(STATUS "ENV{CC}=$ENV{CC}")
+    get_filename_component( gccToolset "$ENV{CC}" NAME )
+
+    # see: https://svn.boost.org/trac/boost/ticket/5917
+    string(TOLOWER ${gccToolset} gccToolset)
+    if(gccToolset STREQUAL "cc")
+      set(gccToolset "gcc")
+    endif()
+    list(APPEND Boost_b2_Command toolset=${gccToolset})
+  endif()
   
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(Boost_address_model 64)
-else()
-  set(Boost_address_model 32)
-endif()
+    set(Boost_address_model 64)
+  else()
+    set(Boost_address_model 32)
+  endif()
 
  ExternalProject_Add(${proj}
 	${${proj}_EP_ARGS}
@@ -63,15 +96,19 @@ endif()
 	URL_MD5 ${Boost_md5}
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
-	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static,shared 
+	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static,shared
 	INSTALL_COMMAND ""
 	)
 
-  set(BOOST_ROOT        ${Boost_Install_Dir})
-  set(BOOST_INCLUDE_DIR ${Boost_Install_Dir}/include)
+  if(NOT WIN32)
+    set(BOOST_ROOT        ${Boost_Install_Dir})
+    set(BOOST_INCLUDE_DIR ${Boost_Install_Dir}/include)
+  else()
+    set(BOOST_ROOT        ${Boost_Install_Dir})
+    set(Boost_INCLUDE_DIR ${Boost_Install_Dir}/include/boost-1_70)
+  endif()
+
   set(Boost_LIBRARY_DIR ${Boost_Install_Dir}/lib)
-  message(STATUS "BOOST_ROOT is " ${BOOST_ROOT})
-  message(STATUS "Boost_LIBRARY_DIR is " ${Boost_LIBRARY_DIR})
 
 else()
   if(${USE_SYSTEM_${extProjName}})

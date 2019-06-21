@@ -54,31 +54,6 @@ function(check_cxx_compiler_flags cxx_flag_var)
   set(${cxx_flag_var} "${local_cxx_flags}" PARENT_SCOPE)
 endfunction()
 
-function(check_c_compiler_warning_flags c_flag_var)
-  set(local_c_flags "")
-  set(flag_list "${ARGN}")
-  foreach(flag IN LISTS flag_list)
-    ITK_CHECK_C_COMPILER_FLAG(${flag} C_HAS_WARNING${flag})
-    if(${C_HAS_WARNING${flag}})
-      set(local_c_flags "${local_c_flags} ${flag}")
-    endif()
-  endforeach()
-  set(${c_flag_var} "${local_c_flags}" PARENT_SCOPE)
-endfunction()
-
-function(check_cxx_compiler_warning_flags cxx_flag_var)
-  set(local_cxx_flags "")
-  set(flag_list "${ARGN}")
-  foreach(flag IN LISTS flag_list)
-    ITK_CHECK_CXX_COMPILER_FLAG(${flag} CXX_HAS_WARNING${flag})
-    if(${CXX_HAS_WARNING${flag}})
-      set(local_cxx_flags "${local_cxx_flags} ${flag}")
-    endif()
-  endforeach()
-  set(${cxx_flag_var} "${local_cxx_flags}" PARENT_SCOPE)
-endfunction()
-
-
 function(check_compiler_warning_flags c_warning_flags_var cxx_warning_flags_var)
   set(${c_warning_flags_var} "" PARENT_SCOPE)
   set(${cxx_warning_flags_var} "" PARENT_SCOPE)
@@ -156,8 +131,8 @@ function(check_compiler_warning_flags c_warning_flags_var cxx_warning_flags_var)
     ## Clang compiler likes to warn about this feature that is technically only in
     ## c++0x, but works on many compilers, and if it fails, then alternate methods are used
 
-  check_c_compiler_warning_flags(CMAKE_C_WARNING_FLAGS ${c_flags} ${c_and_cxx_flags})
-  check_cxx_compiler_warning_flags(CMAKE_CXX_WARNING_FLAGS ${c_and_cxx_flags} ${cxx_flags})
+  check_c_compiler_flags(CMAKE_C_WARNING_FLAGS ${c_flags} ${c_and_cxx_flags})
+  check_cxx_compiler_flags(CMAKE_CXX_WARNING_FLAGS ${c_and_cxx_flags} ${cxx_flags})
 
   set(${c_warning_flags_var} "${CMAKE_C_WARNING_FLAGS}" PARENT_SCOPE)
   set(${cxx_warning_flags_var} "${CMAKE_CXX_WARNING_FLAGS}" PARENT_SCOPE)
@@ -200,7 +175,7 @@ function(check_compiler_optimization_flags c_optimization_flags_var cxx_optimiza
   endif()
   set(c_and_cxx_flags ${InstructionSetOptimizationFlags})
 
-  check_c_compiler_flags(    CMAKE_C_WARNING_FLAGS ${c_and_cxx_flags} ${c_flags})
+  check_c_compiler_flags(CMAKE_C_WARNING_FLAGS ${c_and_cxx_flags} ${c_flags})
   check_cxx_compiler_flags(CMAKE_CXX_WARNING_FLAGS ${c_and_cxx_flags} ${cxx_flags})
 
   set(${c_optimization_flags_var} "${CMAKE_C_WARNING_FLAGS}" PARENT_SCOPE)

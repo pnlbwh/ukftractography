@@ -85,8 +85,6 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	  set(gccToolset "gcc")
 	endif()
 	list(APPEND Boost_b2_Command toolset=${gccToolset})
-  else()
-	message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
   endif()
   
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)

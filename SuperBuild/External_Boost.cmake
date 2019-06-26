@@ -54,8 +54,8 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     if(WIN32)
       set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.zip")
       set(Boost_md5 a110ebd91a3d2c34c72ace09c92ae50b)
-      set(Boost_Bootstrap_Command bootstrap.bat)
-      set(Boost_b2_Command b2.exe)
+      set(Boost_Bootstrap_Command ./bootstrap.bat)
+      set(Boost_b2_Command ./b2.exe)
     endif()
   endif()
 

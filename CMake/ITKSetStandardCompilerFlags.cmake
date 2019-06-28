@@ -21,6 +21,8 @@
 
 include(ITK_CheckCCompilerFlag)
 include(ITK_CheckCXXCompilerFlag)
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14.0)
 	cmake_policy(SET CMP0083 NEW)
@@ -33,7 +35,11 @@ function(check_c_compiler_flags c_flag_var)
   set(flag_list "${ARGN}")
   foreach(flag IN LISTS flag_list)
     string(REPLACE "=" "_" flag_var ${flag} )
-    ITK_CHECK_C_COMPILER_FLAG(${flag} C_HAS_WARNING${flag_var})
+	if(CMAKE_VERSION VERSION_LESS 2.8.9)
+		ITK_CHECK_C_COMPILER_FLAG(${flag} C_HAS_WARNING${flag_var})
+	else()
+		check_c_compiler_flag(${flag} C_HAS_WARNING${flag_var})
+	endif()
     if(${C_HAS_WARNING${flag_var}})
       set(local_c_flags "${local_c_flags} ${flag}")
     endif()
@@ -46,7 +52,11 @@ function(check_cxx_compiler_flags cxx_flag_var)
   set(flag_list "${ARGN}")
   foreach(flag IN LISTS flag_list)
     string(REPLACE "=" "_" flag_var ${flag} )
-    ITK_CHECK_CXX_COMPILER_FLAG(${flag} CXX_HAS_WARNING${flag_var})
+	if(CMAKE_VERSION VERSION_LESS 2.8.9)
+		ITK_CHECK_CXX_COMPILER_FLAG(${flag} CXX_HAS_WARNING${flag_var})
+	else()
+		check_cxx_compiler_flag(${flag} CXX_HAS_WARNING${flag_var})
+	endif()
     if(${CXX_HAS_WARNING${flag_var}})
       set(local_cxx_flags "${local_cxx_flags} ${flag}")
     endif()
@@ -103,7 +113,7 @@ function(check_compiler_warning_flags c_warning_flags_var cxx_warning_flags_var)
   # Check this list on both C and C++ compilers
   set(c_and_cxx_flags
     ${VerboseWarningsFlag}
-    -Wno-long-double        #Needed on APPLE
+    -Wno-long-double #Needed on APPLE
     -Wcast-align
     -Wdisabled-optimization
     -Wextra
@@ -122,7 +132,7 @@ function(check_compiler_warning_flags c_warning_flags_var cxx_warning_flags_var)
   set(cxx_flags
     -Wno-deprecated
     -Wno-invalid-offsetof
-    -Wno-undefined-var-template  # suppress invalid warning when explicitly instantiated in another translation unit
+    -Wno-undefined-var-template # suppress invalid warning when explicitly instantiated in another translation unit
     -Woverloaded-virtual
     -Wstrict-null-sentinel
   )
@@ -423,4 +433,3 @@ string(REPLACE ";" " " CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE " " ";" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${${PROJECT_NAME}_CXX_OPTIMIZATION_FLAGS} ${${PROJECT_NAME}_CXX_WARNING_FLAGS}")
 list(REMOVE_DUPLICATES CMAKE_CXX_FLAGS)
 string(REPLACE ";" " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-

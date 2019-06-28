@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW) #3.12.0 `find_package()`` uses ``<PackageName>_ROOT`` variables.
@@ -69,6 +69,14 @@ endif()
 #-----------------------------------------------------------------------------
 option(${PRIMARY_PROJECT_NAME}_SUPERBUILD "Build ${PRIMARY_PROJECT_NAME} and the projects it depends on via SuperBuild.cmake." ${default_superbuild_value})
 mark_as_advanced(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
+
+#-----------------------------------------------------------------------------
+# Additional CXX/C Flags
+#-----------------------------------------------------------------------------
+set(ADDITIONAL_C_FLAGS "" CACHE STRING "Additional C Flags")
+mark_as_advanced(ADDITIONAL_C_FLAGS)
+set(ADDITIONAL_CXX_FLAGS "" CACHE STRING "Additional CXX Flags")
+mark_as_advanced(ADDITIONAL_CXX_FLAGS)
 
 #-----------------------------------------------------------------------------
 # Required by Slicer extension build system for reasons. See

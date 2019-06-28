@@ -97,7 +97,7 @@ typedef Eigen::Matrix<ukfPrecisionType,Eigen::Dynamic,1> VectorType;
 void
 cell2mat(const MatrixVector &fibers /*in*/,MatrixType &tractMatrix /*out*/)
 {
-  const unsigned int fibersSize(fibers.size());
+  const size_t fibersSize(fibers.size());
   unsigned int numCols(0);
   for(unsigned i = 0; i < fibersSize; ++i)
     {
@@ -144,7 +144,7 @@ void
 FiberVector2EigenFiberVector(const fiberbundle::FiberVector &fv /* in */,
                              MatrixVector &lv)
 {
-  const unsigned long fiberSize(fv.size());
+  const size_t fiberSize(fv.size());
 
   lv.clear();                   // possibly reusing existing vector
   lv.resize(fiberSize);         // same size as input fiberbundle
@@ -152,7 +152,7 @@ FiberVector2EigenFiberVector(const fiberbundle::FiberVector &fv /* in */,
   for(unsigned long i = 0; i < fiberSize; ++i)
     {
     const stdVec_t &curFiber = fv[i].Points;
-    const unsigned long curFiberSize(curFiber.size());
+    const size_t curFiberSize(curFiber.size());
 
     MatrixType &curLocalFiber = lv[i];
     curLocalFiber.conservativeResize(3, curFiberSize);

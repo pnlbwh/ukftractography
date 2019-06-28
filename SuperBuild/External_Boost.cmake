@@ -55,27 +55,41 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
       set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.zip")
       set(Boost_md5 a110ebd91a3d2c34c72ace09c92ae50b)
       set(Boost_Bootstrap_Command ./bootstrap.bat)
-      set(Boost_b2_Command ./b2.exe)
+      set(Boost_b2_Command b2)
     endif()
   endif()
 
-  if(NOT MSVC_VERSION VERSION_LESS 1400 AND MSVC_VERSION VERSION_LESS 1500)
-	list(APPEND Boost_b2_Command toolset=msvc-8.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1500 AND MSVC_VERSION VERSION_LESS 1600)
-	list(APPEND Boost_b2_Command toolset=msvc-9.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1600 AND MSVC_VERSION VERSION_LESS 1700)
-	list(APPEND Boost_b2_Command toolset=msvc-10.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1700 AND MSVC_VERSION VERSION_LESS 1800)
-	list(APPEND Boost_b2_Command toolset=msvc-11.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1800 AND MSVC_VERSION VERSION_LESS 1900)
-	list(APPEND Boost_b2_Command toolset=msvc-12.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1900 AND MSVC_VERSION VERSION_LESS 1910)
-	list(APPEND Boost_b2_Command toolset=msvc-14.0)
-  elseif(NOT MSVC_VERSION VERSION_LESS 1910 AND MSVC_VERSION VERSION_LESS 1920)
-	list(APPEND Boost_b2_Command toolset=msvc-14.1)
-  elseif(ENV{CC})
-  # CMake apprarently puts the full path of the compiler into CC
-  # The user might specify a non-default gcc compiler through ENV
+  if(MSVC)
+    if(MSVC_VERSION GREATER_EQUAL 1400 AND MSVC_VERSION LESS 1500)
+	  list(APPEND Boost_b2_Command toolset=msvc-8.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1500 AND MSVC_VERSION LESS 1600)
+	  list(APPEND Boost_b2_Command toolset=msvc-9.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1600 AND MSVC_VERSION LESS 1700)
+	  list(APPEND Boost_b2_Command toolset=msvc-10.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1700 AND MSVC_VERSION LESS 1800)
+	  list(APPEND Boost_b2_Command toolset=msvc-11.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1800 AND MSVC_VERSION LESS 1900)
+	  list(APPEND Boost_b2_Command toolset=msvc-12.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1900 AND MSVC_VERSION LESS 1910)
+	  list(APPEND Boost_b2_Command toolset=msvc-14.0)
+    elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
+	  list(APPEND Boost_b2_Command toolset=msvc-14.1)
+    elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1922)
+	  list(APPEND Boost_b2_Command toolset=msvc-14.2)
+    else()	
+	  message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
+	endif()
+  endif()
+
+  if(XCODE_VERSION OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    list(APPEND Boost_b2_Command toolset=clang)
+  elseif(CMAKE_COMPILER_IS_GNUCXX)
+    list(APPEND Boost_b2_Command toolset=gcc)
+  endif()
+	
+  if(ENV{CC})
+    # CMake apprarently puts the full path of the compiler into CC
+    # The user might specify a non-default gcc compiler through ENV
 	message(STATUS "ENV{CC}=$ENV{CC}")
 	get_filename_component( gccToolset "$ENV{CC}" NAME )
 
@@ -100,7 +114,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	URL_MD5 ${Boost_md5}
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
-	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static,shared
+	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static
 	INSTALL_COMMAND ""
 	)
 

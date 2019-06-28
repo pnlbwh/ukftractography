@@ -49,16 +49,16 @@ protected:
   std::vector<Fiber> * _fibers;
 
   /** Number of points of all fibers */
-  int _nNumOfPoints;
+  size_t _nNumOfPoints;
 
   /** Number of fibers */
-  int _nNumOfFibers;
+  size_t _nNumOfFibers;
 
   /** Number of scalar fields of the fiber */
-  int _nNumOfFields;
+  size_t _nNumOfFields;
 
   /** The respective lengths of each fiber */
-  std::vector<int> _fiberLengths;
+  std::vector<size_t> _fiberLengths;
 
   /** Write the top line of the vtk file */
   void WriteHeader(std::ofstream & output);

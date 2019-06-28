@@ -31,6 +31,7 @@ set_property(CACHE EXTERNAL_PROJECT_BUILD_TYPE PROPERTY
 option(USE_SYSTEM_ITK "Build using an externally defined version of ITK" OFF)
 option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined version of SlicerExecutionModel"  OFF)
 option(USE_SYSTEM_VTK "Build using an externally defined version of VTK" OFF)
+option(USE_SYSTEM_BOOST "Build using an externally defined version of BOOST" OFF)
 
 #------------------------------------------------------------------------------
 set(SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY bin)

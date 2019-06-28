@@ -29,7 +29,7 @@ namespace QuadProgPP
 // Utility functions for updating some data needed by the solution method
 inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorType& np)
 {
-  const int    n = d.size();
+  const int    n = static_cast<int>(d.size());
 
   /* compute d = H^T * np */
   for( int c = 0; c < n; ++c )
@@ -45,7 +45,7 @@ inline void compute_d(ukfVectorType& d, const ukfMatrixType& J, const ukfVectorT
 
 inline void update_z(ukfVectorType& z, const ukfMatrixType& J, const ukfVectorType& d, int iq)
 {
-  const int n = z.size();
+  const int n = static_cast<int>(z.size());
 
   /* setting of z = H * d */
   for( int i = 0; i < n; ++i )
@@ -91,7 +91,7 @@ inline ukfPrecisionType distance(ukfPrecisionType a, ukfPrecisionType b)
 
 bool add_constraint(ukfMatrixType& R, ukfMatrixType& J, ukfVectorType& d, int& iq, ukfPrecisionType& R_norm)
 {
-  const int n = d.size();
+  const int n = static_cast<int>(d.size());
 
 #ifdef TRACE_SOLVER
   std::cout << "Add constraint " << iq << '/';
@@ -252,7 +252,7 @@ void delete_constraint(ukfMatrixType& R, ukfMatrixType& J, Eigen::VectorXi& A, u
 
 void cholesky_decomposition(ukfMatrixType& A)
 {
-  const int n = A.rows();
+  const int n = static_cast<int>(A.rows());
 
   for( int i = 0; i < n; ++i )
     {
@@ -289,7 +289,7 @@ void cholesky_decomposition(ukfMatrixType& A)
 
 inline void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const ukfVectorType& b)
 {
-  const int n = L.rows();
+  const int n = static_cast<int>(L.rows());
 
   y[0] = b[0] / L(0,0);
   for( int i = 1; i < n; ++i )
@@ -305,7 +305,7 @@ inline void forward_elimination(const ukfMatrixType& L, ukfVectorType& y, const 
 
 inline void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const ukfVectorType& y)
 {
-  const int n = U.rows();
+  const int n = static_cast<int>(U.rows());
 
   x[n - 1] = y[n - 1] / U(n - 1,n - 1);
   for( int i = n - 2; i >= 0; i-- )
@@ -321,7 +321,7 @@ inline void backward_elimination(const ukfMatrixType& U, ukfVectorType& x, const
 
 void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorType& b)
 {
-  const int n = L.rows();
+  const int n = static_cast<int>(L.rows());
 
   ukfVectorType y(n);
 
@@ -334,7 +334,7 @@ void cholesky_solve(const ukfMatrixType& L, ukfVectorType& x, const ukfVectorTyp
 
 inline ukfPrecisionType dot_product(const ukfVectorType& x, const ukfVectorType& y)
 {
-  int    n = x.size();
+  int    n = static_cast<int>(x.size());
   ukfPrecisionType sum;
 
   sum = ukfZero;
@@ -353,11 +353,11 @@ void print_matrix(const char* name, const ukfMatrixType& A, int n, int m)
 
   if( n == -1 )
     {
-    n = A.rows();
+    n = static_cast<int>(A.rows());
     }
   if( m == -1 )
     {
-    m = A.cols();
+    m = static_cast<int>(A.cols());
     }
 
   s << name << ": " << std::endl;
@@ -423,9 +423,9 @@ ukfPrecisionType solve_quadprog(ukfMatrixType& G, ukfVectorType& g0,
     throw std::logic_error(msg.str());
     }
 
-  const int n = G.cols();
-  const int p = CE.cols();
-  const int m = CI.cols();
+  const int n = static_cast<int>(G.cols());
+  const int p = static_cast<int>(CE.cols());
+  const int m = static_cast<int>(CI.cols());
 
   if( (int)G.rows() != n )
     {

@@ -48,7 +48,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     LOG_INSTALL   0  # Wrap install in script to to ignore log output from dashboards
     INSTALL_DIR ${${proj}_INSTALL_DIR}
     CMAKE_GENERATOR ${gen}
-    CMAKE_ARGS -Wno-dev --no-warn-unused-cli -DBOOST_ROOT:PATH=${BOOST_ROOT} -DBoost_NO_BOOST_CMAKE=TRUE -DBoost_NO_SYSTEM_PATHS=TRUE -DBoost_LIBRARY_DIRS:FILEPATH=${BOOST_ROOT}/lib
+    CMAKE_ARGS -Wno-dev --no-warn-unused-cli -DBOOST_ROOT:PATH=${BOOST_ROOT} -DBoost_NO_BOOST_CMAKE:BOOL=TRUE -DBoost_NO_SYSTEM_PATHS:BOOL=TRUE -DBoost_LIBRARY_DIRS:FILEPATH=${BOOST_ROOT}/lib
     CMAKE_CACHE_ARGS
       ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
       ${COMMON_EXTERNAL_PROJECT_ARGS}

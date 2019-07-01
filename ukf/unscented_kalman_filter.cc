@@ -205,7 +205,7 @@ void UnscentedKalmanFilter::Filter(const State& x,
   //const ukfMatrixType WeightsRepeated_Y_Transpose =m_WeightsRepeated*Y_.transpose();
 
   const ukfMatrixType temp = localConstFilterModel->R();
-  int R = 1/temp(0,0);
+  ukfPrecisionType R = 1/temp(0,0);
 
   /** Covariance of the signal */
   //const ukfMatrixType Pyy = Y_ * WeightsRepeated_Y_Transpose + R;

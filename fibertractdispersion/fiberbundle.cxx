@@ -90,7 +90,7 @@ fiberbundle
   for(FiberVector::iterator it = this->m_FiberBundle.begin();
       it != this->m_FiberBundle.end(); ++it)
     {
-    int fiber_size = (*it).Points.size();
+    int fiber_size = static_cast<int>((*it).Points.size());
     vtkIdType *ids = new vtkIdType[fiber_size];
     for(vtkIdType curPoint = 0; curPoint < fiber_size; ++curPoint,++counter)
       {

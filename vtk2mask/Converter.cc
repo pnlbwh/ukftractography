@@ -42,7 +42,7 @@ bool Converter::Run()
     LoadLabel();
     if( _bVerbose )
       {
-      std::cout << "Using Label " << (uint)_nLabelOfInterest << " from label file\n";
+      std::cout << "Using Label " << (unsigned int)_nLabelOfInterest << " from label file\n";
       }
     }
 
@@ -213,7 +213,7 @@ void Converter::AverageVoxels()
         current[0] = x;
         current[1] = y;
         current[2] = z;
-        if( (!_bHasLabel || _Label->GetPixel( current) == (uint)_nLabelOfInterest) && _matField->_[x][y][z].size() > 0 )
+        if( (!_bHasLabel || _Label->GetPixel( current) == (unsigned int)_nLabelOfInterest) && _matField->_[x][y][z].size() > 0 )
           {
           mean = CalcMean(_matField->_[x][y][z]);
           _nrrdDataOut->SetPixel( current, mean );
@@ -332,7 +332,7 @@ float Converter::CalcStdDev(const std::vector<float> & vec, const float & mean)
 {
   float sum = 0;
 
-  for( uint i = 0; i < vec.size(); ++i )
+  for(unsigned int i = 0; i < vec.size(); ++i )
     {
     sum += (vec[i] - mean) * (vec[i] - mean);
     }

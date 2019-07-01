@@ -50,8 +50,8 @@ void vtkWriter::SetInputFibers(std::vector<Fiber> & fibers)
   _fiberLengths.resize(_nNumOfFibers);
   _nNumOfPoints = 0;
 
-  int nCurrSize;
-  for( int i = 0; i < _nNumOfFibers; ++i )
+  size_t nCurrSize;
+  for( size_t i = 0; i < _nNumOfFibers; ++i )
     {
     nCurrSize = (*_fibers)[i].Points.size();
     _fiberLengths[i] = nCurrSize;
@@ -78,9 +78,9 @@ void vtkWriter::WritePoints(std::ofstream & output)
 
   output << "POINTS " << _nNumOfPoints << " float";
   int nCounter = 0;
-  for( int i = 0; i < _nNumOfFibers; ++i )
+  for( size_t i = 0; i < _nNumOfFibers; ++i )
     {
-    for( int j = 0; j < _fiberLengths[i]; ++j )
+    for( size_t j = 0; j < _fiberLengths[i]; ++j )
       {
       if( nCounter % 3 == 0 )
         {
@@ -106,10 +106,10 @@ void vtkWriter::WriteLines(std::ofstream & output)
   output << _nNumOfFibers << " " << _nNumOfFibers + _nNumOfPoints << std::endl;
 
   int counter = 0;
-  for( int i = 0; i < _nNumOfFibers; ++i )
+  for( size_t i = 0; i < _nNumOfFibers; ++i )
     {
     output << _fiberLengths[i];
-    for( int j = 0; j < _fiberLengths[i]; ++j )
+    for( size_t j = 0; j < _fiberLengths[i]; ++j )
       {
       output << " " << counter++;
       }
@@ -131,9 +131,9 @@ void vtkWriter::WriteFields(std::ofstream & output)
     output << cit->first;
     output << " 1 " << _nNumOfPoints;
     output << " float" << std::endl;
-    for( int i = 0; i < _nNumOfFibers; ++i )
+    for( size_t i = 0; i < _nNumOfFibers; ++i )
       {
-      for( int j = 0; j < _fiberLengths[i]; ++j )
+      for( size_t j = 0; j < _fiberLengths[i]; ++j )
         {
         output << (*_fibers)[i].Fields[cit->first][j];
         nCounter++;

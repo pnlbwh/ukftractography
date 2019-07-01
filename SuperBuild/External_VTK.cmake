@@ -24,10 +24,19 @@ if(DEFINED VTK_SOURCE_DIR AND NOT EXISTS ${VTK_SOURCE_DIR})
   message(FATAL_ERROR "VTK_SOURCE_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
+# For MinGW for case of compilation failure cause of 'too many sections' error
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+  if(MINGW)
+	set(ep_common_cxx_flags "${ep_common_cxx_flags} -Wa,-mbig-obj")
+  elseif(MSVC)
+	set(ep_common_cxx_flags "${ep_common_cxx_flags} /bigobj")
+  endif()
+endif()
+
 if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
   set(${proj}_GIT_REPOSITORY "${git_protocol}://www.vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
-  set(${proj}_GIT_TAG "b86da7eef93f75c4a7f524b3644523ae6b651bc4")  # VTK v7.1.1
+  set(${proj}_GIT_TAG "v7.1.1") #"b86da7eef93f75c4a7f524b3644523ae6b651bc4")  # VTK v7.1.1
 
 ## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./
 ## to identify necessary modules for VTK
@@ -41,6 +50,13 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
       ${COMMON_EXTERNAL_PROJECT_ARGS}
+      -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_CXX_STANDARD:STRING=${CMAKE_CXX_STANDARD}
+      -DCMAKE_CXX_STANDARD_REQUIRED:BOOL=${CMAKE_CXX_STANDARD_REQUIRED}
+      -DCMAKE_CXX_EXTENSIONS:BOOL=${CMAKE_CXX_EXTENSIONS}
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_BINARY_DIR}/${proj}-install
       -DCMAKE_INCLUDE_DIRECTORIES_BEFORE:BOOL=OFF
       -DBUILD_TESTING:BOOL=OFF

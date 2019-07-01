@@ -146,9 +146,9 @@ void VtkWriter
   vtkIdType counter = 0;
   for(size_t i = 0; i < num_fibers; ++i)
     {
-    size_t fiber_size = fibers[i].position.size();
+    int fiber_size = static_cast<int>(fibers[i].position.size());
     vtkIdType *ids = new vtkIdType[fiber_size];
-    for(size_t j = 0; j < fiber_size; ++j)
+    for(int j = 0; j < fiber_size; ++j)
       {
       ids[j] = counter;
       counter++;
@@ -199,7 +199,7 @@ void VtkWriter
           curTensor->InsertNextTuple(tmp);
           }
         }
-      const size_t idx = pointData->AddArray(curTensor);
+      const int idx = static_cast<int>(pointData->AddArray(curTensor));
       pointData->SetActiveAttribute(idx,vtkDataSetAttributes::TENSORS);
       }
     }
@@ -312,8 +312,8 @@ VtkWriter
   // object.
   vtkPointData *pointData = polyData->GetPointData();
 
-  int num_fibers = fibers.size();
-  int num_points = 0;
+  int num_fibers = static_cast<int>(fibers.size());
+  size_t num_points = 0;
   for( int i = 0; i < num_fibers; ++i )
     {
     num_points += fibers[i].position.size();
@@ -327,8 +327,8 @@ VtkWriter
   norms->SetName("EstimatedUncertainty");
   for( int i = 0; i < num_fibers; ++i )
     {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j)
+    size_t fiber_size = fibers[i].position.size();
+    for ( size_t j = 0; j < fiber_size; ++j )
       {
       norms->InsertNextValue(fibers[i].norm[j]);
       }
@@ -349,8 +349,8 @@ VtkWriter
       fa->SetName("FA1");
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for ( size_t j = 0; j < fiber_size; ++j )
         {
         fa->InsertNextValue(fibers[i].fa[j]);
         }
@@ -371,8 +371,8 @@ VtkWriter
     fa2->Allocate(num_points);
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for( size_t j = 0; j < fiber_size; ++j )
         {
         fa2->InsertNextValue(fibers[i].fa2[j]);
         }
@@ -393,8 +393,8 @@ VtkWriter
       trace->SetName("trace1");
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for( size_t j = 0; j < fiber_size; ++j )
         {
         trace->InsertNextValue(fibers[i].trace[j]);
         }
@@ -415,8 +415,8 @@ VtkWriter
       trace2->SetName("trace2");
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for( size_t j = 0; j < fiber_size; ++j )
         {
         trace2->InsertNextValue(fibers[i].trace2[j]);
         }
@@ -436,8 +436,8 @@ VtkWriter
       free_water->SetName("FreeWater");
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for( size_t j = 0; j < fiber_size; ++j )
         {
         free_water->InsertNextValue(fibers[i].free_water[j]);
         }
@@ -456,8 +456,8 @@ VtkWriter
     normMSE->SetName("NormalizedSignalEstimationError");
     for( int i = 0; i < num_fibers; ++i )
       {
-      int fiber_size = fibers[i].position.size();
-      for( int j = 0; j < fiber_size; ++j )
+      size_t fiber_size = fibers[i].position.size();
+      for( size_t j = 0; j < fiber_size; ++j )
         {
         normMSE->InsertNextValue(fibers[i].normMSE[j]);
         nmse_sum += fibers[i].normMSE[j];
@@ -552,22 +552,22 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
   vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
   vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
 
-  int num_fibers = fibers.size();
-  int num_points = 0;
-  for( int i = 0; i < num_fibers; ++i )
+  size_t num_fibers = fibers.size();
+  size_t num_points = 0;
+  for( size_t i = 0; i < num_fibers; ++i )
     {
     num_points += fibers[i].position.size();
     }
 
-  int num_tensors = fibers[0].state[0].size() / 5;
+  size_t num_tensors = fibers[0].state[0].size() / 5;
 
   const ukfPrecisionType scale = ukfHalf * _scale_glyphs;
 
 
-  for( int i = 0; i < num_fibers; ++i )
+  for( size_t i = 0; i < num_fibers; ++i )
     {
-    int fiber_size = fibers[i].position.size();
-    for( int j = 0; j < fiber_size; ++j )
+    size_t fiber_size = fibers[i].position.size();
+    for( size_t j = 0; j < fiber_size; ++j )
       {
       vec3_t        point = fibers[i].position[j];
       const State& state = fibers[i].state[j];
@@ -680,7 +680,7 @@ int VtkWriter::WriteGlyphs(const std::string& file_name,
   // do the lines
   vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
 
-  for( int i = 0; i < num_points * num_tensors; ++i )
+  for( size_t i = 0; i < num_points * num_tensors; ++i )
     {
     vtkSmartPointer<vtkLine> line = vtkSmartPointer<vtkLine>::New();
     vtkIdType ids[2];

@@ -30,7 +30,7 @@ void ukf_tell(const ukfPrecisionType & x, const std::string &name)
 }
 }; // anonymous namespace
 
-UKFBASELIB_EXPORTS int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
+int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
 {
   PARSE_ARGS ;
 

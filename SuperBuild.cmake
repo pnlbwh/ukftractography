@@ -31,6 +31,7 @@ set_property(CACHE EXTERNAL_PROJECT_BUILD_TYPE PROPERTY
 option(USE_SYSTEM_ITK "Build using an externally defined version of ITK" OFF)
 option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined version of SlicerExecutionModel"  OFF)
 option(USE_SYSTEM_VTK "Build using an externally defined version of VTK" OFF)
+option(USE_SYSTEM_BOOST "Build using an externally defined version of BOOST" OFF)
 
 #------------------------------------------------------------------------------
 set(SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY bin)
@@ -54,12 +55,12 @@ mark_as_superbuild(
 
 ## for i in SuperBuild/*; do  echo $i |sed 's/.*External_\([a-zA-Z]*\).*/\1/g'|fgrep -v cmake|fgrep -v Template; done|sort -u
 set(${PRIMARY_PROJECT_NAME}_DEPENDENCIES
+  Boost
   SlicerExecutionModel
   ITK
   Eigen
   VTK
   teem
-  Boost
   )
 
 #-----------------------------------------------------------------------------
@@ -122,6 +123,7 @@ mark_as_superbuild(
     PYTHON_LIBRARY:FILEPATH
     BOOST_ROOT:PATH
     BOOST_INCLUDE_DIR:PATH
+    Boost_LIBRARY_DIR:PATH
     SlicerExecutionModel_DIR:PATH
     SlicerExecutionModel_DEFAULT_CLI_RUNTIME_OUTPUT_DIRECTORY:PATH
     SlicerExecutionModel_DEFAULT_CLI_LIBRARY_OUTPUT_DIRECTORY:PATH

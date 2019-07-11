@@ -478,7 +478,7 @@ VtkWriter
     int state_dim = fibers[0].state[0].size();
     vtkSmartPointer<vtkFloatArray> stateArray = vtkSmartPointer<vtkFloatArray>::New();
     stateArray->SetNumberOfComponents(state_dim);
-    stateArray->Allocate(num_points * state_dim);
+    stateArray->Allocate(num_points);
     stateArray->SetName("state");
 
     float *tmpArray = new float[state_dim];
@@ -497,7 +497,7 @@ VtkWriter
         }
       }
     int idx = pointData->AddArray(stateArray);
-    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::VECTORS);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     delete [] tmpArray;
     }
 
@@ -505,11 +505,11 @@ VtkWriter
     {
     int state_dim = fibers[0].state[0].size();
 
-    int cov_dim = state_dim * (state_dim + 1) / 2;
+    int cov_dim = (state_dim * (state_dim + 1)) / 2;
 
     vtkSmartPointer<vtkFloatArray> covarianceArray = vtkSmartPointer<vtkFloatArray>::New();
     covarianceArray->SetNumberOfComponents(cov_dim);
-    covarianceArray->Allocate(num_points * cov_dim);
+    covarianceArray->Allocate(num_points);
     covarianceArray->SetName("covariance");
 
     float *tmpArray = new float[cov_dim];
@@ -532,7 +532,7 @@ VtkWriter
         }
       }
     int idx = pointData->AddArray(covarianceArray);
-    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::VECTORS);
+    pointData->SetActiveAttribute(idx,vtkDataSetAttributes::SCALARS);
     delete [] tmpArray;
     }
 

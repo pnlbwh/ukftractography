@@ -363,7 +363,8 @@ bool Tractography::LoadFiles(const std::string& data_file,
 void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
 {
   if (! (_signal_data)) {
-    itkGenericExceptionMacro(<< "No signal data!");
+    std::cout << "No signal data!";
+    throw;
   }
 
   int signal_dim = _signal_data->GetSignalDimension();
@@ -371,7 +372,8 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   stdVec_t seeds;
   if (! (_labels.size() > 0))
     {
-    itkGenericExceptionMacro(<< "No label data!");
+    std::cout << "No label data!";
+    throw;
     }
 
   if(!_ext_seeds.empty())
@@ -403,7 +405,8 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
 
   if (! (seeds.size() > 0)) {
-    itkGenericExceptionMacro(<< "No matching label ROI seeds found! Please verify label selection.");
+	std::cout << "No matching label ROI seeds found! Please verify label selection.";
+    throw;
   }
 
   // Determinism.

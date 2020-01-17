@@ -35,7 +35,7 @@ endif()
 
 if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
-  set(${proj}_GIT_REPOSITORY "${git_protocol}://www.vtk.org/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
+  set(${proj}_GIT_REPOSITORY "${git_protocol}://github.com/Kitware/VTK.git" CACHE STRING "Repository from which to get VTK" FORCE)
   set(${proj}_GIT_TAG "v7.1.1") #"b86da7eef93f75c4a7f524b3644523ae6b651bc4")  # VTK v7.1.1
 
 ## Use ../VTK/Utilities/Maintenance/WhatModulesVTK.py ../VTK ./

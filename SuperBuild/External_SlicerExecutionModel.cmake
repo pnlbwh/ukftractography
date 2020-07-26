@@ -6,10 +6,6 @@ set(${proj}_DEPENDENCIES
   ITK
   )
 
-if(Slicer_BUILD_PARAMETERSERIALIZER_SUPPORT)
-  set(${proj}_DEPENDENCIES ${${proj}_DEPENDENCIES} JsonCpp ParameterSerializer)
-endif()
-
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
 

@@ -26,6 +26,20 @@ add_custom_target(_GEN_GITVER ALL
 add_custom_command(OUTPUT "${UKF_GITVER_FILE}"
                    DEPENDS _GEN_GITVER)
 
+# Temp hook. The new version of SlicerExecutionModel might require a significant redesign of the whole UKFBase
+# With the new version of Slicer, now there is a conflict with ParameterSerializer (jsoncpp component to be precise)
+# Briefly, generateclp creates UKFTractographyCLP.h and it contains entries that are in conflict with ParameterSerializer
+# ${PROJECT_NAME} gets all components from ${MODULE_TARGET_LIBRARIES} that include ${SlicerExecutionModel_LIBRARIES}
+# After that, WINDOWS_EXPORT_ALL_SYMBOLS property makes all ${MODULE_TARGET_LIBRARIES} AND ${PROJECT_NAME} exported, so 
+# UKFTractographyCLP.h and SlicerExecutionModel_LIBRARIES have duplicated definitions in object files
+
+IF(WIN32)
+ IF(MSVC)
+   SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /FORCE:MULTIPLE")
+   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /FORCE:MULTIPLE")
+ ENDIF(MSVC)
+ENDIF(WIN32)
+
 #-----------------------------------------------------------------------------
 # SlicerExecutionModel
 find_package(SlicerExecutionModel REQUIRED)

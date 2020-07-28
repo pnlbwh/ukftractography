@@ -15,7 +15,7 @@ add_custom_target(_GEN_GITVER ALL
     COMMAND ${CMAKE_COMMAND} -E echo_append  "const char UKF_GIT_HASH[] = _ukf_str(_UKF_GIT_HASH);" >> "${UKF_GITVER_TEMP}"
 
     # copy to the real file if different
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${UKF_GITVER_TEMP}" "${UKF_GITVER_FILE}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${UKF_GITVER_TEMP}" "${UKF_GITVER_FILE}"
 
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating UKF_GIT_HASH"

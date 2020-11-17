@@ -527,9 +527,12 @@ bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
     {
     for( int j = 0; j < 3; ++j )
       {
-//       measurement_frame(i, j) = _data_nrrd->measurementFrame[j][i] ;	//Notice this transpose
-      measurement_frame(i, j) = _data_nrrd->measurementFrame[i][j];
-      // The Nrrd structure stores the measurement frame vectors as rows in its measurementFrame array
+      // The Nrrd structure stores the measurement frame vector[i] as row[i] in its measurementFrame array
+      // So it must be transposed before applying to gradients
+      // Note that gradients_ras = measurement_frame * gradients_xyz
+      // Other than transposing later, read as (i,j)<--[j][i] in one step
+      measurement_frame(i, j) = _data_nrrd->measurementFrame[j][i];
+
       }
     }
 

@@ -28,25 +28,9 @@
     </image>
 
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
-      <name>seedsFile</name>
-      <longflag alias="seedsData">seedsFile</longflag>
-      <label>Input Label Map</label>
-      <channel>input</channel>
-      <description>Seeds for diffusion. If not specified, full brain tractography will be performed, and the algorithm will start from every voxel in the brain mask where the Generalized Anisotropy is bigger than 0.18</description>
-    </image>
-
-    <integer-vector>
-      <name>labels</name>
-      <longflag>labels</longflag>
-      <label>ROI label to use for seeding</label>
-      <description>A vector of the ROI labels to be used. There are the voxel values where tractography should be seeded. </description>
-      <default>1</default>
-    </integer-vector>
-
-    <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>maskFile</name>
       <longflag alias="maskData">maskFile</longflag>
-      <label>Input brain mask</label>
+      <label>Input Brain Mask</label>
       <channel>input</channel>
       <description>Brain mask for diffusion tractography. Tracking will only be performed inside this mask.</description>
     </image>
@@ -58,6 +42,151 @@
       <channel>output</channel>
       <description>Output fiber tracts.</description>
     </geometry>
+
+  </parameters>
+
+  <parameters>
+
+    <label>Seeding/Stopping Options</label>
+    <description>Maps for seeding and stopping tractography</description>
+    
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>seedsFile</name>
+      <longflag alias="seedsData">seedsFile</longflag>
+      <label>Input Seeding Label Map</label>
+      <channel>input</channel>
+      <description>Seeds for diffusion. If not specified, full brain tractography will be performed, and the algorithm will start from every voxel in the brain mask where the Generalized Anisotropy is bigger than 0.18</description>
+    </image>
+
+    <integer-vector>
+      <name>seedLabels</name>
+      <longflag>seedLabels</longflag>
+      <label>ROI Labels for Seeding</label>
+      <description>A vector of the ROI labels to be used. There are the voxel values where tractography should be seeded. </description>
+      <default>1</default>
+    </integer-vector>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>stopFile</name>
+      <longflag alias="stopData">stopFile</longflag>
+      <label>Input Stopping Label Map</label>
+      <channel>input</channel>
+      <description>Stopping mask where tracking should stop. If not specified, the algorithm will stop when stoppingFA or stoppingThreshold are reached.</description>
+    </image>
+
+    <integer-vector>
+      <name>stopLabels</name>
+      <longflag>stopLabels</longflag>
+      <label>ROI Labels for Stopping</label>
+      <description>A vector of the ROI labels to be used. There are the voxel values where tractography should stop. </description>
+      <default>1</default>
+    </integer-vector>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>wmFile</name>
+      <longflag alias="wmData">wmFile</longflag>
+      <label>Input White Matter Segmenation Map</label>
+      <channel>input</channel>
+      <description>A probabilistic segmenation map of the White Matter. The values in the map should be between 0 and 1. If provided, voxels with a probability over 0.5 in this map will be used as seeds for tractography. If Input Seeding Label Map is also provided, the union of the seeding voxels in the two maps will be used. </description>
+    </image>
+
+    <double>
+      <name>wmProbThreshold</name>
+      <longflag>wmProbThreshold</longflag>
+      <label>Probability Threshold: Thresholding input WM map </label>
+      <description>This threshold will be used when wmFile is provided. Voxels with segmentation probability over this threshold will be used for seeding tractography. Default: 0.3. Range: 0-1.</description>
+      <default>0.3</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
+    </double>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>gmFile</name>
+      <longflag alias="gmData">gmFile</longflag>
+      <label>Input Gray Matter Segmenation Map</label>
+      <channel>input</channel>
+      <description>A probabilistic segmenation map of the Gray Matter. The values in the map should be between 0 and 1. If provided, tracking will stop in the voxels with a probability over 0.5. If Input Stopping Label Map and/or Input CSF Segmenation Map are also provided, the union of the stopping voxels in these maps will be used. </description>
+    </image>
+
+    <double>
+      <name>gmProbThreshold</name>
+      <longflag>gmProbThreshold</longflag>
+      <label>Probability Threshold: Thresholding input GM map </label>
+      <description>This threshold will be used when gmFile is provided. Voxels with segmentation probability over this threshold will be used for stopping tractography. Default: 0.95. Range: 0-1.</description>
+      <default>0.95</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
+    </double>
+
+    <image type="scalar" fileExtensions=".nhdr,.nrrd">
+      <name>csfFile</name>
+      <longflag alias="csfData">csfFile</longflag>
+      <label>Input CSF Segmenation Map</label>
+      <channel>input</channel>
+      <description>A probabilistic segmenation map of the Cerebrospinal Fluid (CSF). The values in the map should be between 0 and 1. If provided, tracking will stop in the voxels with a probability over 0.5. If Input Stopping Label Map and/or Input GM Segmenation Map are also provided, the union of the stopping voxels in these maps will be used. </description>
+    </image>
+
+    <double>
+      <name>csfProbThreshold</name>
+      <longflag>csfProbThreshold</longflag>
+      <label>Probability Threshold: Thresholding input CSF map </label>
+      <description>This threshold will be used when csfFile is provided. Voxels with segmentation probability over this threshold will be used for stopping tractography. Default: 0.95. Range: 0-1.</description>
+      <default>0.95</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>seedingThreshold</name>
+      <longflag deprecatedalias="seedFALimit">
+        seedingThreshold
+      </longflag>
+      <label>Seeding: Minimum seed FA</label>
+      <description>Tractography parameter used in all models. Seed points whose fractional anisotropy (FA) are below this value are excluded. If seedsFile and/or wmFile are provided, this parameter will not be used. Default: 0.18. Range: 0-1.</description>
+      <default>0.18</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum> 1</maximum>
+        <step> 0.01</step>
+      </constraints>
+    </double>
+
+    <double>
+      <name>stoppingFA</name>
+      <longflag deprecatedalias="minFA">
+        stoppingFA
+      </longflag>
+      <label>Stopping Criterion: Terminating FA</label>
+      <description>Tractography parameter used in tensor model. Tractography will stop when the fractional anisotropy (FA) of the tensor being tracked is less than this value. Note: make sure to also decrease the GA to track through lower anisotropy areas. This parameter is used only in tensor models. This parameter will be applied whether stopping maps (i.e., stopFile, gmFile and/or csfFile) are provided or not. (If one wants to only use the stopping maps as Stopping Criterion, stoppingFA and stoppingThreshold need to be set to 0.) Default: 0.15. Range: 0-1.</description>
+      <default>0.15</default>
+      <constraints>
+        <minimum>0</minimum>
+      <maximum>1</maximum>
+      <step>0.01</step>
+    </constraints>
+    </double>
+
+    <double>
+      <name>stoppingThreshold</name>
+      <longflag>stoppingThreshold</longflag>
+      <label>Stopping Criterion: Terminating mean signal</label>
+      <description>Tractography parameter used in all models. Tractography will stop when the mean signal is below this value. This parameter will be applied whether stopping maps (i.e., stopFile, gmFile and/or csfFile) are provided or not. (If one wants to only use the stopping maps as Stopping Criterion, stoppingFA and stoppingThreshold need to be set to 0.) Default: 0.1. Range: 0-1.</description>
+      <default>0.1</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>1</maximum>
+        <step>0.01</step>
+      </constraints>
+    </double>
 
   </parameters>
 
@@ -78,49 +207,6 @@
       <step>1</step>
     </constraints>
     </integer>
-
-    <double>
-      <name>seedingThreshold</name>
-      <longflag deprecatedalias="seedFALimit">
-        seedingThreshold
-      </longflag>
-      <label>Seeding: Minimum seed FA</label>
-      <description>Tractography parameter used in all models. Seed points whose fractional anisotropy (FA) or mean signal are below this value are excluded. Default: 0.18. Range: 0-1.</description>
-      <default>0.18</default>
-      <constraints>
-        <minimum>0</minimum>
-        <maximum> 1</maximum>
-        <step> 0.01</step>
-      </constraints>
-    </double>
-
-    <double>
-      <name>stoppingFA</name>
-      <longflag deprecatedalias="minFA">
-        stoppingFA
-      </longflag>
-      <label>Stopping Criterion: Terminating FA</label>
-      <description>Tractography parameter used in tensor model. Tractography will stop when the fractional anisotropy (FA) of the tensor being tracked is less than this value. Note: make sure to also decrease the GA to track through lower anisotropy areas. This parameter is used only in tensor models. Default: 0.15. Range: 0-1.</description>
-      <default>0.15</default>
-      <constraints>
-        <minimum>0</minimum>
-      <maximum>1</maximum>
-      <step>0.01</step>
-    </constraints>
-    </double>
-
-    <double>
-      <name>stoppingThreshold</name>
-      <longflag>stoppingThreshold</longflag>
-      <label>Stopping Criterion: Terminating mean signal</label>
-      <description>Tractography parameter used in all models. Tractography will stop when the mean signal is below this value. Default: 0.1. Range: 0-1. </description>
-      <default>0.1</default>
-      <constraints>
-        <minimum>0</minimum>
-        <maximum>1</maximum>
-        <step>0.01</step>
-      </constraints>
-    </double>
 
     <integer>
       <name>numThreads</name>

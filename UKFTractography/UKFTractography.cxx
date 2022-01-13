@@ -64,6 +64,10 @@ int ModuleEntryPoint(int argc, char **argv)
     {
     if (tract->LoadFiles(ukf_settings.dwiFile,
                          ukf_settings.seedsFile,
+                         ukf_settings.stopFile,
+                         ukf_settings.wmFile,
+                         ukf_settings.gmFile,
+                         ukf_settings.csfFile,
                          ukf_settings.maskFile,
                          normalizedDWIData, outputNormalizedDWIData) == EXIT_FAILURE)
       {

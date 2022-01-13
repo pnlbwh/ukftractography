@@ -50,8 +50,14 @@ public:
   /** Checks if a certian position is still within the brain mask. */
   virtual ukfPrecisionType ScalarMaskValue(const vec3_t& pos) const = 0;
 
+  /** Gets stopping mask value at a certain position, from stop label map, GM segmentation, and CSF segmentation */
+  virtual ukfPrecisionType ScalarStopValue(const std::vector<int>& labels, const ukfPrecisionType gm_prob_threshold, const ukfPrecisionType csf_prob_threshold, const vec3_t& pos) const = 0;
+  
+  /** Check if GM or CSF masks are provided for stopping */
+  virtual ukfPrecisionType isGMCSFProvided() const = 0;
+
   /** Get all the seed points. */
-  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const = 0;
+  virtual void GetSeeds(const std::vector<int>& labels, const ukfPrecisionType prob_threshold, stdVec_t& seeds) const = 0;
 
   /** Returns the gradients. */
   virtual const stdVec_t & gradients() const = 0;
@@ -72,8 +78,9 @@ public:
     *
     * Loads all the data necessary to perform tractography
   */
-  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
-                        const bool normalizedDWIData, const bool outputNormalizedDWIData) = 0;
+  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& stop_file, 
+                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file,
+                        const std::string& mask_file, const bool normalizedDWIData, const bool outputNormalizedDWIData) = 0;
 
   /** Returns the dimensions of the image */
   virtual vec3_t dim() const = 0;

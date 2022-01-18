@@ -78,9 +78,10 @@ public:
     *
     * Loads all the data necessary to perform tractography
   */
-  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& stop_file, 
-                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file,
-                        const std::string& mask_file, const bool normalizedDWIData, const bool outputNormalizedDWIData) = 0;
+  virtual bool LoadData(const std::string& data_file, const std::string& mask_file, 
+                        const bool normalizedDWIData, const bool outputNormalizedDWIData, 
+                        const std::string& seed_file, const std::string& stop_file, 
+                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file) = 0;
 
   /** Returns the dimensions of the image */
   virtual vec3_t dim() const = 0;

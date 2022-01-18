@@ -321,8 +321,10 @@ void Tractography::UpdateFilterModelType()
   _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
 }
 
-bool Tractography::SetData(void* data, void* mask, void* seed, void* stop, void* wm, void* gm, void* csf, 
-                           bool normalizedDWIData)
+bool Tractography::SetData(void* data, void* mask, 
+                           bool normalizedDWIData, 
+                           void* seed, void* stop, 
+                           void* wm, void* gm, void* csf)
 {
   if (!data || !mask)
     {
@@ -330,27 +332,26 @@ bool Tractography::SetData(void* data, void* mask, void* seed, void* stop, void*
     return true;
     }
 
-  if (!seed)
+  if (!seed && !wm) // if no seeding mask or wm map is provided, brain mask with thresholds will be used for seeding 
     {
     _full_brain = true;
     }
 
   _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
-  _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, (Nrrd*)seed, (Nrrd*)stop, (Nrrd*)wm, (Nrrd*)gm, (Nrrd*)csf, normalizedDWIData);
+  _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, normalizedDWIData, (Nrrd*)seed, (Nrrd*)stop, (Nrrd*)wm, (Nrrd*)gm, (Nrrd*)csf);
 
   return false;
 }
 
 bool Tractography::LoadFiles(const std::string& data_file,
+                             const std::string& mask_file,
+                             const bool normalized_DWI_data,
+                             const bool output_normalized_DWI_data,
                              const std::string& seed_file,
                              const std::string& stop_file,
                              const std::string& wm_file,
                              const std::string& gm_file,
-                             const std::string& csf_file,
-                             const std::string& mask_file,
-                             const bool normalized_DWI_data,
-                             const bool output_normalized_DWI_data
-                             )
+                             const std::string& csf_file)
 {
   _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
 
@@ -359,7 +360,7 @@ bool Tractography::LoadFiles(const std::string& data_file,
     _full_brain = true;
     }
 
-  if( _signal_data->LoadData(data_file, seed_file, stop_file, wm_file, gm_file, csf_file, mask_file, normalized_DWI_data, output_normalized_DWI_data) )
+  if( _signal_data->LoadData(data_file, mask_file, normalized_DWI_data, output_normalized_DWI_data, seed_file, stop_file, wm_file, gm_file, csf_file) )
     {
     std::cout << "ISignalData could not be loaded" << std::endl;
     delete _signal_data;
@@ -396,6 +397,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   else
     {
     // Iterate through all brain voxels and take those as seeds voxels.
+    std::cout << "Seeding using Option 1 (or no option has been specified), from the input brain mask." << std::endl;
     const vec3_t dim = _signal_data->dim();
     for( int x = 0; x < dim[0]; ++x )
       {

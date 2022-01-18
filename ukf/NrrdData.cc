@@ -179,7 +179,7 @@ ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
 
 ukfPrecisionType NrrdData::isGMCSFProvided() const
 {
-  if ( _gm_data && _csf_data)
+  if ( _gm_data || _csf_data || _stop_data)
     {
       return ukfOne;
     }
@@ -263,86 +263,88 @@ ukfPrecisionType NrrdData::ScalarStopValue(const std::vector<int>& stopLabels, c
       }
 
     }
-
-  if ( _gm_data )
+  else // If stopping label map is provided, GM and CSF will not be used.
     {
-    size_t nx_gm = _gm_nrrd->axis[2].size;
-    size_t ny_gm = _gm_nrrd->axis[1].size;
-    size_t nz_gm = _gm_nrrd->axis[0].size;
-    assert(_gm_data);
+    if ( _gm_data )
+      {
+      size_t nx_gm = _gm_nrrd->axis[2].size;
+      size_t ny_gm = _gm_nrrd->axis[1].size;
+      size_t nz_gm = _gm_nrrd->axis[0].size;
+      assert(_gm_data);
 
-    if ( !(nx_gm == _dim[0] && ny_gm == _dim[1] && nz_gm == _dim[2]) )
-      {
-      itkGenericExceptionMacro(<< "GM segmentation volume dimensions DO NOT match DWI dimensions");
-      }
+      if ( !(nx_gm == _dim[0] && ny_gm == _dim[1] && nz_gm == _dim[2]) )
+        {
+        itkGenericExceptionMacro(<< "GM segmentation volume dimensions DO NOT match DWI dimensions");
+        }
 
-    float gm_prob = 0.0;
-    switch( _gm_data_type )
-    {
-    case 0:
+      float gm_prob = 0.0;
+      switch( _gm_data_type )
       {
-      gm_prob = 0.0;
-      }
-      break;
-    case 9:
-      {
-      gm_prob = static_cast<float *>(_gm_data)[index];
-      }
-      break;
-    case 10:
-      {
-      gm_prob = static_cast<float *>(_gm_data)[index];
-      }
-      break;
-    default:
-      std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
-      throw;
-    }
-
-    if (gm_prob > gm_prob_threshold)
-      {
-        is_stopping_voxel = ukfOne;
-      }
-    }
-
-  if ( _csf_data )
-    {
-    size_t nx_csf = _csf_nrrd->axis[2].size;
-    size_t ny_csf = _csf_nrrd->axis[1].size;
-    size_t nz_csf = _csf_nrrd->axis[0].size;
-    assert(_csf_data);
-
-    if ( !(nx_csf == _dim[0] && ny_csf == _dim[1] && nz_csf == _dim[2]) )
-      {
-      itkGenericExceptionMacro(<< "CSF segmentation volume dimensions DO NOT match DWI dimensions");
+      case 0:
+        {
+        gm_prob = 0.0;
+        }
+        break;
+      case 9:
+        {
+        gm_prob = static_cast<float *>(_gm_data)[index];
+        }
+        break;
+      case 10:
+        {
+        gm_prob = static_cast<float *>(_gm_data)[index];
+        }
+        break;
+      default:
+        std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
+        throw;
       }
 
-    float csf_prob = 0.0;
-    switch( _csf_data_type )
-    {
-    case 0:
-      {
-      csf_prob = 0.0;
+      if (gm_prob > gm_prob_threshold)
+        {
+          is_stopping_voxel = ukfOne;
+        }
       }
-      break;
-    case 9:
-      {
-      csf_prob = static_cast<float *>(_csf_data)[index];
-      }
-      break;
-    case 10:
-      {
-      csf_prob = static_cast<float *>(_csf_data)[index];
-      }
-      break;
-    default:
-      std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
-      throw;
-    }
 
-    if (csf_prob > csf_prob_threshold)
+    if ( _csf_data )
       {
-        is_stopping_voxel = ukfOne;
+      size_t nx_csf = _csf_nrrd->axis[2].size;
+      size_t ny_csf = _csf_nrrd->axis[1].size;
+      size_t nz_csf = _csf_nrrd->axis[0].size;
+      assert(_csf_data);
+
+      if ( !(nx_csf == _dim[0] && ny_csf == _dim[1] && nz_csf == _dim[2]) )
+        {
+        itkGenericExceptionMacro(<< "CSF segmentation volume dimensions DO NOT match DWI dimensions");
+        }
+
+      float csf_prob = 0.0;
+      switch( _csf_data_type )
+      {
+      case 0:
+        {
+        csf_prob = 0.0;
+        }
+        break;
+      case 9:
+        {
+        csf_prob = static_cast<float *>(_csf_data)[index];
+        }
+        break;
+      case 10:
+        {
+        csf_prob = static_cast<float *>(_csf_data)[index];
+        }
+        break;
+      default:
+        std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
+        throw;
+      }
+
+      if (csf_prob > csf_prob_threshold)
+        {
+          is_stopping_voxel = ukfOne;
+        }
       }
     }
 
@@ -433,6 +435,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels, const ukfPrecisionType w
 
   if( _seed_data )
     {
+      std::cout << "Seeding using Option 3, from a seeding label map." << std::endl;
       size_t nx_seed = _seed_nrrd->axis[2].size;
       size_t ny_seed = _seed_nrrd->axis[1].size;
       size_t nz_seed = _seed_nrrd->axis[0].size;
@@ -443,9 +446,9 @@ void NrrdData::GetSeeds(const std::vector<int>& labels, const ukfPrecisionType w
         itkGenericExceptionMacro(<< "Seeding Labelmap ROI volume dimensions DO NOT match DWI dimensions");
         }
     }
-
-  if( _wm_data )
+  else if( _wm_data )
     {
+      std::cout << "Seeding using Option 2, from a WM segmentation map." << std::endl;;
       size_t nx_wm = _wm_nrrd->axis[2].size;
       size_t ny_wm = _wm_nrrd->axis[1].size;
       size_t nz_wm = _wm_nrrd->axis[0].size;
@@ -502,8 +505,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels, const ukfPrecisionType w
                 }
               }
             }
-
-          if ( _wm_data )
+          else if ( _wm_data )
             {
 
             float wm_prob = 0.0;
@@ -546,8 +548,10 @@ void NrrdData::GetSeeds(const std::vector<int>& labels, const ukfPrecisionType w
     
   }
 
-bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd, Nrrd* stop_nrrd, Nrrd* wm_nrrd, Nrrd* gm_nrrd, Nrrd* csf_nrrd,
-                       bool normalizedDWIData)
+bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, 
+                       bool normalizedDWIData, 
+                       Nrrd* seed_nrrd, Nrrd* stop_nrrd, 
+                       Nrrd* wm_nrrd, Nrrd* gm_nrrd, Nrrd* csf_nrrd)
   {
   //_data_nrrd = (Nrrd*)data;
   //_seed_data = (Nrrd*)seed;
@@ -557,6 +561,25 @@ bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd, Nrrd* 
     {
     return true;
     }
+
+  if( mask_nrrd->type == 1 || mask_nrrd->type == 2 )
+    {
+    this->_mask_num_bytes = 1;
+    }
+  else if( mask_nrrd->type == 3 || mask_nrrd->type == 4 )
+    {
+    this->_mask_num_bytes = 2;
+    }
+  else
+    {
+    std::cout
+    << "This implementation only accepts masks of type 'signed char', 'unsigned char', 'short', and 'unsigned short'\n";
+    std::cout << "Convert your mask using 'unu convert' and rerun.\n";
+    exit(1);
+    }
+
+  this->_mask_nrrd = mask_nrrd;
+  this->_mask_data = mask_nrrd->data;
 
   if (seed_nrrd)
     {
@@ -598,38 +621,18 @@ bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd, Nrrd* 
     assert(_csf_data_type == 9 || _csf_data_type == 10);
     }
 
-  if( mask_nrrd->type == 1 || mask_nrrd->type == 2 )
-    {
-    this->_mask_num_bytes = 1;
-    }
-  else if( mask_nrrd->type == 3 || mask_nrrd->type == 4 )
-    {
-    this->_mask_num_bytes = 2;
-    }
-  else
-    {
-    std::cout
-    << "This implementation only accepts masks of type 'signed char', 'unsigned char', 'short', and 'unsigned short'\n";
-    std::cout << "Convert your mask using 'unu convert' and rerun.\n";
-    exit(1);
-    }
-
-  this->_mask_nrrd = mask_nrrd;
-  this->_mask_data = mask_nrrd->data;
-
   return false;
   }
 
 bool NrrdData::LoadData(const std::string& data_file,
+                        const std::string& mask_file,
+                        const bool normalizedDWIData,
+                        const bool outputNormalizedDWIData,
                         const std::string& seed_file,
                         const std::string& stop_file,
                         const std::string& wm_file, 
                         const std::string& gm_file, 
-                        const std::string& csf_file, 
-                        const std::string& mask_file,
-                        const bool normalizedDWIData,
-                        const bool outputNormalizedDWIData
-                        )
+                        const std::string& csf_file)
 {
   if( _data || _seed_data || _stop_data || _mask_data || _wm_data || _gm_data || _csf_data )
     {
@@ -642,6 +645,16 @@ bool NrrdData::LoadData(const std::string& data_file,
     {
     char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
+    free( err );
+    return true;
+    }
+
+  Nrrd* mask_nrrd = nrrdNew();
+  // Load mask
+  if( nrrdLoad(mask_nrrd, mask_file.c_str(), NULL) )
+    {
+    char *err = biffGetDone(NRRD);
+    std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
     free( err );
     return true;
     }
@@ -661,9 +674,8 @@ bool NrrdData::LoadData(const std::string& data_file,
       }
     }
 
-
   Nrrd* seed_nrrd = nrrdNew();
-  // Load seeds
+  // Load seeding map
   if( !seed_file.empty() )
     {
     if( nrrdLoad(seed_nrrd, seed_file.c_str(), NULL) )
@@ -727,17 +739,7 @@ bool NrrdData::LoadData(const std::string& data_file,
       }
     }
 
-  Nrrd* mask_nrrd = nrrdNew();
-  // Load mask
-  if( nrrdLoad(mask_nrrd, mask_file.c_str(), NULL) )
-    {
-    char *err = biffGetDone(NRRD);
-    std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
-    free( err );
-    return true;
-    }
-
-  bool status = SetData(input_nrrd, mask_nrrd, seed_nrrd, stop_nrrd, wm_nrrd, gm_nrrd, csf_nrrd, normalizedDWIData);
+  bool status = SetData(input_nrrd, mask_nrrd, normalizedDWIData, seed_nrrd, stop_nrrd, wm_nrrd, gm_nrrd, csf_nrrd);
   return status;
 }
 

@@ -123,15 +123,16 @@ public:
    * Load the files that contain the DWI signal, the seeds and a mask
    * defining the volume of the brain.
   */
-  bool LoadFiles(const std::string& data_file, const std::string& seed_file, const std::string& stop_file, 
-                 const std::string& wm_file, const std::string& gm_file, const std::string& csf_file, 
-                 const std::string& mask_file, const bool normalized_DWI_data, const bool output_normalized_DWI_data);
+  bool LoadFiles(const std::string& data_file, const std::string& mask_file, 
+                 const bool normalized_DWI_data, const bool output_normalized_DWI_data, 
+                 const std::string& seed_file, const std::string& stop_file, 
+                 const std::string& wm_file, const std::string& gm_file, const std::string& csf_file);
 
   /**
    * Directly set the data volume pointers
   */
 
-  bool SetData(void* data, void* mask, void* seed, void* stop, void* wm, void* gm, void* csf, bool normalizedDWIData);
+  bool SetData(void* data, void* mask, bool normalizedDWIData, void* seed, void* stop, void* wm, void* gm, void* csf);
 
   /**
    * Directly set the seed locations

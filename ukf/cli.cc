@@ -59,9 +59,6 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   }
   /* End deprecation section */
 
-  ukfPrecisionType l_wmProbThreshold = wmProbThreshold;
-  ukfPrecisionType l_gmProbThreshold = gmProbThreshold;
-  ukfPrecisionType l_csfProbThreshold = csfProbThreshold;
   ukfPrecisionType l_stoppingFA = stoppingFA;
   ukfPrecisionType l_stoppingThreshold = stoppingThreshold;
   ukfPrecisionType l_stepLength = stepLength;
@@ -130,24 +127,6 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
 
   if (seedLabels.size() == 0) {
     seedLabels.push_back(1) ;	//Default to use label 1
-  }
-
-  if (l_wmProbThreshold == 0.3) {
-    ukf_setAndTell(l_wmProbThreshold, l_wmProbThreshold, "wmProbThreshold");
-  } else {
-    ukf_tell(l_wmProbThreshold, "wmProbThreshold");
-  }
-
-  if (l_gmProbThreshold == 0.95) {
-    ukf_setAndTell(l_gmProbThreshold, l_gmProbThreshold, "gmProbThreshold");
-  } else {
-    ukf_tell(l_gmProbThreshold, "gmProbThreshold");
-  }
-
-  if (l_csfProbThreshold == 0.95) {
-    ukf_setAndTell(l_csfProbThreshold, l_csfProbThreshold, "csfProbThreshold");
-  } else {
-    ukf_tell(l_csfProbThreshold, "csfProbThreshold");
   }
 
   if (l_stoppingFA == 0.15) {

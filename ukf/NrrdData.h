@@ -90,12 +90,13 @@ public:
     *
     * Loads all the data necessary to perform tractography
   */
-  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& stop_file, 
-                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file, 
-                        const std::string& mask_file, const bool normalizedDWIData, const bool outputNormalizedDWIData);
+  virtual bool LoadData(const std::string& data_file, const std::string& mask_file, 
+                        const bool normalizedDWIData, const bool outputNormalizedDWIData, 
+                        const std::string& seed_file, const std::string& stop_file, 
+                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file);
 
 
-  virtual bool SetData(Nrrd* data, Nrrd* mask, Nrrd* seed, Nrrd* stop, Nrrd* wm, Nrrd* gm, Nrrd* csf, bool normalizedDWIData);
+  virtual bool SetData(Nrrd* data, Nrrd* mask, bool normalizedDWIData, Nrrd* seed, Nrrd* stop, Nrrd* wm, Nrrd* gm, Nrrd* csf);
 
   /** Returns the dimensions of the signal in each directions as a vector */
   vec3_t dim() const

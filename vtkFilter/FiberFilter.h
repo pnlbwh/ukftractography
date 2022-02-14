@@ -15,7 +15,7 @@
 #include "Region.h"
 
 #include <itkImage.h>
-#include <itkExceptionObject.h>
+#include <itkMacro.h>
 #include <itkImageFileWriter.h>
 #include <itkImageFileReader.h>
 #include <itkMetaDataObject.h>

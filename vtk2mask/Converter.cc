@@ -302,7 +302,7 @@ void Converter::WriteOutNrrd(const std::string & out_path)
     {
     nrrdWriter->Update();
     }
-  catch( itk::ExceptionObject e )
+  catch( itk::ExceptionObject & e )
     {
     std::cout << e << std::endl;
     }
@@ -319,7 +319,7 @@ void Converter::WriteOutNrrd(const std::string & out_path)
       {
       nrrdWriter->Update();
       }
-    catch( itk::ExceptionObject e )
+    catch( itk::ExceptionObject & e )
       {
       std::cout << e << std::endl;
       }

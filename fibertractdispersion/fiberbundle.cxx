@@ -39,7 +39,7 @@ fiberbundle
     {
     Fiber curFiber;
     vtkIdType nPoints;
-    vtkIdType *pts;
+    vtkIdType const *pts;
     if(curLines->GetNextCell(nPoints,pts) == 0)
       {
       break;

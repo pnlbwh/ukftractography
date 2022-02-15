@@ -10,22 +10,13 @@ if(DEFINED ${extProjName}_DIR AND NOT EXISTS ${${extProjName}_DIR})
 endif()
 
 # Set dependency list
-set(${proj}_DEPENDENCIES Boost)
+set(${proj}_DEPENDENCIES "")
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj}_DEPENDENCIES)
 
 if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" ) )
   #message(STATUS "${__indent}Adding project ${proj}")
-
-  # Set CMake OSX variable to pass down the external project
-  set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
-  if(APPLE)
-    list(APPEND CMAKE_OSX_EXTERNAL_PROJECT_ARGS
-      -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
-      -DCMAKE_OSX_SYSROOT:STRING=${CMAKE_OSX_SYSROOT}
-      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET})
-  endif()
 
   ### --- Project specific additions here
   set(${proj}_INSTALL_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install)
@@ -34,6 +25,12 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
       -DEIGEN_BUILD_PKGCONFIG:BOOL=OFF
       -DEIGEN_TEST_NOQT:BOOL=ON
     )
+
+#-----------------------------------------------------------------------------
+# Eigen version settings
+#-----------------------------------------------------------------------------
+set(Eigen_GIT_REPOSITORY "https://gitlab.com/libeigen/eigen.git")
+set(Eigen_GIT_TAG "3.4.0")  ## updated version of Eigen needed for better C++11 support and CMake 11 fixes
 
   ### --- End Project specific additions
   ExternalProject_Add(Eigen
@@ -48,9 +45,8 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     LOG_INSTALL   0  # Wrap install in script to to ignore log output from dashboards
     INSTALL_DIR ${${proj}_INSTALL_DIR}
     CMAKE_GENERATOR ${gen}
-    CMAKE_ARGS -Wno-dev --no-warn-unused-cli -DBOOST_ROOT:PATH=${BOOST_ROOT} -DBoost_NO_BOOST_CMAKE:BOOL=TRUE -DBoost_NO_SYSTEM_PATHS:BOOL=TRUE -DBoost_LIBRARY_DIRS:FILEPATH=${BOOST_ROOT}/lib
+    CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
-      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
       ${COMMON_EXTERNAL_PROJECT_ARGS}
       ${${proj}_CMAKE_OPTIONS}
 ## We really do want to install in order to limit # of include paths INSTALL_COMMAND ""

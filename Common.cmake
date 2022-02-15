@@ -8,7 +8,26 @@ set(ep_common_c_flags "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
 set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS_INIT} ${ADDITIONAL_CXX_FLAGS}")
 
 #-----------------------------------------------------------------------------
+#
+# By default we want to build ${PROJECT_NAME} stuff using the CMAKE_BUILD_TYPE of
+# the top level build, but build the support libraries in Release.
+# So make a list of option that will be passed only to all the prerequisite libraries.
+#
+set(COMMON_EXTERNAL_PROJECT_ARGS)
+if(NOT CMAKE_CONFIGURATION_TYPES)
+  list(APPEND COMMON_EXTERNAL_PROJECT_ARGS
+    -DCMAKE_BUILD_TYPE:STRING=${EXTERNAL_PROJECT_BUILD_TYPE}
+    )
+endif()
+
+#-----------------------------------------------------------------------------
 if(APPLE)
+  # Set CMake OSX variable to pass down the external project
+  list(APPEND COMMON_EXTERNAL_PROJECT_ARGS
+    -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
+    -DCMAKE_OSX_SYSROOT:STRING=${CMAKE_OSX_SYSROOT}
+    -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET})
+
   # Note: By setting CMAKE_OSX_* variables before any enable_language() or project() calls,
   #       we ensure that the bitness, and C++ standard library will be properly detected.
   mark_as_superbuild(
@@ -83,22 +102,6 @@ set(CMAKE_MODULE_PATH
 #------------------------------------------------------------------------------
 include(PreventInSourceBuilds)
 include(PreventInBuildInstalls)
-
-#-----------------------------------------------------------------------------
-# Platform check
-#-----------------------------------------------------------------------------
-set(PLATFORM_CHECK true)
-if(PLATFORM_CHECK)
-  # See CMake/Modules/Platform/Darwin.cmake)
-  #   6.x == Mac OSX 10.2 (Jaguar)
-  #   7.x == Mac OSX 10.3 (Panther)
-  #   8.x == Mac OSX 10.4 (Tiger)
-  #   9.x == Mac OSX 10.5 (Leopard)
-  #  10.x == Mac OSX 10.6 (Snow Leopard)
-  if (DARWIN_MAJOR_VERSION LESS "9")
-    message(FATAL_ERROR "Only Mac OSX >= 10.5 are supported !")
-  endif()
-endif()
 
 #-----------------------------------------------------------------------------
 if(NOT COMMAND SETIFEMPTYANDMKDIRANDMKDIR)

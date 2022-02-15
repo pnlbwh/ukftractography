@@ -23,15 +23,6 @@ ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj
 if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" ) )
   #message(STATUS "${__indent}Adding project ${proj}")
 
-  # Set CMake OSX variable to pass down the external project
-  set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
-  if(APPLE)
-    list(APPEND CMAKE_OSX_EXTERNAL_PROJECT_ARGS
-      -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES}
-      -DCMAKE_OSX_SYSROOT:STRING=${CMAKE_OSX_SYSROOT}
-      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET})
-  endif()
-
   ### --- Project specific additions here
   set(Boost_Install_Dir ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install)
   
@@ -46,29 +37,21 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
   set(BOOST_SOURCE_DIR ${SOURCE_DOWNLOAD_CACHE}/${proj})
 
   if(UNIX)
-    set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.tar.gz")
-    set(Boost_md5 fea771fe8176828fabf9c09242ee8c26)
+    set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.tar.gz")
+    set(Boost_SHA256 94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7)
     set(Boost_Bootstrap_Command ./bootstrap.sh)
     set(Boost_b2_Command ./b2)
   else()
     if(WIN32)
-      set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.70.0/boost_1_70_0.zip")
-      set(Boost_md5 a110ebd91a3d2c34c72ace09c92ae50b)
+      set(Boost_url "http://sourceforge.net/projects/boost/files/boost/1.78.0/boost_1_78_0.zip")
+      set(Boost_SHA256 f22143b5528e081123c3c5ed437e92f648fe69748e95fa6e2bd41484e2986cc3)
       set(Boost_Bootstrap_Command ./bootstrap.bat)
       set(Boost_b2_Command b2)
     endif()
   endif()
 
   if(MSVC)
-    if(MSVC_VERSION GREATER_EQUAL 1400 AND MSVC_VERSION LESS 1500)
-	  list(APPEND Boost_b2_Command toolset=msvc-8.0)
-    elseif(MSVC_VERSION GREATER_EQUAL 1500 AND MSVC_VERSION LESS 1600)
-	  list(APPEND Boost_b2_Command toolset=msvc-9.0)
-    elseif(MSVC_VERSION GREATER_EQUAL 1600 AND MSVC_VERSION LESS 1700)
-	  list(APPEND Boost_b2_Command toolset=msvc-10.0)
-    elseif(MSVC_VERSION GREATER_EQUAL 1700 AND MSVC_VERSION LESS 1800)
-	  list(APPEND Boost_b2_Command toolset=msvc-11.0)
-    elseif(MSVC_VERSION GREATER_EQUAL 1800 AND MSVC_VERSION LESS 1900)
+    if(MSVC_VERSION GREATER_EQUAL 1800 AND MSVC_VERSION LESS 1900)
 	  list(APPEND Boost_b2_Command toolset=msvc-12.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1900 AND MSVC_VERSION LESS 1910)
 	  list(APPEND Boost_b2_Command toolset=msvc-14.0)
@@ -79,6 +62,10 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     else()	
 	  message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
 	endif()
+  endif()
+  unset(deplyment_mode)
+  if(APPPLE)
+     set(deployment_mode "-a macosx-version-min=${CMAKE_OSX_DEPLOYMENT_TARGET}")
   endif()
 
   if(XCODE_VERSION OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
@@ -111,10 +98,10 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	${${proj}_EP_ARGS}
 	BUILD_IN_SOURCE 1
 	URL ${Boost_url}
-	URL_MD5 ${Boost_md5}
+	URL_HASH SHA256=${Boost_SHA256}
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
-	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static
+	BUILD_COMMAND ${Boost_b2_Command} ${deployment_mode} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static
 	INSTALL_COMMAND ""
 	)
 
@@ -123,7 +110,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     set(BOOST_INCLUDE_DIR ${Boost_Install_Dir}/include)
   else()
     set(BOOST_ROOT        ${Boost_Install_Dir})
-    set(Boost_INCLUDE_DIR ${Boost_Install_Dir}/include/boost-1_70)
+    set(Boost_INCLUDE_DIR ${Boost_Install_Dir}/include/boost-1_78)
   endif()
 
   set(Boost_LIBRARY_DIR ${Boost_Install_Dir}/lib)

@@ -40,7 +40,8 @@ if(NOT DEFINED SlicerExecutionModel_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM
 
   ExternalProject_SetIfNotDefined(
     ${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG
-    "795e6717600d5241a6fe0e2e48dee741c3fd0918"
+    # "update-tclap" # format outputs
+    f19d6e88a94ba8f31ddafcff4adf185fe90d7e72 # 20210122
     QUIET
     )
 
@@ -56,7 +57,7 @@ if(NOT DEFINED SlicerExecutionModel_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
       ${COMMON_EXTERNAL_PROJECT_ARGS}
-	  -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DBUILD_TESTING:BOOL=OFF
       -DITK_DIR:PATH=${ITK_DIR}
       -DSlicerExecutionModel_LIBRARY_PROPERTIES:STRING=${Slicer_LIBRARY_PROPERTIES}
@@ -76,6 +77,9 @@ if(NOT DEFINED SlicerExecutionModel_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM
     DEPENDS
       ${${proj}_DEPENDENCIES}
     )
+
+  ExternalProject_GenerateProjectDescription_Step(${proj})
+
   set(SlicerExecutionModel_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
 
   #-----------------------------------------------------------------------------

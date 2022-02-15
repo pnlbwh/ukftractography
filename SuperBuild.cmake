@@ -147,19 +147,6 @@ if(${PRIMARY_PROJECT_NAME}_USE_QT)
 endif()
 mark_as_superbuild(${PRIMARY_PROJECT_NAME}_USE_QT)
 
-#-----------------------------------------------------------------------------
-# Set CMake OSX variable to pass down the external projects
-#-----------------------------------------------------------------------------
-if(APPLE)
-  mark_as_superbuild(
-    VARS
-      CMAKE_OSX_ARCHITECTURES:STRING
-      CMAKE_OSX_SYSROOT:PATH
-      CMAKE_OSX_DEPLOYMENT_TARGET:STRING
-    ALL_PROJECTS
-    )
-endif()
-
 set(extProjName ${PRIMARY_PROJECT_NAME})
 set(proj        ${PRIMARY_PROJECT_NAME})
 ExternalProject_Include_Dependencies(${proj} DEPENDS_VAR ${PRIMARY_PROJECT_NAME}_DEPENDENCIES)
@@ -173,19 +160,6 @@ mark_as_superbuild(
     BUILD_EXAMPLES:BOOL
     BUILD_TESTING:BOOL
   )
-
-#-----------------------------------------------------------------------------
-#
-# By default we want to build ${PROJECT_NAME} stuff using the CMAKE_BUILD_TYPE of
-# the top level build, but build the support libraries in Release.
-# So make a list of option that will be passed only to all the prerequisite libraries.
-#
-set(COMMON_EXTERNAL_PROJECT_ARGS)
-if(NOT CMAKE_CONFIGURATION_TYPES)
-  list(APPEND COMMON_EXTERNAL_PROJECT_ARGS
-    -DCMAKE_BUILD_TYPE:STRING=${EXTERNAL_PROJECT_BUILD_TYPE}
-    )
-endif()
 
 #-----------------------------------------------------------------------------
 # CTestCustom

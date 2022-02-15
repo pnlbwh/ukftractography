@@ -45,6 +45,7 @@ if(NOT DEFINED zlib_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     BINARY_DIR ${EP_BINARY_DIR}
     INSTALL_DIR ${EP_INSTALL_DIR}
     CMAKE_CACHE_ARGS
+      ${COMMON_EXTERNAL_PROJECT_ARGS}
       ## CXX should not be needed, but it a cmake default test
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
@@ -61,11 +62,7 @@ if(NOT DEFINED zlib_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   set(ZLIB_ROOT ${zlib_DIR})
   set(ZLIB_INCLUDE_DIR ${zlib_DIR}/include)
   if(WIN32)
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU") #to make compatible with msys2 gcc build
-		set(ZLIB_LIBRARY ${zlib_DIR}/lib/libzlib.a)
-	else()
-		set(ZLIB_LIBRARY ${zlib_DIR}/lib/zlib.lib)
-	endif()
+    set(ZLIB_LIBRARY ${zlib_DIR}/lib/zlib.lib)
   else()
     set(ZLIB_LIBRARY ${zlib_DIR}/lib/libzlib.a)
   endif()

@@ -1,3 +1,6 @@
+#-----------------------------------------------------------------------------
+include(itkCompilerChecks) # Short-circuit test for identifying outdated compilers quickly
+
 include(ExternalProject)
 include(ExternalProjectDependency)
 

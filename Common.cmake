@@ -47,7 +47,7 @@ find_package(Git REQUIRED)
 # Eigen version settings
 #-----------------------------------------------------------------------------
 
-set(Eigen_GIT_REPOSITORY "${git_protocol}://github.com/eigenteam/eigen-git-mirror")
+set(Eigen_GIT_REPOSITORY "https://github.com/eigenteam/eigen-git-mirror")
 set(Eigen_GIT_TAG "3.3.7")
 
 #-----------------------------------------------------------------------------

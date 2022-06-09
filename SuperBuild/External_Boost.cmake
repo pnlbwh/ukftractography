@@ -74,10 +74,10 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	  list(APPEND Boost_b2_Command toolset=msvc-14.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
 	  list(APPEND Boost_b2_Command toolset=msvc-14.1)
-    elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1927)
+    elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1930)
 	  list(APPEND Boost_b2_Command toolset=msvc-14.2)
     else()	
-	  message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
+	  message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]. Run with Visual Studio 16.10 2019 or earlier.")
 	endif()
   endif()
 
@@ -107,6 +107,12 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     set(Boost_address_model 32)
   endif()
 
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(Boost_VARIANT debug)
+  else()
+    set(Boost_VARIANT release)
+  endif()
+
  ExternalProject_Add(${proj}
 	${${proj}_EP_ARGS}
 	BUILD_IN_SOURCE 1
@@ -114,7 +120,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	URL_MD5 ${Boost_md5}
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
-	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static
+	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options --with-atomic address-model=${Boost_address_model} variant=${Boost_VARIANT} link=static optimization=speed
 	INSTALL_COMMAND ""
 	)
 
@@ -128,10 +134,14 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 
   set(Boost_LIBRARY_DIR ${Boost_Install_Dir}/lib)
 
-else()
+  else()
   if(${USE_SYSTEM_${extProjName}})
     find_package(${proj} ${${extProjName}_REQUIRED_VERSION} REQUIRED)
-    message("USING the system ${extProjName}, set ${extProjName}_DIR=${${extProjName}_DIR}")
+    if(BOOST_FOUND)
+      message("Boost_INCLUDE_DIRS = " ${Boost_INCLUDE_DIRS})
+    else()
+      message("-- USING the system ${extProjName}, set ${extProjName}_DIR=${${extProjName}_DIR}")
+    endif()
   endif()
   # The project is provided using ${extProjName}_DIR, nevertheless since other
   # project may depend on ${extProjName}, let's add an 'empty' one

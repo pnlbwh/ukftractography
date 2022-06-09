@@ -65,8 +65,8 @@
 #!
 function(ExternalProject_GenerateProjectDescription_Step projectname)
   set(options)
-  set(oneValueArgs NAME SOURCE_DIR VERSION LICENSE_FILES)
-  set(multiValueArgs)
+  set(oneValueArgs NAME SOURCE_DIR VERSION)
+  set(multiValueArgs LICENSE_FILES)
   cmake_parse_arguments(_epgpd "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   set(name ${projectname})
@@ -87,7 +87,7 @@ function(ExternalProject_GenerateProjectDescription_Step projectname)
   set(explicit_licenses 1)
 
   if(NOT _epgpd_LICENSE_FILES)
-    foreach(filename IN ITEMS NOTICE COPYRIGHT Copyright COPYING LICENSE License)
+    foreach(filename IN ITEMS LICENSE License license LICENCE Licence licence NOTICE COPYRIGHT Copyright copyright COPYING)
       foreach(ext IN ITEMS "" .md .rst .txt)
         list(APPEND _epgpd_LICENSE_FILES ${filename}${ext})
       endforeach()
@@ -125,6 +125,7 @@ set(license_found 0)
 foreach(license_file IN LISTS license_files)
   if(IS_ABSOLUTE \${license_file})
     set(filepath \${license_file})
+    get_filename_component(license_file \${license_file} NAME)
   else()
     set(filepath \${SOURCE_DIR}/\${license_file})
   endif()
@@ -151,7 +152,7 @@ endforeach()
 if(NOT license_found AND EXISTS \${SOURCE_DIR}/setup.py)
   # Extract string of the form 'License [:: <text> [...]]:: <license_name>'
   set(license_name )
-  file(STRINGS \${SOURCE_DIR}/setup.py content REGEX \"Lic ense :: (.*)\" LIMIT_COUNT 1)
+  file(STRINGS \${SOURCE_DIR}/setup.py content REGEX \"License :: (.*)\" LIMIT_COUNT 1)
   if(content)
     string(STRIP \${content} content)
     # Extract <license_name>
@@ -173,7 +174,7 @@ if(NOT license_found)
   message(AUTHOR_WARNING \"${name}: Could not find a license file\")
 endif()
 ")
-  
+
   ExternalProject_Add_Step(${projectname} generate_project_description
     COMMAND ${CMAKE_COMMAND} -P ${script}
     COMMENT "Generate ${generated_version_file} and ${generated_license_file}"

@@ -35,13 +35,12 @@ list(APPEND ExternalData_URL_TEMPLATES
   # Data published by Iowa Psychiatry web interface
   ## The primary home for data
   "http://slicer.kitware.com/midas3/api/rest?method=midas.bitstream.download&checksum=%(hash)"
-  # Data published by MIDAS
-  "http://midas3.kitware.com/midas/api/rest?method=midas.bitstream.download&checksum=%(hash)&algorithm=%(algo)"
+  # Data published on Girder
+  "https://data.kitware.com:443/api/v1/file/hashsum/%(algo)/%(hash)/download"
   # Data published by developers using git-gerrit-push.
   "http://www.itk.org/files/ExternalData/%(algo)/%(hash)"
   )
 
 # Tell ExternalData commands to transform raw files to content links.
 # TODO: Condition this feature on presence of our pre-commit hook.
-set(ExternalData_LINK_CONTENT MD5)
-
+set(ExternalData_LINK_CONTENT SHA512)

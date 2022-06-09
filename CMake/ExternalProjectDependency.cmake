@@ -16,7 +16,7 @@
 #  you may not use this file except in compliance with the License.
 #  You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0.txt
+#      https://www.apache.org/licenses/LICENSE-2.0.txt
 #
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS,
@@ -86,33 +86,6 @@ endif()
 # If defaults to ``^^``.
 if(NOT DEFINED EP_LIST_SEPARATOR)
   set(EP_LIST_SEPARATOR "^^")
-endif()
-
-
-#.rst:
-# .. cmake:variable:: EP_GIT_PROTOCOL
-#
-# The value of this variable is controlled by the option ``<SUPERBUILD_TOPLEVEL_PROJECT>_USE_GIT_PROTOCOL``
-# automatically defined by including this CMake module. Setting this option allows to update the value of
-# ``EP_GIT_PROTOCOL`` variable.
-#
-# If enabled, the variable ``EP_GIT_PROTOCOL`` is set to ``git``. Otherwise, it is set to ``https``.
-# The option is enabled by default.
-#
-# The variable ``EP_GIT_PROTOCOL`` can be used when adding external project. For example:
-#
-# .. code-block:: cmake
-#
-#   ExternalProject_Add(${proj}
-#     ${${proj}_EP_ARGS}
-#     GIT_REPOSITORY "${EP_GIT_PROTOCOL}://github.com/Foo/Foo.git"
-#     [...]
-#     )
-#
-option(${SUPERBUILD_TOPLEVEL_PROJECT}_USE_GIT_PROTOCOL "If behind a firewall turn this off to use https instead." ON)
-set(EP_GIT_PROTOCOL "git")
-if(NOT ${SUPERBUILD_TOPLEVEL_PROJECT}_USE_GIT_PROTOCOL)
-  set(EP_GIT_PROTOCOL "https")
 endif()
 
 # Compute -G arg for configuring external projects with the same CMake generator:
@@ -758,11 +731,6 @@ macro(ExternalProject_Include_Dependencies project_name)
     #message("[${project_name}] Setting _sb_SB_VAR with default value '${_sb_SB_VAR}'")
   endif()
 
-  # Try to detect if superbuild variable was improperly passed
-  if("${_sb_SB_VAR}" STREQUAL "_SUPERBUILD")
-    message(FATAL_ERROR "SUPERBUILD_VAR value is incorrectly set to '_SUPERBUILD'")
-  endif()
-
   # Set local variables
   set(_sb_DEPENDS ${${_sb_DEPENDS_VAR}})
   set(_sb_USE_SYSTEM ${${_sb_USE_SYSTEM_VAR}})
@@ -1022,16 +990,13 @@ endfunction()
 #
 #  ExternalProject_SetIfNotDefined(<var> <defaultvalue> [OBFUSCATE] [QUIET])
 #
-# If *NOT* already defined, the variable <var> is set with:
-#  (1) the value of the environment variable <var>, if defined.
-#  (2) the value of the local variable variable <var>, if defined.
-#  (3) if none of the above is defined, the <defaultvalue> passed as a parameter.
+# The default value is set with:
+#  (1) if set, the value environment variable <var>.
+#  (2) if set, the value of local variable variable <var>.
+#  (3) if none of the above, the value passed as a parameter.
 #
-# Passing the optional parameter 'OBFUSCATE' will display 'OBFUSCATED' instead of the real value.
-# Passing the optional parameter 'QUIET' will not display any message.
-#
-# For convenience, the value of the cache variable named <var> will
-# be displayed if it was set and if QUIET has not been passed.
+# Setting the optional parameter 'OBFUSCATE' will display 'OBFUSCATED' instead of the real value.
+# Setting the optional parameter 'QUIET' will not display any message.
 macro(ExternalProject_SetIfNotDefined var defaultvalue)
   set(_obfuscate FALSE)
   set(_quiet FALSE)
@@ -1062,14 +1027,6 @@ macro(ExternalProject_SetIfNotDefined var defaultvalue)
       message(STATUS "Setting '${var}' variable with default value '${_value}'")
     endif()
     set(${var} "${defaultvalue}")
-  endif()
-  get_property(_is_set CACHE ${var} PROPERTY VALUE SET)
-  if(_is_set AND NOT _quiet)
-    set(_value "${${var}}")
-    if(_obfuscate)
-      set(_value "OBFUSCATED")
-    endif()
-    message(STATUS "Cache variable '${var}' set to '${_value}'")
   endif()
 endmacro()
 

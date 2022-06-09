@@ -6,6 +6,11 @@ if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
   include(${Slicer_USE_FILE})
 endif()
 
+# Just in case if object file grows beyond 2^16 addressable sections in MSVC
+if(CMAKE_CL_64 OR MSVC)
+  add_definitions(/bigobj)
+endif()
+
 #-----------------------------------------------------------------------------
 find_package(SlicerExecutionModel REQUIRED)
 include(${SlicerExecutionModel_USE_FILE})

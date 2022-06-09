@@ -30,7 +30,7 @@ Installation
 
 Checkout from github:
 
-    git clone git://github.com/pnlbwh/ukftractography.git
+    git clone https://github.com/pnlbwh/ukftractography.git
 
 There are 3 ways to build this project from source, as a stand alone
 superbuild, against a Slicer 4 build, and as a Slicer 4 extension build (which
@@ -101,4 +101,4 @@ Notes
 On a Mac, there are rounding errors that affect the accuracy of 2T FW tracts.
 This explains why the 2T_FW ctest fails.
 
-Several steps in the SuperBuild process download additional git repositories as CMake external projects. By default `UKFTractography_USE_GIT_PROTOCOL:BOOL=OFF` indicates to use `https://` instead of `git://`. This default should work behind most firewalls (the git protocol uses port 9418: if this is blocked by your firewall the build will fail). If download problems are encountered, please [file an issue](https://github.com/pnlbwh/ukftractography/issues/new).
+Several steps in the SuperBuild process download additional git repositories as CMake external projects. If download problems are encountered, please [file an issue](https://github.com/pnlbwh/ukftractography/issues/new).

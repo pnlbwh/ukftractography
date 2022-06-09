@@ -1,24 +1,26 @@
+# Works on Unix-like systems if the build folder within the root of source code and named 'build'
+
 start=`date +%s`
 
-SRC="../ukftractography"
+SRC="../UKFTractography"
 
 #logFile Name
 logFile="log.txt"
 
 # BINARY
-BINARY='bin/UKFTractography'
+BINARY='../build/UKFTractography-build/UKFTractography/bin/UKFTractography'
 
 # VOLUME
-dwi_path="$SRC/ukf/Data/Input/dwi.nhdr"
+dwi_path="$SRC/Data/Input/dwi.nhdr"
 
 # MASK
-mask_path="$SRC/ukf/Data/Input/dwi-mask.nhdr"
+mask_path="$SRC/Data/Input/dwi-mask.nhdr"
 
 # SEEDS
-seeds_path="$SRC/ukf/Data/Input/seeds_tc.nhdr"
+seeds_path="$SRC/Data/Input/seeds_tc.nhdr"
 
 # OUTPUT FIBER
-output_path='./seeds_tc.vtk'
+output_path='./output_tractography.vtk'
 
 eval $BINARY \
  --dwiFile $dwi_path \
@@ -31,6 +33,4 @@ eval $BINARY \
 
 runtime=$(python -c "print(${end} - ${start})")
 echo "Output file name $output_path" | tee -a $logFile
-echo "CPU Runtime was $runtime"  | tee -a $logFile
-
-#diff $output_path $SRC/ukf/Data/Baseline/seeds_tc.vtk
+echo "CPU Runtime was $runtime seconds"  | tee -a $logFile

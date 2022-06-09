@@ -118,6 +118,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 	BUILD_IN_SOURCE 1
 	URL ${Boost_url}
 	URL_MD5 ${Boost_md5}
+  ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
 	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options --with-atomic address-model=${Boost_address_model} variant=${Boost_VARIANT} link=static optimization=speed

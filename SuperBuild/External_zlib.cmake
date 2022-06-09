@@ -44,6 +44,7 @@ if(NOT DEFINED zlib_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     SOURCE_DIR ${EP_SOURCE_DIR}
     BINARY_DIR ${EP_BINARY_DIR}
     INSTALL_DIR ${EP_INSTALL_DIR}
+    ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
     CMAKE_CACHE_ARGS
       ## CXX should not be needed, but it a cmake default test
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}

@@ -28,6 +28,16 @@ set(EXTERNAL_PROJECT_BUILD_TYPE "Release" CACHE STRING "Default build type for s
 set_property(CACHE EXTERNAL_PROJECT_BUILD_TYPE PROPERTY
   STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
+# With CMake 2.8.9 or later, the UPDATE_COMMAND is required for updates to occur.
+option(FORCE_EXTERNAL_BUILDS "Force rebuilding of external project (if they are updated)" OFF)
+if(NOT FORCE_EXTERNAL_BUILDS)
+  set(cmakeversion_external_update UPDATE_COMMAND)
+  set(cmakeversion_external_update_value "" )
+else()
+  set(cmakeversion_external_update LOG_UPDATE )
+  set(cmakeversion_external_update_value 1)
+endif()
+
 option(USE_SYSTEM_ITK "Build using an externally defined version of ITK" OFF)
 option(USE_SYSTEM_SlicerExecutionModel "Build using an externally defined version of SlicerExecutionModel"  OFF)
 option(USE_SYSTEM_VTK "Build using an externally defined version of VTK" OFF)
@@ -225,6 +235,7 @@ ExternalProject_Add_Step(${proj} forcebuild
   COMMAND ${CMAKE_COMMAND} -E remove
     ${CMAKE_CURRENT_BINARY_DIR}/${proj}-prefix/src/${proj}-stamp/${proj}-build
   COMMENT "Forcing build step for '${proj}'"
+  DEPENDEES configure
   DEPENDEES build
   ALWAYS 1
   )

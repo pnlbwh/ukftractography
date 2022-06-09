@@ -56,6 +56,7 @@ else()
       BINARY_DIR        ${Eigen_BUILD_DIR}
       GIT_REPOSITORY    ${Eigen_GIT_REPOSITORY}
       GIT_TAG           ${Eigen_GIT_TAG}
+      ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
       CONFIGURE_COMMAND ""
       BUILD_COMMAND     ""
       INSTALL_COMMAND   ""

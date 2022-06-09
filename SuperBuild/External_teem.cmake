@@ -59,6 +59,7 @@ if(NOT DEFINED Teem_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     GIT_TAG "${${CMAKE_PROJECT_NAME}_${proj}_GIT_TAG}"
     SOURCE_DIR ${EP_SOURCE_DIR}
     BINARY_DIR ${EP_BINARY_DIR}
+    ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
     CMAKE_CACHE_ARGS
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
       # Not needed -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}

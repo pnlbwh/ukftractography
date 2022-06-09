@@ -72,6 +72,8 @@ set(CMAKE_MODULE_PATH
 include(PreventInSourceBuilds)
 include(PreventInBuildInstalls)
 
+set(cmakeversion_external_update LOG_UPDATE 1)
+
 #-----------------------------------------------------------------------------
 # Platform check
 #-----------------------------------------------------------------------------

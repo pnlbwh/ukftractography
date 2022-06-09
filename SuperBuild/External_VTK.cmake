@@ -47,6 +47,7 @@ if((NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR) AND NOT ${CMAKE_PROJECT_N
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-build
     GIT_REPOSITORY "${${proj}_GIT_REPOSITORY}"
     GIT_TAG ${${proj}_GIT_TAG}
+    ${cmakeversion_external_update} "${cmakeversion_external_update_value}"
     CMAKE_ARGS -Wno-dev --no-warn-unused-cli
     CMAKE_CACHE_ARGS
       ${COMMON_EXTERNAL_PROJECT_ARGS}

@@ -1897,12 +1897,24 @@ void Tractography::Record(const vec3_t& x, const ukfPrecisionType fa, const ukfP
 
   if( _record_trace || _record_kappa)
     {
-    fiber.trace.push_back(2*(atan(1/trace)/3.14));
-    if( _num_tensors >= 2 )
+    if( _noddi )
       {
-      fiber.trace2.push_back(2*(atan(1/trace2)/3.14));
+      fiber.trace.push_back(2*(atan(1/trace)/3.14));
+      if( _num_tensors >= 2 )
+        {
+        fiber.trace2.push_back(2*(atan(1/trace2)/3.14));
+        }
+      }
+      else
+      {
+      fiber.trace.push_back(trace/1.0e6);
+      if( _num_tensors >= 2 )
+        {
+        fiber.trace2.push_back(trace2/1e6);
+        }
       }
     }
+
 
   if( _record_fa || _record_Vic)
     {

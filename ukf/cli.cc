@@ -80,11 +80,11 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   // HANDLE ERRORNOUS INPUT
   if (dwiFile.empty() || maskFile.empty() || tracts.empty()) {
     std::cout << "Error! Must indicate DWI data, mask and tracts output files!" << std::endl << std::endl ;
-    return 1 ;	//This is to indicate that the module returns with error
+    return 1 ;  //This is to indicate that the module returns with error
   }
 
   if (numTensor == 1) {
-    tractsWithSecondTensor.clear() ;	//Reassure the string is empty
+    tractsWithSecondTensor.clear() ;  //Reassure the string is empty
   }
 
   if (l_maxHalfFiberLength <= 0) {
@@ -126,7 +126,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   }
 
   if (labels.size() == 0) {
-    labels.push_back(1) ;	//Default to use label 1
+    labels.push_back(1) ; //Default to use label 1
   }
 
   if (l_stoppingFA == 0.15) {

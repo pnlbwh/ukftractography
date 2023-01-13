@@ -20,15 +20,16 @@ include(${ITK_USE_FILE})
 #-----------------------------------------------------------------------------
 set(VTK_FOUND OFF)
 find_package(VTK COMPONENTS
-      vtkCommonSystem
-      vtkCommonCore
-      vtkCommonSystem
-      vtkCommonMath
-      vtkCommonMisc
-      vtkCommonTransforms
-      vtkIOLegacy
-      vtkIOXML
-      REQUIRED)
+  CommonSystem
+  CommonCore
+  CommonSystem
+  CommonMath
+  CommonMisc
+  CommonTransforms
+  IOLegacy
+  IOXML
+  REQUIRED
+  )
 if(VTK_USE_FILE)
   include(${VTK_USE_FILE})
 endif()

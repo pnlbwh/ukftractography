@@ -30,9 +30,6 @@ find_package(VTK COMPONENTS
   IOXML
   REQUIRED
   )
-if(VTK_USE_FILE)
-  include(${VTK_USE_FILE})
-endif()
 
 #-----------------------------------------------------------------------------
 if(DEFINED Eigen_INCLUDE_DIR)

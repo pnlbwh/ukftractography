@@ -15,11 +15,11 @@
   <license></license>
   <contributor>Yogesh Rathi, Christian Baumgartner</contributor>
   <acknowledgements></acknowledgements>
-  
+
   <parameters>
     <label>IO</label>
     <description>IO</description>
-    
+
     <geometry type="model" fileExtensions=".vtk">
       <name>FiberInFile</name>
       <longflag>FiberInFile</longflag>
@@ -27,7 +27,7 @@
       <channel>input</channel>
       <description>The fibers to be filtered</description>
     </geometry>
-    
+
     <geometry type="model" fileExtensions=".vtk">
       <name>FiberOutFile</name>
       <longflag>FiberOutFile</longflag>
@@ -35,7 +35,7 @@
       <channel>output</channel>
       <description>The filtered fibers</description>
     </geometry>
-    
+
   </parameters>
   <parameters>
     <label>Regions of Interest</label>
@@ -48,7 +48,7 @@
       <channel>input</channel>
       <description>File with the Labels for the Region of Interest A</description>
     </image>
-    
+
     <integer-vector>
       <name>LabelA</name>
       <longflag>LabelA</longflag>
@@ -56,7 +56,7 @@
       <description>Choose one or more Labels from LabelFileA </description>
       <default>1</default>
     </integer-vector>
-    
+
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>LabelFileB</name>
       <longflag alias="LabelFile">LabelFileB</longflag>
@@ -64,7 +64,7 @@
       <channel>input</channel>
       <description>File with the Labels for the Region of Interest B</description>
     </image>
-    
+
     <integer-vector>
       <name>LabelB</name>
       <longflag>LabelB</longflag>
@@ -72,7 +72,7 @@
       <description>Choose one or more Labels from LabelFileB </description>
       <default>1</default>
     </integer-vector>
-    
+
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>LabelFileC</name>
       <longflag alias="LabelFile">LabelFileC</longflag>
@@ -80,7 +80,7 @@
       <channel>input</channel>
       <description>File with the Labels for the Region of Interest C</description>
     </image>
-    
+
     <integer-vector>
       <name>LabelC</name>
       <longflag>LabelC</longflag>
@@ -88,7 +88,7 @@
       <description>Choose one or more Labels from LabelFileC </description>
       <default>1</default>
     </integer-vector>
-        
+
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>LabelFileD</name>
       <longflag alias="LabelFile">LabelFileD</longflag>
@@ -96,7 +96,7 @@
       <channel>input</channel>
       <description>File with the Labels for the Region of Interest D</description>
     </image>
-    
+
     <integer-vector>
       <name>LabelD</name>
       <longflag>LabelD</longflag>
@@ -106,7 +106,7 @@
     </integer-vector>
 
   </parameters>
-  
+
   <parameters>
     <label>Logic</label>
     <description>Logic</description>
@@ -116,11 +116,11 @@
       <description>Logic function of the form: Ae and (B or not C). The 'e' signifies 'ending in region'</description>
     </string>
   </parameters>
-  
+
   <parameters>
     <label>Options</label>
     <description>Options</description>
-    
+
     <boolean>
       <name>CopyFields</name>
       <longflag>CopyFields</longflag>
@@ -128,7 +128,7 @@
       <description>Copy VTK field data (Uncheck for speed).</description>
       <default>true</default>
     </boolean>
-    
+
     <boolean>
       <name>Verbose</name>
       <longflag>Verbose</longflag>

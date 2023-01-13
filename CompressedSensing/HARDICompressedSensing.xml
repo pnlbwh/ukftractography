@@ -7,7 +7,7 @@
   <documentation-url></documentation-url>
   <license>Slicer</license>
   <contributor>Yogesh Rathi (BWH), Hans J. Johnson (UIowa)</contributor>
-  <acknowledgements><![CDATA[Yogesh Rathi (1); Hans Johnson(2); Peter Savadjiev (1); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements> 
+  <acknowledgements><![CDATA[Yogesh Rathi (1); Hans Johnson(2); Peter Savadjiev (1); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements>
 
  <parameters advanced="false">
     <label>IO</label>
@@ -15,7 +15,7 @@
     <image type="diffusion-weighted">
       <name>inputDWIVolume</name>
       <flag>i</flag>
-      <longflag>inputDWIVolume</longflag>		
+      <longflag>inputDWIVolume</longflag>
       <label>Input DWI Volume</label>
       <channel>input</channel>
       <index>0</index>
@@ -70,5 +70,5 @@
       <channel>output</channel>
       <description><![CDATA[If you choose to save the coefficients, please select the output text file.]]></description>
     </file>
-  </parameters> 
+  </parameters>
 </executable>

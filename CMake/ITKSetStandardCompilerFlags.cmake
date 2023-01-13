@@ -258,7 +258,7 @@ macro(check_compiler_platform_flags)
   #-----------------------------------------------------------------------------
   #ITK requires special compiler flags on some platforms.
   if(CMAKE_COMPILER_IS_GNUCXX)
-  
+
       # GCC's -Warray-bounds has been shown to throw false positives with -O3 on 4.8.
     if(UNIX AND (
       ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_EQUAL "4.8") OR
@@ -288,7 +288,7 @@ macro(check_compiler_platform_flags)
         endif()
       endif()
     endif()
-    
+
     if(APPLE)
      option(ITK_USE_64BITS_APPLE_TRUNCATION_WARNING "Turn on warnings on 64bits to 32bits truncations." OFF)
      mark_as_advanced(ITK_USE_64BITS_APPLE_TRUNCATION_WARNING)
@@ -341,8 +341,8 @@ macro(check_compiler_platform_flags)
       endif()
      endif()
   endif()
-  
-  
+
+
   # mingw thread support
   if(MINGW)
     set(ITK_REQUIRED_CXX_FLAGS "${ITK_REQUIRED_CXX_FLAGS} -mthreads")

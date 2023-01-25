@@ -37,6 +37,7 @@ include(ExternalProjectGenerateProjectDescription)
 #-----------------------------------------------------------------------------
 
 find_package(Git REQUIRED)
+mark_as_superbuild(GIT_EXECUTABLE)
 
 #-----------------------------------------------------------------------------
 # Build option(s)

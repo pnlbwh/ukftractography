@@ -74,7 +74,7 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
      list(APPEND Boost_b2_Command toolset=msvc-14.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
       list(APPEND Boost_b2_Command toolset=msvc-14.1)
-    elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1927)
+    elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1930)
       list(APPEND Boost_b2_Command toolset=msvc-14.2)
     else()
       message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")

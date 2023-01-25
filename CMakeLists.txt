@@ -16,6 +16,11 @@ message(STATUS "${_msg} - C++${CMAKE_CXX_STANDARD}")
 
 #-----------------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
+
+# Sanity checks
+include(PreventInSourceBuilds)
+include(PreventInBuildInstalls)
+
 include(SlicerBlockSetCMakeOSXVariables)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)

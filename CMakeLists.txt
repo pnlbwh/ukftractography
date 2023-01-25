@@ -21,6 +21,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
 include(PreventInSourceBuilds)
 include(PreventInBuildInstalls)
 
+# macOS initialization
 include(SlicerBlockSetCMakeOSXVariables)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)

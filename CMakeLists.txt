@@ -85,6 +85,8 @@ set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY
 # Superbuild script
 #-----------------------------------------------------------------------------
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/Common.cmake) #<-- All feature options for top superbuild and inner product build
+
 if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   project(SuperBuild_${PRIMARY_PROJECT_NAME} LANGUAGES C CXX)  # <- NOTE: Project name for pre-requisites is different form main project
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")

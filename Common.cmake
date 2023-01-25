@@ -33,13 +33,8 @@ include(ExternalProjectDependency)
 include(ExternalProjectGenerateProjectDescription)
 
 #-----------------------------------------------------------------------------
-# Git protocol option
+# Prerequisites
 #-----------------------------------------------------------------------------
-option(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL "Turn this ON to use git:// instead of https:// (not recommended behind firewall)" OFF)
-set(git_protocol "https")
-if(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL)
-  set(git_protocol "git")
-endif()
 
 find_package(Git REQUIRED)
 

@@ -22,6 +22,9 @@ include(PreventInSourceBuilds)
 include(PreventInBuildInstalls)
 
 # macOS initialization
+if(APPLE AND DARWIN_MAJOR_VERSION LESS "10.13")
+  message(FATAL_ERROR "Only macOS >= 10.13 is supported")
+endif()
 include(SlicerBlockSetCMakeOSXVariables)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)

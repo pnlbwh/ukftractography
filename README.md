@@ -1,6 +1,7 @@
 UKF TRACTOGRAPHY
 ================
 
+[![Ubuntu 20.04 Build](https://github.com/pnlbwh/ukftractography/actions/workflows/build-test.yml/badge.svg?branch=master)](https://github.com/pnlbwh/ukftractography/actions/workflows/build-test.yml?query=branch%3Amaster)
 
 About
 -----

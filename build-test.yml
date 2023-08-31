@@ -1,0 +1,38 @@
+name: Build, test
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        include:
+          - os: ubuntu-20.04
+            c-compiler: "gcc-7"
+            cxx-compiler: "g++-7"
+            cxxstd: "11"
+
+    env:
+      CC: ${{matrix.c-compiler}}
+      CXX: ${{matrix.cxx-compiler}}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install -y \
+          cmake ${{matrix.c-compiler}} ${{matrix.cxx-compiler}}
+        sudo apt-get clean
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE:STRING=MinSizeRel -B . -S $GITHUB_WORKSPACE \
+          -D CMAKE_C_COMPILER=${CC} \
+          -D CMAKE_CXX_COMPILER=${CXX} \
+          -D CMAKE_CXX_STANDARD=${{matrix.cxxstd}}
+        make

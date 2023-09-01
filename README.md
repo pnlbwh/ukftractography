@@ -10,10 +10,10 @@ We present a framework which uses an unscented Kalman filter for performing
 tractography. At each point on the fiber the most consistent direction is found
 as a mixture of previous estimates and of the local model.
 
-It is very easy to expand the framework and to implement new fiber representations 
-for it. Currently it is possible to tract fibers using two different 1-, 2-, or 3-tensor 
-methods. Both methods use a mixture of Gaussian tensors. One limits the diffusion 
-ellipsoids to a cylindrical shape (the second and third eigenvalue are assumed to be 
+It is very easy to expand the framework and to implement new fiber representations
+for it. Currently it is possible to tract fibers using two different 1-, 2-, or 3-tensor
+methods. Both methods use a mixture of Gaussian tensors. One limits the diffusion
+ellipsoids to a cylindrical shape (the second and third eigenvalue are assumed to be
 identical) and the other one uses a full tensor representation.
 
 __Authors__:
@@ -76,18 +76,18 @@ Basic Usage
 ### 1. As Command Line Module
 
 The executable is called 'UKFTractography'. It can be found in:
-    
+
     <build-dir>/UKFTractography-build/UKFTractography/bin/
 
 In order to see all options run.
 
-    ./UKFTractography --help 
+    ./UKFTractography --help
 
 In the source directory of the project you will find a shell script called 'sample_run.sh'
-It should give you an idea of what a function call could look like. 
+It should give you an idea of what a function call could look like.
 
 Files dataset_Mask.nrrd and seeds_full_cc.nrrd in Input folder are mask and seed files of subject 100307
-in hcp dataset, download the subject's preprocessed diffusion MRI data from https://db.humanconnectome.org/ 
+in hcp dataset, download the subject's preprocessed diffusion MRI data from https://db.humanconnectome.org/
 
 ### 2. As Slicer 4 module
 

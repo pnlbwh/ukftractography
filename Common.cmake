@@ -33,22 +33,11 @@ include(ExternalProjectDependency)
 include(ExternalProjectGenerateProjectDescription)
 
 #-----------------------------------------------------------------------------
-# Git protocol option
+# Prerequisites
 #-----------------------------------------------------------------------------
-option(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL "Turn this ON to use git:// instead of https:// (not recommended behind firewall)" OFF)
-set(git_protocol "https")
-if(${CMAKE_PROJECT_NAME}_USE_GIT_PROTOCOL)
-  set(git_protocol "git")
-endif()
 
 find_package(Git REQUIRED)
-
-#-----------------------------------------------------------------------------
-# Eigen version settings
-#-----------------------------------------------------------------------------
-
-set(Eigen_GIT_REPOSITORY "https://github.com/eigenteam/eigen-git-mirror")
-set(Eigen_GIT_TAG "3.3.7")
+mark_as_superbuild(GIT_EXECUTABLE)
 
 #-----------------------------------------------------------------------------
 # Build option(s)
@@ -74,28 +63,6 @@ set(CMAKE_MODULE_PATH
   ${${PROJECT_NAME}_BINARY_DIR}/CMake
   ${CMAKE_MODULE_PATH}
   )
-
-#-----------------------------------------------------------------------------
-# Sanity checks
-#------------------------------------------------------------------------------
-include(PreventInSourceBuilds)
-include(PreventInBuildInstalls)
-
-#-----------------------------------------------------------------------------
-# Platform check
-#-----------------------------------------------------------------------------
-set(PLATFORM_CHECK true)
-if(PLATFORM_CHECK)
-  # See CMake/Modules/Platform/Darwin.cmake)
-  #   6.x == Mac OSX 10.2 (Jaguar)
-  #   7.x == Mac OSX 10.3 (Panther)
-  #   8.x == Mac OSX 10.4 (Tiger)
-  #   9.x == Mac OSX 10.5 (Leopard)
-  #  10.x == Mac OSX 10.6 (Snow Leopard)
-  if (DARWIN_MAJOR_VERSION LESS "9")
-    message(FATAL_ERROR "Only Mac OSX >= 10.5 are supported !")
-  endif()
-endif()
 
 #-----------------------------------------------------------------------------
 if(NOT COMMAND SETIFEMPTYANDMKDIRANDMKDIR)

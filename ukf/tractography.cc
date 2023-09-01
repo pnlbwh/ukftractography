@@ -405,7 +405,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
 
   if (! (seeds.size() > 0)) {
-	std::cout << "No matching label ROI seeds found! Please verify label selection.";
+    std::cout << "No matching label ROI seeds found! Please verify label selection.";
     throw;
   }
 

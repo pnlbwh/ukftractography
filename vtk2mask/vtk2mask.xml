@@ -14,11 +14,11 @@
   <license></license>
   <contributor>Yogesh Rathi, Christian Baumgartner</contributor>
   <acknowledgements></acknowledgements>
-  
+
   <parameters>
     <label>Input</label>
     <description>Input</description>
-    
+
     <image type="diffusion-weighted" fileExtensions=".nhdr,.nrrd">
       <name>ReferenceFile</name>
       <longflag alias="ReferenceFile">ReferenceFile</longflag>
@@ -26,7 +26,7 @@
       <channel>input</channel>
       <description>Used to embed the outputs in the right coordinate system.</description>
     </image>
-    
+
     <geometry type="model" fileExtensions=".vtk">
       <name>FiberFile</name>
       <longflag>FiberFile</longflag>
@@ -34,7 +34,7 @@
       <channel>input</channel>
       <description>The fibers from which the scalars will be extracted</description>
     </geometry>
-    
+
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>LabelFile</name>
       <longflag alias="LabelFile">LabelFile</longflag>
@@ -42,7 +42,7 @@
       <channel>input</channel>
       <description>An optional label file, if only one ROI has to be extracted. Use with --LabelOfInterest.</description>
     </image>
-    
+
     <integer>
       <name>LabelOfInterest</name>
       <longflag>LabelOfInterest</longflag>
@@ -52,11 +52,11 @@
     </integer>
 
   </parameters>
-  
+
   <parameters>
     <label>Output</label>
     <description>Output</description>
-    
+
     <string>
       <name>ScalarName</name>
       <longflag>ScalarName</longflag>
@@ -64,29 +64,29 @@
       <description>Choose the name of the scalar attached to the VTK File</description>
       <default></default>
     </string>
-    
+
     <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>OutputVolume</name>
       <longflag alias="FileFA">OutputVolume</longflag>
       <label>Output Volume</label>
       <channel>output</channel>
       <description>Output file for the scalar selected above.</description>
-    </image> 
- 
+    </image>
+
      <image type="scalar" fileExtensions=".nhdr,.nrrd">
       <name>StandartDevVolume</name>
       <longflag alias="FileFA">StandartDevVolume</longflag>
       <label>Volume for std. deviation (optional) </label>
       <channel>output</channel>
       <description>Output file for the std. deviation. If no given, std. dev. is not calculated. </description>
-    </image> 
-    
+    </image>
+
   </parameters>
 
   <parameters>
     <label>Options</label>
     <description>Additional Options</description>
-    
+
     <boolean>
       <name>Verbose</name>
       <longflag>Verbose</longflag>

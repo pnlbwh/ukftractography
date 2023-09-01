@@ -147,7 +147,7 @@
       <label>Tracking: Step length of tractography (in mm)</label>
       <description>Tractography parameter used in all models. Step size when conducting tractography. Default: 0.3. Range: 0.1-1. </description>
       <default>0.3</default>
-      <constraints> 
+      <constraints>
         <minimum> 0.1 </minimum>
         <maximum> 1 </maximum>
         <step> 0.1 </step>
@@ -438,7 +438,7 @@
       <description>Develop/Debug Only: Write tract file as ASCII text format. Default is not ASCII. Default tracts are written on VTK binary data file.</description>
       <default>false</default>
     </boolean>
-    
+
     <boolean>
       <name>writeUncompressedTracts</name>
       <flag>u</flag>

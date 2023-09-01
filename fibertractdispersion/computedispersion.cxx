@@ -674,7 +674,7 @@ computedispersion(fiberbundle &bundle, double scale,
 
   MatrixType DDFOutput = dispersionDistributionValues.row(numberOfSamplingDirections);
   //
-  // So the 'punt' to handle sub-sampling is that any fibers skipped 
+  // So the 'punt' to handle sub-sampling is that any fibers skipped
   for(unsigned int i = 0, curPoint = 0; i < fibers.size(); ++i)
     {
     Fiber &curFiber = fibers[i];

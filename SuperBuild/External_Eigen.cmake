@@ -18,6 +18,9 @@ ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj DEPENDS_VAR ${proj
 if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" ) )
   #message(STATUS "${__indent}Adding project ${proj}")
 
+  set(Eigen_GIT_REPOSITORY "https://github.com/eigenteam/eigen-git-mirror")
+  set(Eigen_GIT_TAG "3.3.7")
+
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
   if(APPLE)
@@ -57,8 +60,8 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     DEPENDS
       ${${proj}_DEPENDENCIES}
   )
-  set(${extProjName}_DIR ${CMAKE_BINARY_DIR}/${proj}-install)
-  set(${extProjName}_INCLUDE_DIR ${CMAKE_BINARY_DIR}/${proj}-install/include/eigen3)
+  set(${extProjName}_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install)
+  set(${extProjName}_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${proj}-install/include/eigen3)
 else()
   if(${USE_SYSTEM_${extProjName}})
     find_package(${extProjName} ${${extProjName}_REQUIRED_VERSION} REQUIRED)

@@ -27,9 +27,9 @@ endif()
 # For MinGW for case of compilation failure cause of 'too many sections' error
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   if(MINGW)
-	set(ep_common_cxx_flags "${ep_common_cxx_flags} -Wa,-mbig-obj")
+    set(ep_common_cxx_flags "${ep_common_cxx_flags} -Wa,-mbig-obj")
   elseif(MSVC)
-	set(ep_common_cxx_flags "${ep_common_cxx_flags} /bigobj")
+    set(ep_common_cxx_flags "${ep_common_cxx_flags} /bigobj")
   endif()
 endif()
 

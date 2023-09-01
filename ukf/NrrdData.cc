@@ -244,9 +244,9 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     std::vector<int>::const_iterator cit;
 
     // Go through the volume.
-	size_t nx = _seed_nrrd->axis[2].size;
-	size_t ny = _seed_nrrd->axis[1].size;
-	size_t nz = _seed_nrrd->axis[0].size;
+    size_t nx = _seed_nrrd->axis[2].size;
+    size_t ny = _seed_nrrd->axis[1].size;
+    size_t nz = _seed_nrrd->axis[0].size;
     assert(_seed_data);
 
     if ( !(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]) )
@@ -263,7 +263,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
           for( cit = labels.begin(); cit != labels.end(); ++cit )
             {
             int value = 0;
-			size_t index = ny * nz * i + nz * j + k;
+            size_t index = ny * nz * i + nz * j + k;
 
             switch( _seed_data_type )
               {

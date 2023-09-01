@@ -1,4 +1,4 @@
-name: Build, test
+name: Ubuntu 20.04 Build
 
 on: [push, pull_request]
 

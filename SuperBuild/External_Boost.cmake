@@ -61,24 +61,24 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
 
   if(MSVC)
     if(MSVC_VERSION GREATER_EQUAL 1400 AND MSVC_VERSION LESS 1500)
-	  list(APPEND Boost_b2_Command toolset=msvc-8.0)
+      list(APPEND Boost_b2_Command toolset=msvc-8.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1500 AND MSVC_VERSION LESS 1600)
-	  list(APPEND Boost_b2_Command toolset=msvc-9.0)
+      list(APPEND Boost_b2_Command toolset=msvc-9.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1600 AND MSVC_VERSION LESS 1700)
-	  list(APPEND Boost_b2_Command toolset=msvc-10.0)
+      list(APPEND Boost_b2_Command toolset=msvc-10.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1700 AND MSVC_VERSION LESS 1800)
-	  list(APPEND Boost_b2_Command toolset=msvc-11.0)
+      list(APPEND Boost_b2_Command toolset=msvc-11.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1800 AND MSVC_VERSION LESS 1900)
-	  list(APPEND Boost_b2_Command toolset=msvc-12.0)
+      list(APPEND Boost_b2_Command toolset=msvc-12.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1900 AND MSVC_VERSION LESS 1910)
-	  list(APPEND Boost_b2_Command toolset=msvc-14.0)
+     list(APPEND Boost_b2_Command toolset=msvc-14.0)
     elseif(MSVC_VERSION GREATER_EQUAL 1910 AND MSVC_VERSION LESS 1920)
-	  list(APPEND Boost_b2_Command toolset=msvc-14.1)
+      list(APPEND Boost_b2_Command toolset=msvc-14.1)
     elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1927)
-	  list(APPEND Boost_b2_Command toolset=msvc-14.2)
-    else()	
-	  message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
-	endif()
+      list(APPEND Boost_b2_Command toolset=msvc-14.2)
+    else()
+      message(FATAL_ERROR "Unknown MSVC compiler version [${MSVC_VERSION}]")
+    endif()
   endif()
 
   if(XCODE_VERSION OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
@@ -86,19 +86,19 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
   elseif(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND Boost_b2_Command toolset=gcc)
   endif()
-	
+
   if(ENV{CC})
     # CMake apprarently puts the full path of the compiler into CC
     # The user might specify a non-default gcc compiler through ENV
-	message(STATUS "ENV{CC}=$ENV{CC}")
-	get_filename_component( gccToolset "$ENV{CC}" NAME )
+  message(STATUS "ENV{CC}=$ENV{CC}")
+  get_filename_component( gccToolset "$ENV{CC}" NAME )
 
-	# see: https://svn.boost.org/trac/boost/ticket/5917
-	string(TOLOWER ${gccToolset} gccToolset)
-	if(gccToolset STREQUAL "cc")
-	  set(gccToolset "gcc")
-	endif()
-	list(APPEND Boost_b2_Command toolset=${gccToolset})
+  # see: https://svn.boost.org/trac/boost/ticket/5917
+  string(TOLOWER ${gccToolset} gccToolset)
+  if(gccToolset STREQUAL "cc")
+    set(gccToolset "gcc")
+  endif()
+  list(APPEND Boost_b2_Command toolset=${gccToolset})
   endif()
   
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -107,16 +107,26 @@ if(NOT ( DEFINED "USE_SYSTEM_${extProjName}" AND "${USE_SYSTEM_${extProjName}}" 
     set(Boost_address_model 32)
   endif()
 
- ExternalProject_Add(${proj}
-	${${proj}_EP_ARGS}
-	BUILD_IN_SOURCE 1
-	URL ${Boost_url}
-	URL_MD5 ${Boost_md5}
-	UPDATE_COMMAND ""
-	CONFIGURE_COMMAND ${Boost_Bootstrap_Command} --prefix=${Boost_Install_Dir}/lib
-	BUILD_COMMAND ${Boost_b2_Command} install -j8 --prefix=${Boost_Install_Dir} --with-thread --with-filesystem --with-system --with-date_time --with-program_options  --with-atomic  address-model=${Boost_address_model} link=static
-	INSTALL_COMMAND ""
-	)
+  ExternalProject_Add(${proj}
+    ${${proj}_EP_ARGS}
+    BUILD_IN_SOURCE 1
+    URL ${Boost_url}
+    URL_MD5 ${Boost_md5}
+    UPDATE_COMMAND ""
+    CONFIGURE_COMMAND ${Boost_Bootstrap_Command}
+      --prefix=${Boost_Install_Dir}/lib
+    BUILD_COMMAND ${Boost_b2_Command} install -j8
+      --prefix=${Boost_Install_Dir}
+      --with-thread
+      --with-filesystem
+      --with-system
+      --with-date_time
+      --with-program_options
+      --with-atomic
+      address-model=${Boost_address_model}
+      link=static
+    INSTALL_COMMAND ""
+    )
 
   if(NOT WIN32)
     set(BOOST_ROOT        ${Boost_Install_Dir})

@@ -25,9 +25,9 @@ include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14.0)
-	cmake_policy(SET CMP0083 NEW)
-	include(CheckPIESupported)
-	check_pie_supported()
+  cmake_policy(SET CMP0083 NEW)
+  include(CheckPIESupported)
+  check_pie_supported()
 endif()
 
 function(check_c_compiler_flags c_flag_var)
@@ -35,11 +35,11 @@ function(check_c_compiler_flags c_flag_var)
   set(flag_list "${ARGN}")
   foreach(flag IN LISTS flag_list)
     string(REPLACE "=" "_" flag_var ${flag} )
-	if(CMAKE_VERSION VERSION_LESS 2.8.9)
-		ITK_CHECK_C_COMPILER_FLAG(${flag} C_HAS_WARNING${flag_var})
-	else()
-		check_c_compiler_flag(${flag} C_HAS_WARNING${flag_var})
-	endif()
+    if(CMAKE_VERSION VERSION_LESS 2.8.9)
+      ITK_CHECK_C_COMPILER_FLAG(${flag} C_HAS_WARNING${flag_var})
+    else()
+      check_c_compiler_flag(${flag} C_HAS_WARNING${flag_var})
+    endif()
     if(${C_HAS_WARNING${flag_var}})
       set(local_c_flags "${local_c_flags} ${flag}")
     endif()
@@ -52,11 +52,11 @@ function(check_cxx_compiler_flags cxx_flag_var)
   set(flag_list "${ARGN}")
   foreach(flag IN LISTS flag_list)
     string(REPLACE "=" "_" flag_var ${flag} )
-	if(CMAKE_VERSION VERSION_LESS 2.8.9)
-		ITK_CHECK_CXX_COMPILER_FLAG(${flag} CXX_HAS_WARNING${flag_var})
-	else()
-		check_cxx_compiler_flag(${flag} CXX_HAS_WARNING${flag_var})
-	endif()
+    if(CMAKE_VERSION VERSION_LESS 2.8.9)
+      ITK_CHECK_CXX_COMPILER_FLAG(${flag} CXX_HAS_WARNING${flag_var})
+    else()
+      check_cxx_compiler_flag(${flag} CXX_HAS_WARNING${flag_var})
+    endif()
     if(${CXX_HAS_WARNING${flag_var}})
       set(local_cxx_flags "${local_cxx_flags} ${flag}")
     endif()
@@ -209,7 +209,7 @@ macro(check_compiler_platform_flags)
              -D_CRT_TIME_FUNCTIONS_NO_DEPRECATE
              -D_CRT_VCCLRIT_NO_DEPRECATE
              -D_SCL_SECURE_NO_DEPRECATE
-             )
+           )
          endif()
          # With MS compilers on Win64, we need the /bigobj switch, else generated
          # code results in objects with number of sections exceeding object file
@@ -243,11 +243,11 @@ macro(check_compiler_platform_flags)
       # if CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS is on, then
       # BUILD_SHARED_LIBS works as it would on other systems
       if(NOT CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS)
-      if(BUILD_SHARED_LIBS)
-        set(ITK_LIBRARY_BUILD_TYPE "SHARED")
-      else()
-        set(ITK_LIBRARY_BUILD_TYPE "STATIC")
-      endif()
+        if(BUILD_SHARED_LIBS)
+          set(ITK_LIBRARY_BUILD_TYPE "SHARED")
+        else()
+          set(ITK_LIBRARY_BUILD_TYPE "STATIC")
+        endif()
         # turn off BUILD_SHARED_LIBS as ITK_LIBRARY_BUILD_TYPE
         # is used on the libraries that have markup.
       set(BUILD_SHARED_LIBS OFF)
@@ -258,7 +258,7 @@ macro(check_compiler_platform_flags)
   #-----------------------------------------------------------------------------
   #ITK requires special compiler flags on some platforms.
   if(CMAKE_COMPILER_IS_GNUCXX)
-  
+
       # GCC's -Warray-bounds has been shown to throw false positives with -O3 on 4.8.
     if(UNIX AND (
       ("${CMAKE_CXX_COMPILER_VERSION}" VERSION_EQUAL "4.8") OR
@@ -288,7 +288,7 @@ macro(check_compiler_platform_flags)
         endif()
       endif()
     endif()
-    
+
     if(APPLE)
      option(ITK_USE_64BITS_APPLE_TRUNCATION_WARNING "Turn on warnings on 64bits to 32bits truncations." OFF)
      mark_as_advanced(ITK_USE_64BITS_APPLE_TRUNCATION_WARNING)
@@ -341,8 +341,7 @@ macro(check_compiler_platform_flags)
       endif()
      endif()
   endif()
-  
-  
+
   # mingw thread support
   if(MINGW)
     set(ITK_REQUIRED_CXX_FLAGS "${ITK_REQUIRED_CXX_FLAGS} -mthreads")
@@ -396,7 +395,6 @@ mark_as_advanced(${PROJECT_NAME}_CXX_WARNING_FLAGS)
 mark_as_advanced(${PROJECT_NAME}_C_WARNING_FLAGS)
 unset(C_WARNING_FLAGS)
 unset(CXX_WARNING_FLAGS)
-
 
 if(NOT ${PROJECT_NAME}_C_OPTIMIZATION_FLAGS OR NOT ${PROJECT_NAME}_CXX_OPTIMIZATION_FLAGS ) # Only check once if not explicitly set on command line
   #-----------------------------------------------------------------------------

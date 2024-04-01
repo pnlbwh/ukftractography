@@ -113,7 +113,7 @@ void NrrdData::Interp3Signal(const vec3_t& pos,
     signal[i] /= w_sum;
 
     // Push into second spot.
-    signal[i + _num_gradients]  = signal[i];  // Duplicate the signals
+    signal[i + _num_gradients]  = signal[i]; // Duplicate the signals
     }
 
 }
@@ -244,9 +244,9 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
     std::vector<int>::const_iterator cit;
 
     // Go through the volume.
-	size_t nx = _seed_nrrd->axis[2].size;
-	size_t ny = _seed_nrrd->axis[1].size;
-	size_t nz = _seed_nrrd->axis[0].size;
+    size_t nx = _seed_nrrd->axis[2].size;
+    size_t ny = _seed_nrrd->axis[1].size;
+    size_t nz = _seed_nrrd->axis[0].size;
     assert(_seed_data);
 
     if ( !(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]) )
@@ -263,7 +263,7 @@ void NrrdData::GetSeeds(const std::vector<int>& labels,
           for( cit = labels.begin(); cit != labels.end(); ++cit )
             {
             int value = 0;
-			size_t index = ny * nz * i + nz * j + k;
+            size_t index = ny * nz * i + nz * j + k;
 
             switch( _seed_data_type )
               {
@@ -419,7 +419,7 @@ bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
   else
     {
     this->_data_nrrd = nrrdNew();
-    dwiNormalize(input_nrrd, _data_nrrd);   // Do preprocessing on the data
+    dwiNormalize(input_nrrd, _data_nrrd); // Do preprocessing on the data
     }
 
   // After normalization, the first axis of the nrrd data is the list, namely the gradient axis
@@ -493,7 +493,7 @@ bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
   nrrdSpacingCalculate(this->_data_nrrd, 1, &spacing1, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 2, &spacing2, space_dir);
   nrrdSpacingCalculate(this->_data_nrrd, 3, &spacing3, space_dir);
-  _voxel << spacing3, spacing2, spacing1;  // NOTE that the _voxel here is in reverse axis order!
+  _voxel << spacing3, spacing2, spacing1; // NOTE that the _voxel here is in reverse axis order!
 
   // make sure something computable is in spacing.
   for(unsigned int i = 0; i < this->_data_nrrd->dim; ++i)
@@ -569,8 +569,8 @@ bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
 
   R(0, 0) *=  vox_x_inv;
   R(1, 0) *=  vox_x_inv;
-  R(2, 0) *=  vox_x_inv;  // R(0,0), R(1,0), R(2,0) is a unit vector, and is just the normalized spacedirection of axis
-                          // 1
+  R(2, 0) *=  vox_x_inv; // R(0,0), R(1,0), R(2,0) is a unit vector, and is just the normalized spacedirection of axis
+                         // 1
   R(0, 1) *=  vox_y_inv;
   R(1, 1) *=  vox_y_inv;
   R(2, 1) *=  vox_y_inv;

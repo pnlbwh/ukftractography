@@ -30,7 +30,7 @@ typedef std::vector<WorkList> WorkDistribution;
 // ~ProgressThread() ;
 // } ;
 
-// const int PROGRESS_REPORT_INTERVAL = 2 ;	//Report progress once per 2 seconds
+// const int PROGRESS_REPORT_INTERVAL = 2 ; //Report progress once per 2 seconds
 
 WorkDistribution GenerateWorkDistribution(const int num_threads, const int total_num_works);
 

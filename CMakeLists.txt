@@ -81,7 +81,7 @@ mark_as_advanced(ADDITIONAL_CXX_FLAGS)
 #-----------------------------------------------------------------------------
 # Required by Slicer extension build system for reasons. See
 #    https://github.com/Slicer/Slicer/commit/b160ec13f276a86306513954ef8b08a5332afc2e
-  set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};RuntimeLibraries;/")
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};RuntimeLibraries;/")
 
 #-----------------------------------------------------------------------------
 # Superbuild script

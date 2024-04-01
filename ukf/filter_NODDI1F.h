@@ -26,17 +26,17 @@ public:
 
     // Setting the constraints according to D'*x >= -d
     _D(5, 0) = -1;
-    _d(0) = 1;  // Viso <= 1
+    _d(0) = 1; // Viso <= 1
     _D(5, 1) = 1;
-    _d(1) = 0;  // Viso >= 0
+    _d(1) = 0; // Viso >= 0
 
     _D(3, 2) = 1;
-    _d(2) = 0;  // Vic >= 0
+    _d(2) = 0; // Vic >= 0
     _D(3, 3) = -1;
-    _d(3) = 1;  // Vic <= 1
+    _d(3) = 1; // Vic <= 1
 
     _D(4, 4) = 1;
-    _d(4) = 0;  // kappa >= 0
+    _d(4) = 0; // kappa >= 0
 
   }
 

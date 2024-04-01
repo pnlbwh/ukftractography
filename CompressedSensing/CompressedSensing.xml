@@ -7,7 +7,7 @@
   <documentation-url>http://www.na-mic.org/Wiki/index.php/2014_Project_Week:DWIDispersion</documentation-url>
   <license>Slicer</license>
   <contributor>Peter Savadjiev (BWH), Hans J. Johnson, Kent Williams (UIowa)</contributor>
-  <acknowledgements><![CDATA[Peter Savadjiev (1); Yogesh Rathi (1); Hans Johnson(2); Kent Williams(2); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements> 
+  <acknowledgements><![CDATA[Peter Savadjiev (1); Yogesh Rathi (1); Hans Johnson(2); Kent Williams(2); 1= Brigham and Women's Hospital, Harvard Medical School, 2=University of Iowa]]>  </acknowledgements>
 
   <parameters advanced="false">
     <label>I/O</label>

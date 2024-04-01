@@ -206,8 +206,8 @@ void Tractography::UpdateFilterModelType()
   }
 
   // Double check branching.
-  _is_branching = _num_tensors > 1 && _cos_theta_max < ukfOne;  // The branching is enabled when the maximum branching
-                                                             // angle is not 0
+  _is_branching = _num_tensors > 1 && _cos_theta_max < ukfOne; // The branching is enabled when the maximum branching
+                                                               // angle is not 0
   std::cout << "Branching " << (_is_branching ? "enabled" : "disabled") << std::endl << std::endl;
   if( !_is_branching )
     {
@@ -405,7 +405,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
 
   if (! (seeds.size() > 0)) {
-	std::cout << "No matching label ROI seeds found! Please verify label selection.";
+    std::cout << "No matching label ROI seeds found! Please verify label selection.";
     throw;
   }
 
@@ -418,7 +418,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   if( seeds.size() == 1 && _seeds_per_voxel == 1 )   // if there is only one seed don't use offset so fibers can be
                                                      // compared
     {
-    rand_dirs.push_back(vec3_t(0,0,0) /* make_vec(0, 0, 0) */);   // in the test cases.
+    rand_dirs.push_back(vec3_t(0,0,0) /* make_vec(0, 0, 0) */); // in the test cases.
     }
   else
     {
@@ -626,9 +626,9 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         {
           minnmse = nmse;
           Viso = Visoperm[c];
-          tmp_info_state[3] = Vic[b];     // Vic
+          tmp_info_state[3] = Vic[b];        // Vic
           tmp_info_state[4] = kappas[a];     // Kappa
-          tmp_info_inv_state[3] = Vic[b]; // Vic
+          tmp_info_inv_state[3] = Vic[b];    // Vic
           tmp_info_inv_state[4] = kappas[a]; // Kappa
        }
       }
@@ -643,10 +643,10 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
         tmp_info_inv_state[5] = info_inv.start_dir[0];
         tmp_info_inv_state[6] = info_inv.start_dir[1];
         tmp_info_inv_state[7] = info_inv.start_dir[2];
-        tmp_info_state[8] = tmp_info_state[3];     // Vic
-        tmp_info_state[9] = tmp_info_state[4];     // Kappa
+        tmp_info_state[8] = tmp_info_state[3];         // Vic
+        tmp_info_state[9] = tmp_info_state[4];         // Kappa
         tmp_info_inv_state[8] = tmp_info_inv_state[3]; // Vic
-        tmp_info_inv_state[9] = tmp_info_inv_state[4]; //kappa
+        tmp_info_inv_state[9] = tmp_info_inv_state[4]; // kappa
       }
     }
     else
@@ -704,14 +704,14 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     info.state = ConvertVector<stdVecState,State>(tmp_info_state);
     info_inv.state = ConvertVector<stdVecState,State>(tmp_info_inv_state);
     seed_infos.push_back(info);
-    seed_infos.push_back(info_inv);   // NOTE that the seed in reverse direction is put directly after the seed in
-                                      // original direction
+    seed_infos.push_back(info_inv); // NOTE that the seed in reverse direction is put directly after the seed in
+                                    // original direction
     }
 }
 
 bool Tractography::Run()
 {
-  assert(_signal_data);   // The _signal_data is initialized in Tractography::LoadFiles(),
+  assert(_signal_data); // The _signal_data is initialized in Tractography::LoadFiles(),
   // Thus Run() must be invoked after LoadFiles()
   // Initialize and prepare seeds.
 
@@ -734,7 +734,7 @@ bool Tractography::Run()
   _ukf.reserve(num_of_threads); //Allocate, but do not assign
   for( int i = 0; i < num_of_threads; i++ )
     {
-    _ukf.push_back(new UnscentedKalmanFilter(_model) );   // Create one Kalman filter for each thread
+    _ukf.push_back(new UnscentedKalmanFilter(_model) ); // Create one Kalman filter for each thread
     }
 
   std::vector<UKFFiber> raw_primary;
@@ -1295,7 +1295,7 @@ void Tractography::Follow2T(const int thread_id,
   int fiber_size = 100;
   int fiber_length = 0;
   // Unpack the fiberStartSeed information.
-  vec3_t x = fiberStartSeed.point;   // NOTICE that the x here is in ijk coordinate system
+  vec3_t x = fiberStartSeed.point; // NOTICE that the x here is in ijk coordinate system
   State state = fiberStartSeed.state;
 
   ukfMatrixType p(fiberStartSeed.covariance);
@@ -1634,7 +1634,7 @@ void Tractography::Step2T(const int thread_id,
   state = state_new;
   covariance = covariance_new;
 
-  const vec3_t old_dir = m1;   // Direction in last step
+  const vec3_t old_dir = m1; // Direction in last step
   ukfPrecisionType fa_tensor_1 = ukfZero;
   ukfPrecisionType fa_tensor_2 = ukfZero;
   if(_noddi)
@@ -1652,7 +1652,7 @@ void Tractography::Step2T(const int thread_id,
     }
   else
     {
-    _model->State2Tensor2T(state, old_dir, m1, l1, m2, l2);   // The returned m1 and m2 are unit vector here
+    _model->State2Tensor2T(state, old_dir, m1, l1, m2, l2); // The returned m1 and m2 are unit vector here
     trace = l1[0] + l1[1] + l1[2];
     trace2 = l2[0] + l2[1] + l2[2];
     fa_tensor_1 = l2fa(l1[0], l1[1], l1[2]);
@@ -1677,7 +1677,7 @@ void Tractography::Step2T(const int thread_id,
     trace= trace2;
     trace2=tmpScalar;
     ukfMatrixType old = covariance;
-    SwapState2T(state, covariance);   // Swap the two tensors
+    SwapState2T(state, covariance); // Swap the two tensors
     }
 
   if(tensor_angle <= 20)
@@ -1689,7 +1689,7 @@ void Tractography::Step2T(const int thread_id,
       m2 = tmp;
       ukfMatrixType old = covariance;
 
-      SwapState2T(state, covariance);   // Swap the two tensors
+      SwapState2T(state, covariance); // Swap the two tensors
       }
     else if (std::min(fa_tensor_1, fa_tensor_2) <= 0.2 )
       {
@@ -1710,7 +1710,7 @@ void Tractography::Step2T(const int thread_id,
 
         ukfMatrixType old = covariance;
 
-        SwapState2T(state, covariance);   // Swap the two tensors
+        SwapState2T(state, covariance); // Swap the two tensors
         }
       }
     }
@@ -1728,7 +1728,7 @@ void Tractography::Step2T(const int thread_id,
     }
   vec3_t dx;
     {
-    const vec3_t dir = m1;     // The dir is a unit vector in ijk coordinate system indicating the direction of step
+    const vec3_t dir = m1; // The dir is a unit vector in ijk coordinate system indicating the direction of step
     const vec3_t voxel = _signal_data->voxel();
     dx << dir[2] / voxel[0], // By dividing by the voxel size, it's guaranteed that the step
        // represented by dx is 1mm in RAS coordinate system, no matter whether

@@ -241,7 +241,7 @@ void PostProcessFibers( const std::vector<UKFFiber>& raw_primary,
 
     const UKFFiber& first_half = raw_primary[first_half_index];
     const UKFFiber& second_half = raw_primary[second_half_index];
-    const UKFFiber& branch = raw_branch[i];  // This is the un-back-traced branch
+    const UKFFiber& branch = raw_branch[i]; // This is the un-back-traced branch
 
     fibers[counter].position.resize(num_points_on_branch[i]);
     if( record_fa )

@@ -45,7 +45,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
     throw;
     }
 
-  nrrdKeyValueClear(normalized);  // Force to erase the key/value pairs
+  nrrdKeyValueClear(normalized); // Force to erase the key/value pairs
 
   // Process the key/value pairs. Identify the non-zero gradients, namely the non-zero B values
   std::vector<std::pair<std::string, std::string> > keyValuePairsOfRaw;
@@ -149,7 +149,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
   // Compute the permutation
   std::vector<unsigned int> permutation(DATA_DIMENSION);
   unsigned int              permuteCounter = 0;
-  permutation[0] = static_cast<unsigned int>(listAxis);     // Shift the list axis to the fastest axis
+  permutation[0] = static_cast<unsigned int>(listAxis); // Shift the list axis to the fastest axis
   for( int i = 1; i < DATA_DIMENSION; i++ )
     {
     if( permuteCounter == static_cast<unsigned int>(listAxis) )
@@ -272,7 +272,7 @@ void dwiNormalize(const Nrrd *raw, Nrrd *& normalized)
   if( normalized->content != NULL )
     {
     free( normalized->content );
-    normalized->content = NULL;   // Get rid of the content field
+    normalized->content = NULL; // Get rid of the content field
     }
   // Add the key/value pairs back to the normalized data
   int totalGradientCounter = 0;

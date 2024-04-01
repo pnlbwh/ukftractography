@@ -700,7 +700,7 @@ PointConvert(const vec3_t& point)
 {
   vec3_t rval;
   ukfVectorType p(4);
-  p[0] = point[2];    // NOTICE the change of order here. Flips back to the original axis order
+  p[0] = point[2]; // NOTICE the change of order here. Flips back to the original axis order
   p[1] = point[1];
   p[2] = point[0];
 
@@ -708,7 +708,7 @@ PointConvert(const vec3_t& point)
     {
     p[3] = ukfOne;
     ukfVectorType p_new(4);
-    p_new = _signal_data->i2r() * p;    // ijk->RAS transform
+    p_new = _signal_data->i2r() * p; // ijk->RAS transform
     rval[0] = p_new[0];
     rval[1] = p_new[1];
     rval[2] = p_new[2];

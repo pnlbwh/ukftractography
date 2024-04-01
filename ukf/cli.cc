@@ -80,11 +80,11 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   // HANDLE ERRORNOUS INPUT
   if (dwiFile.empty() || maskFile.empty() || tracts.empty()) {
     std::cout << "Error! Must indicate DWI data, mask and tracts output files!" << std::endl << std::endl ;
-    return 1 ;  //This is to indicate that the module returns with error
+    return 1 ; //This is to indicate that the module returns with error
   }
 
   if (numTensor == 1) {
-    tractsWithSecondTensor.clear() ;  //Reassure the string is empty
+    tractsWithSecondTensor.clear() ; //Reassure the string is empty
   }
 
   if (l_maxHalfFiberLength <= 0) {
@@ -137,7 +137,7 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
 
   if (l_seedingThreshold == 0.0) {
     ukf_setAndTell(l_seedingThreshold, FULL_BRAIN_MEAN_SIGNAL_MIN,
-               "seedingThreshold");  // Used to default to 2 times the FA threshold.
+               "seedingThreshold"); // Used to default to 2 times the FA threshold.
   } else {
     ukf_tell(l_seedingThreshold, "seedingThreshold");
   }
@@ -156,12 +156,12 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
       else
         ukf_setAndTell(l_Qm, 0.001, "Qm");
     } else if (numTensor == 1) {
-        ukf_setAndTell(l_Qm, 0.005, "Qm");//l_Qm = 0.0015;
+        ukf_setAndTell(l_Qm, 0.005, "Qm"); //l_Qm = 0.0015;
     } else {
       if (fullTensorModel) {
-        ukf_setAndTell(l_Qm, 0.002, "Qm");//l_Qm = 0.002;
+        ukf_setAndTell(l_Qm, 0.002, "Qm"); //l_Qm = 0.002;
       } else {
-        ukf_setAndTell(l_Qm, 0.001, "Qm");//l_Qm = 0.001; was 0.003, changed to 0.001 for new Interp3Signal
+        ukf_setAndTell(l_Qm, 0.001, "Qm"); //l_Qm = 0.001; was 0.003, changed to 0.001 for new Interp3Signal
       }
     }
   } else {
@@ -178,11 +178,11 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
   else {
     if (l_Ql == 0.0) {
       if (numTensor == 1) {
-        ukf_setAndTell(l_Ql, 300.0, "Ql");//l_Ql = 25.0;
+        ukf_setAndTell(l_Ql, 300.0, "Ql"); //l_Ql = 25.0;
       } else if (numTensor == 2) {
-        ukf_setAndTell(l_Ql, 50.0, "Ql");//was l_Ql = 100.0; for old Interp3Signal
+        ukf_setAndTell(l_Ql, 50.0, "Ql"); //was l_Ql = 100.0; for old Interp3Signal
       } else if (numTensor == 3) {
-        ukf_setAndTell(l_Ql, 100.0, "Ql");//l_Ql = 150.0;
+        ukf_setAndTell(l_Ql, 100.0, "Ql"); //l_Ql = 150.0;
       }
     } else {
         ukf_tell(l_Ql, "Ql");
@@ -192,12 +192,12 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
 
   if (l_Rs == 0.0) {
     if (numTensor == 1) {
-      ukf_setAndTell(l_Rs, 0.01, "Rs");//l_Rs = 0.02;
+      ukf_setAndTell(l_Rs, 0.01, "Rs"); //l_Rs = 0.02;
     } else {
       if (fullTensorModel) {
-        ukf_setAndTell(l_Rs, 0.01, "Rs");// = 0.01;
+        ukf_setAndTell(l_Rs, 0.01, "Rs"); // = 0.01;
       } else {
-        ukf_setAndTell(l_Rs, 0.02, "Rs");//was l_Rs = 0.015;for old Interp3Signal
+        ukf_setAndTell(l_Rs, 0.02, "Rs"); //was l_Rs = 0.015;for old Interp3Signal
       }
     }
   } else {

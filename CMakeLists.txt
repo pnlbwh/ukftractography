@@ -43,15 +43,17 @@ set(PRIMARY_PROJECT_NAME UKFTractography)
 # Extension meta-information
 #-----------------------------------------------------------------------------
 set(EXTENSION_NAME  UKFTractography)
-set(EXTENSION_HOMEPAGE "http://www.nitrc.org/plugins/mwiki/index.php/ukftractography:MainPage")
-set(EXTENSION_CATEGORY "Diffusion.Tractography")
-set(EXTENSION_CONTRIBUTORS "Yogesh Rathi, Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Ryan Eckbo, Kent Williams, Hans Johnson, Peter Savadjiev, Carl-Fredrik Westin")
+set(EXTENSION_HOMEPAGE "https://www.nitrc.org/projects/ukftractography/")
+set(EXTENSION_CATEGORY "Tractography")
+set(EXTENSION_CONTRIBUTORS "Yogesh Rathi (yogesh@bwh.harvard.edu), Stefan Lienhard, Yinpeng Li, Martin Styner, Ipek Oguz, Yundi Shi, Christian Baumgartner, Ryan Eckbo, Hans Johnson, Kent Williams, Peter Savadjiev, Carl-Fredrik Westin.")
 set(EXTENSION_STATUS "Alpha")
 set(EXTENSION_DEPENDS "NA")
-set(EXTENSION_DESCRIPTION "This module traces fibers in a DWI Volume using the multiple tensor unscented Kalman Filter methology. ")
+set(EXTENSION_DESCRIPTION "This extension provides a module for tracing fibers in a DWI volume using the multiple tensor unscented Kalman Filter methodology.
+
+The development of this module was supported by NIH grants R01 MH097979 (PI Rathi), R01 MH092862 (PIs Westin and Verma), U01 NS083223 (PI Westin), R01 MH074794 (PI Westin) and P41 EB015902 (PI Kikinis).")
 set(EXTENSION_LICENSE_SHORT_DESCRIPTION "Quadratic Programming Library QuadProg++ has LGPL or GPL")
 set(EXTENSION_ICONURL "https://github.com/pnlbwh/ukftractography/raw/master/UKF_icon.png")
-set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/a/ab/Slicer-r19441-CLIExtensionTemplate-screenshot.png http://wiki.slicer.org/slicerWiki/images/1/1e/Slicer-r19441-CLIExtensionTemplate-screenshot-2.png")
+set(EXTENSION_SCREENSHOTURLS "")
 
 #-----------------------------------------------------------------------------
 option(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION "Build ${PRIMARY_PROJECT_NAME} as Slicer extension." OFF)

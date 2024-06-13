@@ -4,13 +4,11 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW) #3.12.0 `find_package()`` uses ``<PackageName>_ROOT`` variables.
 endif()
 
-#-----------------------------------------------------------------------------
-# Enable C++11
-#-----------------------------------------------------------------------------
+# C++ standard
 set(_msg "Setting C++ standard")
 message(STATUS "${_msg}")
 if(NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -18,6 +16,15 @@ message(STATUS "${_msg} - C++${CMAKE_CXX_STANDARD}")
 
 #-----------------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/CMake)
+
+# Sanity checks
+include(PreventInSourceBuilds)
+include(PreventInBuildInstalls)
+
+# macOS initialization
+if(APPLE AND DARWIN_MAJOR_VERSION LESS "10.13")
+  message(FATAL_ERROR "Only macOS >= 10.13 is supported")
+endif()
 include(SlicerBlockSetCMakeOSXVariables)
 
 set(PRIMARY_PROJECT_NAME UKFTractography)
@@ -83,11 +90,13 @@ mark_as_advanced(ADDITIONAL_CXX_FLAGS)
 #-----------------------------------------------------------------------------
 # Required by Slicer extension build system for reasons. See
 #    https://github.com/Slicer/Slicer/commit/b160ec13f276a86306513954ef8b08a5332afc2e
-  set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};RuntimeLibraries;/")
+set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};RuntimeLibraries;/")
 
 #-----------------------------------------------------------------------------
 # Superbuild script
 #-----------------------------------------------------------------------------
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/Common.cmake) #<-- All feature options for top superbuild and inner product build
 
 if(${PRIMARY_PROJECT_NAME}_SUPERBUILD)
   project(SuperBuild_${PRIMARY_PROJECT_NAME} LANGUAGES C CXX)  # <- NOTE: Project name for pre-requisites is different form main project

@@ -1,4 +1,3 @@
-include(${CMAKE_CURRENT_LIST_DIR}/Common.cmake)
 
 #-----------------------------------------------------------------------------
 if(${PRIMARY_PROJECT_NAME}_BUILD_SLICER_EXTENSION)
@@ -20,18 +19,16 @@ include(${ITK_USE_FILE})
 #-----------------------------------------------------------------------------
 set(VTK_FOUND OFF)
 find_package(VTK COMPONENTS
-      vtkCommonSystem
-      vtkCommonCore
-      vtkCommonSystem
-      vtkCommonMath
-      vtkCommonMisc
-      vtkCommonTransforms
-      vtkIOLegacy
-      vtkIOXML
-      REQUIRED)
-if(VTK_USE_FILE)
-  include(${VTK_USE_FILE})
-endif()
+  CommonSystem
+  CommonCore
+  CommonSystem
+  CommonMath
+  CommonMisc
+  CommonTransforms
+  IOLegacy
+  IOXML
+  REQUIRED
+  )
 
 #-----------------------------------------------------------------------------
 if(DEFINED Eigen_INCLUDE_DIR)
@@ -79,10 +76,10 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/common)
 set(UKF_STATIC)
 if(NOT BUILD_SHARED_LIBS)
-    set(UKF_STATIC 1)
-    if(WIN32)
-        add_definitions("-DUKF_STATIC")
-    endif()
+  set(UKF_STATIC 1)
+  if(WIN32)
+    add_definitions("-DUKF_STATIC")
+  endif()
 endif()
 add_subdirectory(ukf)
 add_subdirectory(UKFTractography)

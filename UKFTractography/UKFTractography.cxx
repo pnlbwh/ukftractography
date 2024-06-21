@@ -63,9 +63,14 @@ int ModuleEntryPoint(int argc, char **argv)
   try
     {
     if (tract->LoadFiles(ukf_settings.dwiFile,
-                         ukf_settings.seedsFile,
                          ukf_settings.maskFile,
-                         normalizedDWIData, outputNormalizedDWIData) == EXIT_FAILURE)
+                         normalizedDWIData, 
+                         outputNormalizedDWIData == EXIT_FAILURE,
+                         ukf_settings.seedsFile,
+                         ukf_settings.stopFile,
+                         ukf_settings.wmFile,
+                         ukf_settings.gmFile,
+                         ukf_settings.csfFile))
       {
       itkGenericExceptionMacro(<< "::LoadFiles failed with unknown error.");
       }

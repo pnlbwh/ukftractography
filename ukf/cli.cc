@@ -125,8 +125,8 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     l_maxBranchingAngle = 0.0;
   }
 
-  if (labels.size() == 0) {
-    labels.push_back(1) ;	//Default to use label 1
+  if (seedLabels.size() == 0) {
+    seedLabels.push_back(1) ;	//Default to use label 1
   }
 
   if (l_stoppingFA == 0.15) {
@@ -274,6 +274,9 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     s.transform_position = true; // TODO hard-coded :/
     s.store_glyphs = storeGlyphs;
     s.branches_only = false; // TODO hard-coded :/
+    s.wm_prob_threshold = wmProbThreshold;
+    s.gm_prob_threshold = gmProbThreshold;
+    s.csf_prob_threshold = csfProbThreshold;
     s.fa_min = l_stoppingFA;
     s.mean_signal_min = l_stoppingThreshold;
     s.seeding_threshold = l_seedingThreshold;
@@ -287,7 +290,8 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     s.stepLength = l_stepLength;
     s.recordLength = l_recordLength;
     s.maxHalfFiberLength = maxHalfFiberLength;
-    s.labels = labels;
+    s.seedLabels = seedLabels;
+    s.stopLabels = stopLabels;
     s.num_threads = numThreads;
 
     s.Qm = l_Qm;
@@ -307,6 +311,10 @@ int ukf_parse_cli(int argc, char** argv, UKFSettings& s)
     s.output_file_with_second_tensor = tractsWithSecondTensor;
     s.dwiFile = dwiFile;
     s.seedsFile = seedsFile;
+    s.stopFile = stopFile;
+    s.wmFile = wmFile;
+    s.gmFile = gmFile;
+    s.csfFile = csfFile;
     s.maskFile = maskFile;
     s.writeAsciiTracts = writeAsciiTracts;
     s.writeUncompressedTracts = writeUncompressedTracts;

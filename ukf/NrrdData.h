@@ -39,15 +39,21 @@ public:
   /** Gets brain mask value at a certain position */
   virtual ukfPrecisionType ScalarMaskValue(const vec3_t& pos) const;
 
+  /** Gets stopping mask value at a certain position, from stop label map, GM segmentation, and CSF segmentation */
+  virtual ukfPrecisionType ScalarStopValue(const std::vector<int>& labels, const ukfPrecisionType gm_prob_threshold, const ukfPrecisionType csf_prob_threshold, const vec3_t& pos) const;
+
+  /** Check if GM or CSF masks are provided for stopping */
+  virtual ukfPrecisionType isGMCSFProvided() const;
+
   /**
-   * \brief Get the seed points from the nrrd file
+   * \brief Get the seed points from the nrrd files: seeding label map and WM segmentation
    *
    * Takes care of different seed data types by type casting
    *
    * \param[in]  labels  a vector of labels that define the seed region
    * \param[out] seeds   a vector containing the positions in ijk-space of the seeds
   */
-  virtual void GetSeeds(const std::vector<int>& labels, stdVec_t& seeds) const;
+  virtual void GetSeeds(const std::vector<int>& labels, const ukfPrecisionType wm_prob_threshold, stdVec_t& seeds) const;
 
   /** returns the gradients of the diffusion image */
   virtual const stdVec_t & gradients() const
@@ -84,11 +90,13 @@ public:
     *
     * Loads all the data necessary to perform tractography
   */
-  virtual bool LoadData(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
-                        const bool normalizedDWIData, const bool outputNormalizedDWIData);
+  virtual bool LoadData(const std::string& data_file, const std::string& mask_file, 
+                        const bool normalizedDWIData, const bool outputNormalizedDWIData, 
+                        const std::string& seed_file, const std::string& stop_file, 
+                        const std::string& wm_file, const std::string& gm_file, const std::string& csf_file);
 
 
-  virtual bool SetData(Nrrd* data, Nrrd* seed, Nrrd* mask, bool normalizedDWIData);
+  virtual bool SetData(Nrrd* data, Nrrd* mask, bool normalizedDWIData, Nrrd* seed, Nrrd* stop, Nrrd* wm, Nrrd* gm, Nrrd* csf);
 
   /** Returns the dimensions of the signal in each directions as a vector */
   vec3_t dim() const
@@ -119,10 +127,26 @@ private:
   void *_seed_data;
   /** seed type is needed for correct casting type */
   int _seed_data_type;
+ /** pointer to stop data, is casted at runtime */
+  void *_stop_data;
+  /** stop type is needed for correct casting type */
+  int _stop_data_type;
   /** pointer to mask data, is casted at runtime */
   void *_mask_data;
   /** number of bytes of the mask is needed for casting */
   int _mask_num_bytes;
+  /** pointer to WM data, is casted at runtime */
+  void *_wm_data;
+  /** WM type is needed for correct casting type */
+  int _wm_data_type;
+  /** pointer to GM data, is casted at runtime */
+  void *_gm_data;
+  /** GM type is needed for correct casting type */
+  int _gm_data_type;
+  /** pointer to CSF data, is casted at runtime */
+  void *_csf_data;
+  /** CSF type is needed for correct casting type */
+  int _csf_data_type;
 
   /** the actual diffusion data in Nrrd type */
   Nrrd *_data_nrrd;
@@ -130,6 +154,14 @@ private:
   Nrrd *_seed_nrrd;
   /** The actual mask data */
   Nrrd *_mask_nrrd;
+    /** The actual stop data */
+  Nrrd *_stop_nrrd;
+  /** The actual WM data */
+  Nrrd *_wm_nrrd;
+  /** The actual GM data */
+  Nrrd *_gm_nrrd;
+  /** The actual CSF data */
+  Nrrd *_csf_nrrd;
 };
 
 #endif  // NRRDDATA_H_

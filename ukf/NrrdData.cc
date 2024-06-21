@@ -12,7 +12,7 @@
 
 NrrdData::NrrdData(ukfPrecisionType sigma_signal, ukfPrecisionType sigma_mask)
   : ISignalData(sigma_signal, sigma_mask),
-    _data(NULL), _seed_data(NULL), _mask_data(NULL), _data_nrrd(NULL)
+    _data(NULL), _seed_data(NULL), _stop_data(NULL), _mask_data(NULL), _wm_data(NULL), _gm_data(NULL), _csf_data(NULL), _data_nrrd(NULL)
 {
 
 }
@@ -25,6 +25,22 @@ NrrdData::~NrrdData()
     if( _seed_data )
       {
       nrrdNuke(_seed_nrrd);
+      }
+    if( _stop_data )
+      {
+      nrrdNuke(_stop_nrrd);
+      }
+    if( _wm_data )
+      {
+      nrrdNuke(_wm_nrrd);
+      }
+    if( _gm_data )
+      {
+      nrrdNuke(_gm_nrrd);
+      }
+    if( _csf_data )
+      {
+      nrrdNuke(_csf_nrrd);
       }
     if( _mask_data )
       {
@@ -125,7 +141,7 @@ ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
   const int nz = static_cast<const int>(_dim[2]);
 
   unsigned int index;
-  ukfPrecisionType       value;
+  ukfPrecisionType value;
 
   const int x = static_cast<const int>(round(pos[0]));
   const int y = static_cast<const int>(round(pos[1]));
@@ -154,11 +170,185 @@ ukfPrecisionType NrrdData::ScalarMaskValue(const vec3_t& pos) const
       }
       break;
     default:
-      std::cout << "Unsupported data type for seed file!" << std::endl;
+      std::cout << "Unsupported data type for mask file!" << std::endl;
       throw;
     }
 
   return value;
+}
+
+ukfPrecisionType NrrdData::isGMCSFProvided() const
+{
+  if ( _gm_data || _csf_data || _stop_data)
+    {
+      return ukfOne;
+    }
+  else
+    {
+      return ukfZero;
+    }
+}
+
+ukfPrecisionType NrrdData::ScalarStopValue(const std::vector<int>& stopLabels, const ukfPrecisionType gm_prob_threshold, const ukfPrecisionType csf_prob_threshold, const vec3_t& pos) const
+{
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
+
+  unsigned int index;
+  ukfPrecisionType is_stopping_voxel = ukfZero;
+
+  const int x = static_cast<const int>(round(pos[0]));
+  const int y = static_cast<const int>(round(pos[1]));
+  const int z = static_cast<const int>(round(pos[2]));
+
+  if( (x < 0 || nx <= x) ||
+      (y < 0 || ny <= y) ||
+      (z < 0 || nz <= z)  )
+    {
+    return is_stopping_voxel;
+    }
+
+  index = nz * ny * x + nz * y + z;
+
+  if ( _stop_data )
+    {
+
+    size_t nx_stop = _stop_nrrd->axis[2].size;
+    size_t ny_stop = _stop_nrrd->axis[1].size;
+    size_t nz_stop = _stop_nrrd->axis[0].size;
+    assert(_stop_data);
+
+    if ( !(nx_stop == _dim[0] && ny_stop == _dim[1] && nz_stop == _dim[2]) )
+      {
+      itkGenericExceptionMacro(<< "Stopping Labelmap ROI volume dimensions DO NOT match DWI dimensions");
+      }
+
+    // signed or unsigned doesn't make a difference since masks don't contain any negative values
+    int stop_value = 0;
+    switch( _stop_data_type )
+      {
+      case 0:
+        {
+        stop_value = 0;
+        }
+        break;
+      case 2:
+        {
+        stop_value = static_cast<unsigned char *>(_stop_data)[index];
+        }
+        break;
+      case 3:
+        {
+        stop_value = static_cast<short *>(_stop_data)[index];
+        }
+        break;
+      case 5:
+        {
+        stop_value = static_cast<int *>(_stop_data)[index];
+        }
+        break;
+      default:
+        std::cout << "Unsupported data type for stop file!" << std::endl;
+        throw;
+      }
+
+    std::vector<int>::const_iterator cit;
+    for( cit = stopLabels.begin(); cit != stopLabels.end(); ++cit ) 
+      {
+        if( *cit == stop_value )
+          {
+            is_stopping_voxel = ukfOne;
+          }
+      }
+
+    }
+  else // If stopping label map is provided, GM and CSF will not be used.
+    {
+    if ( _gm_data )
+      {
+      size_t nx_gm = _gm_nrrd->axis[2].size;
+      size_t ny_gm = _gm_nrrd->axis[1].size;
+      size_t nz_gm = _gm_nrrd->axis[0].size;
+      assert(_gm_data);
+
+      if ( !(nx_gm == _dim[0] && ny_gm == _dim[1] && nz_gm == _dim[2]) )
+        {
+        itkGenericExceptionMacro(<< "GM segmentation volume dimensions DO NOT match DWI dimensions");
+        }
+
+      float gm_prob = 0.0;
+      switch( _gm_data_type )
+      {
+      case 0:
+        {
+        gm_prob = 0.0;
+        }
+        break;
+      case 9:
+        {
+        gm_prob = static_cast<float *>(_gm_data)[index];
+        }
+        break;
+      case 10:
+        {
+        gm_prob = static_cast<float *>(_gm_data)[index];
+        }
+        break;
+      default:
+        std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
+        throw;
+      }
+
+      if (gm_prob > gm_prob_threshold)
+        {
+          is_stopping_voxel = ukfOne;
+        }
+      }
+
+    if ( _csf_data )
+      {
+      size_t nx_csf = _csf_nrrd->axis[2].size;
+      size_t ny_csf = _csf_nrrd->axis[1].size;
+      size_t nz_csf = _csf_nrrd->axis[0].size;
+      assert(_csf_data);
+
+      if ( !(nx_csf == _dim[0] && ny_csf == _dim[1] && nz_csf == _dim[2]) )
+        {
+        itkGenericExceptionMacro(<< "CSF segmentation volume dimensions DO NOT match DWI dimensions");
+        }
+
+      float csf_prob = 0.0;
+      switch( _csf_data_type )
+      {
+      case 0:
+        {
+        csf_prob = 0.0;
+        }
+        break;
+      case 9:
+        {
+        csf_prob = static_cast<float *>(_csf_data)[index];
+        }
+        break;
+      case 10:
+        {
+        csf_prob = static_cast<float *>(_csf_data)[index];
+        }
+        break;
+      default:
+        std::cout << "Unsupported data type for GM segmentation file!" << std::endl;
+        throw;
+      }
+
+      if (csf_prob > csf_prob_threshold)
+        {
+          is_stopping_voxel = ukfOne;
+        }
+      }
+    }
+
+  return is_stopping_voxel;
 }
 
 ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
@@ -235,74 +425,133 @@ ukfPrecisionType NrrdData::Interp3ScalarMask(const vec3_t& pos) const
   return s / w_sum;
 }
 
-void NrrdData::GetSeeds(const std::vector<int>& labels,
+void NrrdData::GetSeeds(const std::vector<int>& labels, const ukfPrecisionType wm_prob_threshold,
                         stdVec_t& seeds) const
 {
+
+  const int nx = static_cast<const int>(_dim[0]);
+  const int ny = static_cast<const int>(_dim[1]);
+  const int nz = static_cast<const int>(_dim[2]);
+
   if( _seed_data )
     {
-    assert(seeds.size() == 0);
-    std::vector<int>::const_iterator cit;
+      std::cout << "Seeding using Option 3, from a seeding label map." << std::endl;
+      size_t nx_seed = _seed_nrrd->axis[2].size;
+      size_t ny_seed = _seed_nrrd->axis[1].size;
+      size_t nz_seed = _seed_nrrd->axis[0].size;
+      assert(_seed_data);
 
-    // Go through the volume.
-	size_t nx = _seed_nrrd->axis[2].size;
-	size_t ny = _seed_nrrd->axis[1].size;
-	size_t nz = _seed_nrrd->axis[0].size;
-    assert(_seed_data);
-
-    if ( !(nx == _dim[0] && ny == _dim[1] && nz == _dim[2]) )
-      {
-      itkGenericExceptionMacro(<< "Labelmap ROI volume dimensions DO NOT match DWI dimensions");
-      }
-
-    for( size_t i = 0; i < nx; ++i )
-      {
-      for( size_t j = 0; j < ny; ++j )
+      if ( !(nx_seed == _dim[0] && ny_seed == _dim[1] && nz_seed == _dim[2]) )
         {
-        for( size_t k = 0; k < nz; ++k )
-          {
-          for( cit = labels.begin(); cit != labels.end(); ++cit )
-            {
-            int value = 0;
-			size_t index = ny * nz * i + nz * j + k;
+        itkGenericExceptionMacro(<< "Seeding Labelmap ROI volume dimensions DO NOT match DWI dimensions");
+        }
+    }
+  else if( _wm_data )
+    {
+      std::cout << "Seeding using Option 2, from a WM segmentation map." << std::endl;;
+      size_t nx_wm = _wm_nrrd->axis[2].size;
+      size_t ny_wm = _wm_nrrd->axis[1].size;
+      size_t nz_wm = _wm_nrrd->axis[0].size;
+      assert(_wm_data);
 
-            switch( _seed_data_type )
+      if ( !(nx_wm == _dim[0] && ny_wm == _dim[1] && nz_wm == _dim[2]) )
+        {
+        itkGenericExceptionMacro(<< "WM segmentation volume dimensions DO NOT match DWI dimensions");
+        }
+    }
+
+  assert(seeds.size() == 0); // Make sure seeds is empty
+
+  for( int i = 0; i < nx; ++i )
+    {
+    for( int j = 0; j < ny; ++j )
+      {
+      for( int k = 0; k < nz; ++k )
+        {
+          int is_seeding_voxel = 0;
+          size_t index = ny * nz * i + nz * j + k;
+
+          if( _seed_data )
+            {
+            std::vector<int>::const_iterator cit;
+            for( cit = labels.begin(); cit != labels.end(); ++cit )
               {
-              case 2:
+              int value = 0;
+
+              switch( _seed_data_type )
                 {
-                value = static_cast<unsigned char *>(_seed_data)[index];
+                case 2:
+                  {
+                  value = static_cast<unsigned char *>(_seed_data)[index];
+                  }
+                  break;
+                case 3:
+                  {
+                  value = static_cast<short *>(_seed_data)[index];
+                  }
+                  break;
+                case 5:
+                  {
+                  value = static_cast<int *>(_seed_data)[index];
+                  }
+                  break;
+                default:
+                  std::cout << "Unsupported data type for seed file!" << std::endl;
+                  assert(false);
+                }
+              if( *cit == value )
+                {
+                is_seeding_voxel = 1;
+                }
+              }
+            }
+          else if ( _wm_data )
+            {
+
+            float wm_prob = 0.0;
+
+            switch( _wm_data_type )
+              {
+              case 0:
+                {
+                wm_prob = 0.0;
                 }
                 break;
-              case 3:
+              case 9:
                 {
-                value = static_cast<short *>(_seed_data)[index];
+                wm_prob = static_cast<float *>(_wm_data)[index];
                 }
                 break;
-              case 5:
+              case 10:
                 {
-                value = static_cast<int *>(_seed_data)[index];
+                wm_prob = static_cast<float *>(_wm_data)[index];
                 }
                 break;
               default:
-                std::cout << "Unsupported data type for seed file!" << std::endl;
-                assert(false);
+                std::cout << "Unsupported data type for WM segmentation file!" << std::endl;
+                throw;
               }
-            if( *cit == value )
+
+            if (wm_prob > wm_prob_threshold) // TODO: may support a user provided threshold.
               {
-              seeds.push_back(vec3_t(i, j, k) );
+                is_seeding_voxel = 1;
               }
             }
-          }
+
+          if( is_seeding_voxel == 1 )
+            {
+            seeds.push_back(vec3_t(i, j, k) );
+            }
         }
       }
     }
-  else
-    {
-    std::cout << "No seed data available." << std::endl;
-    }
-}
+    
+  }
 
-bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd,
-                       bool normalizedDWIData)
+bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, 
+                       bool normalizedDWIData, 
+                       Nrrd* seed_nrrd, Nrrd* stop_nrrd, 
+                       Nrrd* wm_nrrd, Nrrd* gm_nrrd, Nrrd* csf_nrrd)
   {
   //_data_nrrd = (Nrrd*)data;
   //_seed_data = (Nrrd*)seed;
@@ -311,14 +560,6 @@ bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd,
   if( LoadSignal(data_nrrd, normalizedDWIData) )
     {
     return true;
-    }
-
-  if (seed_nrrd)
-    {
-    this->_seed_nrrd = seed_nrrd;
-    this->_seed_data = seed_nrrd->data;
-    this->_seed_data_type = seed_nrrd->type;
-    assert(_seed_data_type == 2 || _seed_data_type == 3 || _seed_data_type == 5);
     }
 
   if( mask_nrrd->type == 1 || mask_nrrd->type == 2 )
@@ -340,17 +581,60 @@ bool NrrdData::SetData(Nrrd* data_nrrd, Nrrd* mask_nrrd, Nrrd* seed_nrrd,
   this->_mask_nrrd = mask_nrrd;
   this->_mask_data = mask_nrrd->data;
 
+  if (seed_nrrd)
+    {
+    this->_seed_nrrd = seed_nrrd;
+    this->_seed_data = seed_nrrd->data;
+    this->_seed_data_type = seed_nrrd->type;
+    assert(_seed_data_type == 2 || _seed_data_type == 3 || _seed_data_type == 5);
+    }
+
+  if (stop_nrrd)
+    {
+    this->_stop_nrrd = stop_nrrd;
+    this->_stop_data = stop_nrrd->data;
+    this->_stop_data_type = stop_nrrd->type;
+    assert(_stop_data_type == 2 || _stop_data_type == 3 || _stop_data_type == 5);
+    }
+
+  if (wm_nrrd)
+    {
+    this->_wm_nrrd = wm_nrrd;
+    this->_wm_data = wm_nrrd->data;
+    this->_wm_data_type = wm_nrrd->type;
+    assert(_wm_data_type == 9 || _wm_data_type == 10);
+    }
+
+  if (gm_nrrd)
+    {
+    this->_gm_nrrd = gm_nrrd;
+    this->_gm_data = gm_nrrd->data;
+    this->_gm_data_type = gm_nrrd->type;
+    assert(_gm_data_type == 9 || _gm_data_type == 10);
+    }
+
+  if (csf_nrrd)
+    {
+    this->_csf_nrrd = csf_nrrd;
+    this->_csf_data = csf_nrrd->data;
+    this->_csf_data_type = csf_nrrd->type;
+    assert(_csf_data_type == 9 || _csf_data_type == 10);
+    }
+
   return false;
   }
 
 bool NrrdData::LoadData(const std::string& data_file,
-                        const std::string& seed_file,
                         const std::string& mask_file,
                         const bool normalizedDWIData,
-                        const bool outputNormalizedDWIData
-                        )
+                        const bool outputNormalizedDWIData,
+                        const std::string& seed_file,
+                        const std::string& stop_file,
+                        const std::string& wm_file, 
+                        const std::string& gm_file, 
+                        const std::string& csf_file)
 {
-  if( _data || _seed_data || _mask_data )
+  if( _data || _seed_data || _stop_data || _mask_data || _wm_data || _gm_data || _csf_data )
     {
     std::cout << "There is already some data!" << std::endl;
     return true;
@@ -361,6 +645,16 @@ bool NrrdData::LoadData(const std::string& data_file,
     {
     char *err = biffGetDone(NRRD);
     std::cout << "Trouble reading " << data_file << ": " << err << std::endl;
+    free( err );
+    return true;
+    }
+
+  Nrrd* mask_nrrd = nrrdNew();
+  // Load mask
+  if( nrrdLoad(mask_nrrd, mask_file.c_str(), NULL) )
+    {
+    char *err = biffGetDone(NRRD);
+    std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
     free( err );
     return true;
     }
@@ -380,9 +674,8 @@ bool NrrdData::LoadData(const std::string& data_file,
       }
     }
 
-
   Nrrd* seed_nrrd = nrrdNew();
-  // Load seeds
+  // Load seeding map
   if( !seed_file.empty() )
     {
     if( nrrdLoad(seed_nrrd, seed_file.c_str(), NULL) )
@@ -394,17 +687,59 @@ bool NrrdData::LoadData(const std::string& data_file,
       }
     }
 
-  Nrrd* mask_nrrd = nrrdNew();
-  // Load mask
-  if( nrrdLoad(mask_nrrd, mask_file.c_str(), NULL) )
+  Nrrd* stop_nrrd = nrrdNew();
+  // Load stopping map
+  if( !stop_file.empty() )
     {
-    char *err = biffGetDone(NRRD);
-    std::cout << "Trouble reading " << mask_file << ": " << err << std::endl;
-    free( err );
-    return true;
+    if( nrrdLoad(stop_nrrd, stop_file.c_str(), NULL) )
+      {
+      char *err = biffGetDone(NRRD);
+      std::cout << "Trouble reading " << stop_file << ": " << err << std::endl;
+      free( err );
+      return true;
+      }
     }
 
-  bool status = SetData(input_nrrd, mask_nrrd, seed_nrrd, normalizedDWIData);
+  Nrrd* wm_nrrd = nrrdNew();
+  // Load WM segmentation
+  if( !wm_file.empty() )
+    {
+    if( nrrdLoad(wm_nrrd, wm_file.c_str(), NULL) )
+      {
+      char *err = biffGetDone(NRRD);
+      std::cout << "Trouble reading " << wm_file << ": " << err << std::endl;
+      free( err );
+      return true;
+      }
+    }
+
+  Nrrd* gm_nrrd = nrrdNew();
+  // Load GM segmentation
+  if( !gm_file.empty() )
+    {
+    if( nrrdLoad(gm_nrrd, gm_file.c_str(), NULL) )
+      {
+      char *err = biffGetDone(NRRD);
+      std::cout << "Trouble reading " << gm_file << ": " << err << std::endl;
+      free( err );
+      return true;
+      }
+    }
+
+  Nrrd* csf_nrrd = nrrdNew();
+  // Load CSF segmentation
+  if( !csf_file.empty() )
+    {
+    if( nrrdLoad(csf_nrrd, csf_file.c_str(), NULL) )
+      {
+      char *err = biffGetDone(NRRD);
+      std::cout << "Trouble reading " << csf_file << ": " << err << std::endl;
+      free( err );
+      return true;
+      }
+    }
+
+  bool status = SetData(input_nrrd, mask_nrrd, normalizedDWIData, seed_nrrd, stop_nrrd, wm_nrrd, gm_nrrd, csf_nrrd);
   return status;
 }
 
@@ -438,7 +773,7 @@ bool NrrdData::LoadSignal(Nrrd* input_nrrd, const bool normalizedDWIData)
     }
   assert(size == 2);
 
-  ukfPrecisionType              bValue = ukfZero;
+  ukfPrecisionType bValue = ukfZero;
 
   assert(_gradients.size() == 0);
   // Read key value pairs.

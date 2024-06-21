@@ -82,7 +82,11 @@ Tractography::Tractography(UKFSettings s) :
     _max_length(static_cast<int>(std::ceil(s.maxHalfFiberLength / s.stepLength) ) ),
     _full_brain(false),
     _noddi(s.noddi),
-    _fa_min(s.fa_min), _mean_signal_min(s.mean_signal_min),
+    _wm_prob_threshold(s.wm_prob_threshold),
+    _gm_prob_threshold(s.gm_prob_threshold),
+    _csf_prob_threshold(s.csf_prob_threshold),
+    _fa_min(s.fa_min), 
+    _mean_signal_min(s.mean_signal_min),
     _seeding_threshold(s.seeding_threshold),
     _num_tensors(s.num_tensors),
     _seeds_per_voxel(s.seeds_per_voxel),
@@ -92,7 +96,8 @@ Tractography::Tractography(UKFSettings s) :
     _free_water(s.free_water),
     _stepLength(s.stepLength),
     _steps_per_record(s.recordLength/s.stepLength),
-    _labels(s.labels),
+    _seed_labels(s.seedLabels),
+    _stop_labels(s.stopLabels),
 
     Qm(s.Qm),
     Ql(s.Ql),
@@ -316,8 +321,10 @@ void Tractography::UpdateFilterModelType()
   _model->set_signal_dim(_signal_data->GetSignalDimension() * 2);
 }
 
-bool Tractography::SetData(void* data, void* mask, void* seed,
-                           bool normalizedDWIData)
+bool Tractography::SetData(void* data, void* mask, 
+                           bool normalizedDWIData, 
+                           void* seed, void* stop, 
+                           void* wm, void* gm, void* csf)
 {
   if (!data || !mask)
     {
@@ -325,32 +332,35 @@ bool Tractography::SetData(void* data, void* mask, void* seed,
     return true;
     }
 
-  if (!seed)
+  if (!seed && !wm) // if no seeding mask or wm map is provided, brain mask with thresholds will be used for seeding 
     {
     _full_brain = true;
     }
 
   _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
-  _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, (Nrrd*)seed, normalizedDWIData);
+  _signal_data->SetData((Nrrd*)data, (Nrrd*)mask, normalizedDWIData, (Nrrd*)seed, (Nrrd*)stop, (Nrrd*)wm, (Nrrd*)gm, (Nrrd*)csf);
 
   return false;
 }
 
 bool Tractography::LoadFiles(const std::string& data_file,
-                             const std::string& seed_file,
                              const std::string& mask_file,
                              const bool normalized_DWI_data,
-                             const bool output_normalized_DWI_data
-                             )
+                             const bool output_normalized_DWI_data,
+                             const std::string& seed_file,
+                             const std::string& stop_file,
+                             const std::string& wm_file,
+                             const std::string& gm_file,
+                             const std::string& csf_file)
 {
   _signal_data = new NrrdData(_sigma_signal, _sigma_mask);
 
-  if( seed_file.empty() )
+  if( seed_file.empty() && wm_file.empty() )
     {
     _full_brain = true;
     }
 
-  if( _signal_data->LoadData(data_file, seed_file, mask_file, normalized_DWI_data, output_normalized_DWI_data) )
+  if( _signal_data->LoadData(data_file, mask_file, normalized_DWI_data, output_normalized_DWI_data, seed_file, stop_file, wm_file, gm_file, csf_file) )
     {
     std::cout << "ISignalData could not be loaded" << std::endl;
     delete _signal_data;
@@ -370,7 +380,7 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
   int signal_dim = _signal_data->GetSignalDimension();
 
   stdVec_t seeds;
-  if (! (_labels.size() > 0))
+  if (! (_seed_labels.size() > 0))
     {
     std::cout << "No label data!";
     throw;
@@ -382,11 +392,12 @@ void Tractography::Init(std::vector<SeedPointInfo>& seed_infos)
     }
   else if(!_full_brain)
     {
-    _signal_data->GetSeeds(_labels, seeds);
+    _signal_data->GetSeeds(_seed_labels, _wm_prob_threshold, seeds);
     }
   else
     {
     // Iterate through all brain voxels and take those as seeds voxels.
+    std::cout << "Seeding using Option 1 (or no option has been specified), from the input brain mask." << std::endl;
     const vec3_t dim = _signal_data->dim();
     for( int x = 0; x < dim[0]; ++x )
       {
@@ -1336,6 +1347,8 @@ void Tractography::Follow2T(const int thread_id,
     // the fiber gets too long.
     const bool is_brain = _signal_data->ScalarMaskValue(x) > 0; // _signal_data->Interp3ScalarMask(x) > 0.1; // is this 0.1 correct? yes
 
+    const bool is_stop = _signal_data->ScalarStopValue(_stop_labels, _gm_prob_threshold, _csf_prob_threshold, x) > 0;
+
     // after here state does not change until next step.
 
     state_tmp.col(0) = state;
@@ -1343,13 +1356,25 @@ void Tractography::Follow2T(const int thread_id,
     _model->H(state_tmp, signal_tmp); // signal_tmp is written, but only used to calculate mean signal
 
     const ukfPrecisionType mean_signal = s2adc(signal_tmp);
-    const bool in_csf = (_noddi) ? ( mean_signal < _mean_signal_min ) :
-                                   ( mean_signal < _mean_signal_min || fa < _fa_min);
+
+    bool in_csf;
+    if (_signal_data->isGMCSFProvided())
+      {
+      in_csf = false;
+      }
+    else
+      {
+      if(_noddi)
+        in_csf = mean_signal < _mean_signal_min;
+      else
+        in_csf = mean_signal < _mean_signal_min || fa < _fa_min;
+      }
 
     const bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
+        || is_stop 
         || stepnr > _max_length  // Stop when the fiber is too long
         || is_curving)
       {
@@ -1463,6 +1488,9 @@ void Tractography::Follow1T(const int thread_id,
 
     // Terminate if off brain or in CSF.
     const bool is_brain = _signal_data->ScalarMaskValue(x) > 0; //_signal_data->Interp3ScalarMask(x) > 0.1; // x is the seed point
+
+    const bool is_stop = _signal_data->ScalarStopValue(_stop_labels, _gm_prob_threshold, _csf_prob_threshold, x) > 0;
+
     state_tmp.col(0) = state;
 
     _model->H(state_tmp, signal_tmp);
@@ -1470,15 +1498,23 @@ void Tractography::Follow1T(const int thread_id,
     // Check mean_signal threshold
     const ukfPrecisionType mean_signal = s2adc(signal_tmp);
     bool in_csf;
-    if(_noddi)
-      in_csf = mean_signal < _mean_signal_min;
+    if (_signal_data->isGMCSFProvided())
+      {
+      in_csf = false;
+      }
     else
-      in_csf = mean_signal < _mean_signal_min || fa < _fa_min;
+      {
+      if(_noddi)
+        in_csf = mean_signal < _mean_signal_min;
+      else
+        in_csf = mean_signal < _mean_signal_min || fa < _fa_min;
+      }
 
     bool is_curving = curve_radius(fiber.position) < _min_radius;
 
     if( !is_brain
         || in_csf
+        || is_stop
         || stepnr > _max_length  // Stop when fiber is too long
         || is_curving )
       {

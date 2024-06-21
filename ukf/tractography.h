@@ -38,6 +38,9 @@ struct UKFSettings {
   bool transform_position;
   bool store_glyphs;
   bool branches_only;
+  ukfPrecisionType wm_prob_threshold;
+  ukfPrecisionType gm_prob_threshold;
+  ukfPrecisionType csf_prob_threshold;
   ukfPrecisionType fa_min;
   ukfPrecisionType mean_signal_min;
   ukfPrecisionType seeding_threshold;
@@ -51,7 +54,8 @@ struct UKFSettings {
   ukfPrecisionType stepLength;
   ukfPrecisionType recordLength;
   ukfPrecisionType maxHalfFiberLength;
-  std::vector<int> labels;
+  std::vector<int> seedLabels;
+  std::vector<int> stopLabels;
 
   ukfPrecisionType Qm;
   ukfPrecisionType Ql;
@@ -78,6 +82,10 @@ struct UKFSettings {
   std::string output_file_with_second_tensor;
   std::string dwiFile;
   std::string seedsFile;
+  std::string stopFile;
+  std::string wmFile;
+  std::string gmFile;
+  std::string csfFile;
   std::string maskFile;
   };
 
@@ -115,14 +123,16 @@ public:
    * Load the files that contain the DWI signal, the seeds and a mask
    * defining the volume of the brain.
   */
-  bool LoadFiles(const std::string& data_file, const std::string& seed_file, const std::string& mask_file,
-                 const bool normalized_DWI_data, const bool output_normalized_DWI_data);
+  bool LoadFiles(const std::string& data_file, const std::string& mask_file, 
+                 const bool normalized_DWI_data, const bool output_normalized_DWI_data, 
+                 const std::string& seed_file, const std::string& stop_file, 
+                 const std::string& wm_file, const std::string& gm_file, const std::string& csf_file);
 
   /**
    * Directly set the data volume pointers
   */
 
-  bool SetData(void* data, void* mask, void* seed, bool normalizedDWIData);
+  bool SetData(void* data, void* mask, bool normalizedDWIData, void* seed, void* stop, void* wm, void* gm, void* csf);
 
   /**
    * Directly set the seed locations
@@ -294,6 +304,9 @@ private:
   int _nPosFreeWater;
 
   // Parameters for the tractography
+  ukfPrecisionType  _wm_prob_threshold;
+  ukfPrecisionType  _gm_prob_threshold;
+  ukfPrecisionType  _csf_prob_threshold;
   ukfPrecisionType  _fa_min;
   ukfPrecisionType  _mean_signal_min;
   ukfPrecisionType  _seeding_threshold;
@@ -305,7 +318,8 @@ private:
   bool              _free_water;
   ukfPrecisionType  _stepLength;
   int               _steps_per_record;
-  std::vector<int>  _labels;
+  std::vector<int>  _seed_labels;
+  std::vector<int>  _stop_labels;
   stdVec_t _ext_seeds;
 
   ukfPrecisionType Qm;

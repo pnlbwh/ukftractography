@@ -51,7 +51,7 @@ RUN yum remove -y git gcc gcc-c++ make wget curl-devel && \
 
 # Set the entrypoint for the container to run UKFTractography
 # Adjust this path according to where the binary is actually built
-ENTRYPOINT ["/opt/ukftractography/build/UKFTractography/UKFTractography"]
+ENTRYPOINT ["/opt/ukftractography/build/UKFTractography-build/UKFTractography/bin/UKFTractography"]
 
 # Optional: Add default command or arguments if necessary
 # CMD ["--help"]

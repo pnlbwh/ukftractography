@@ -132,7 +132,7 @@ public:
    * Directly set the data volume pointers
   */
 
-  bool SetData(void* data, void* mask, bool normalizedDWIData, void* seed, void* stop, void* wm, void* gm, void* csf);
+  bool SetData(void* data, void* mask, bool normalizedDWIData, void* seed, void* stop=nullptr, void* wm=nullptr, void* gm=nullptr, void* csf=nullptr);
 
   /**
    * Directly set the seed locations

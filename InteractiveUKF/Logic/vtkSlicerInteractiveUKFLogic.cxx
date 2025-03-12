@@ -232,7 +232,7 @@ void vtkSlicerInteractiveUKFLogic::SetDataNodes(
     return;
     }
 
-  tract->SetData(nrrd, mask, seed, false /*normalizedDWIData*/);
+  tract->SetData(nrrd, mask, false /*normalizedDWIData*/, seed);
   tract->UpdateFilterModelType();
 
   vtkPolyData* pd = vtkPolyData::New();
